@@ -1,0 +1,4 @@
+.guide-page{font-family:system-ui,Arial,Helvetica,sans-serif}
+.guide-hero{background:#eaf7ff;padding:28px;border-bottom:1px solid #e0f0ff}
+.guide-actions{display:flex;gap:16px;padding:20px}
+.panel{background:#fff;padding:16px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
