@@ -1,0 +1,5 @@
+.ws-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#fff;border-bottom:1px solid #eee}
+.ws-brand{font-weight:700;color:#1a8f66}
+.ws-nav-list{list-style:none;display:flex;gap:16px;margin:0;padding:0}
+.ws-nav-list a{color:#333;text-decoration:none}
+.ws-nav-list a.active{font-weight:700}

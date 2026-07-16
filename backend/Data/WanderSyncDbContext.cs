@@ -15,5 +15,8 @@ namespace backend.Data
         }
 
         //To add database tables below
+        //Generic of DbSet is the model class that represents the table in the database
+
+        public DbSet<backend.Models.User> Users { get; set; }
     }
 }

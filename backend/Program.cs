@@ -6,17 +6,32 @@ using backend.Data;
 
 
 Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Grab the connection string from appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("WanderSyncDbContext");
+//  Grab the connection string from configuration (appsettings.json or environment)
+var connectionString = builder.Configuration.GetConnectionString("WanderSyncDb");
+if (string.IsNullOrEmpty(connectionString))
+{  
+     connectionString = "ConnectionStrings__WanderSyncDb";
+}
 
-// 2. Register the DbContext to use Pomelo MySQL
+
+// Port information for axios requests from the frontend (Vite) to the backend (ASP.NET Core)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowViteApp", policy =>
+    {
+        //Accepts any port (4173, 5173, 3000, etc.) as long as it is localhost
+        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost") 
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddDbContext<WanderSyncDbContext>(options =>
-    options.UseMySql(
-        connectionString, 
-        ServerVersion.AutoDetect(connectionString)
-    ));
+    options.UseMySQL(connectionString) 
+);
 
 builder.Services.AddControllers();
 
