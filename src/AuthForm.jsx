@@ -55,7 +55,7 @@ function AuthForm() {
       localStorage.setItem('user', JSON.stringify(user));
 
       // Navigate to app home (role-based routing in App.jsx)
-      navigate('/');
+      navigate('/home');
     } catch (error) {
       alert(error.response?.data?.message || 'Login failed. Please check your credentials.');
     }
@@ -103,7 +103,9 @@ function AuthForm() {
     <div className="signin-signup-page">
       <div className="logo-top">
         <img src={logo} alt="WanderSync logo" className="brand-logo" />
-        <div className="logo-text">WanderSync</div>
+        <button type="button" className="logo-text-button" onClick={() => navigate('/home')}>
+          <div className="logo-text">WanderSync</div>
+        </button>
       </div>
       <div className="signin-signup-container">
         <div className={`signin-signup ${isSignUpActive ? 'sign-up-mode' : ''}`}>

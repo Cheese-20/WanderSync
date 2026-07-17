@@ -1,0 +1,18 @@
+.profile-page{font-family:system-ui,Arial,Helvetica,sans-serif;padding:20px}
+.profile-card{max-width:820px;margin:24px auto;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06);overflow:hidden}
+.profile-image{background:#f4f6f8;height:260px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.profile-image img{
+    /* border-radius: 100%; */
+    max-height:100%;
+    max-width:100%;
+    object-fit:cover
+}
+.profile-image .placeholder{color:#666}
+.profile-form{padding:18px;display:flex;flex-direction:column;gap:12px}
+.profile-form .row{display:flex;gap:12px}
+.profile-form .row.small{display:flex;gap:12px}
+.profile-form label{min-width:100px}
+.profile-form input, .profile-form textarea{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px}
+.profile-form textarea{min-height:90px}
+.profile-form .actions{display:flex;gap:12px;justify-content:flex-end}
+.profile-form button{background:#1a8f66;color:#fff;padding:8px 14px;border:none;border-radius:6px;cursor:pointer}

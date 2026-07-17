@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowViteApp", policy =>
     {
-        //Accepts any port (4173, 5173, 3000, etc.) as long as it is localhost
+        //Accepts any port as long as it is localhost
         policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost") 
               .AllowAnyHeader()
               .AllowAnyMethod();

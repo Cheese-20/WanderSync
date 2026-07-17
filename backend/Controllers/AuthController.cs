@@ -52,7 +52,7 @@ namespace backend.Controllers
                 FirstName = model.Name,
                 LastName = model.Surname,
                 Email = model.Email,
-                CellNumber = model.PhoneNumber, // Maps the React 'PhoneNumber' to MySQL 'cellNumber'
+                CellNumber = model.PhoneNumber, 
                 Age = model.Age,
                 HashedPword = passwordHash,     // Maps the hashed password to MySQL 'hashedPword'
                 Role = "Explorer",                  // Default role for new signups
