@@ -6,6 +6,8 @@ import logo from '../assets/images/logo.png';
 export default function NavBar() {
   const navigate = useNavigate();
 
+  const navLinkClass = ({ isActive }) => (isActive ? 'active' : undefined);
+
   return (
     <nav className="ws-nav">
       <div className="ws-brand-wrap" onClick={() => navigate('/home')}>
@@ -13,11 +15,11 @@ export default function NavBar() {
         <div className="ws-brand">WanderSync</div>
       </div>
       <ul className="ws-nav-list">
-        <li><NavLink to="/discover">Discover</NavLink></li>
-        <li><NavLink to="/match">Match</NavLink></li>
-        <li><NavLink to="/explore">Explore</NavLink></li>
-        <li><NavLink to="/messages">Messages</NavLink></li>
-        <li><NavLink to="/profile">Profile</NavLink></li>
+        <li><NavLink to="/discover" className={navLinkClass}>Discover</NavLink></li>
+        <li><NavLink to="/match" className={navLinkClass}>Match</NavLink></li>
+        <li><NavLink to="/explore" className={navLinkClass}>Explore</NavLink></li>
+        <li><NavLink to="/messages" className={navLinkClass}>Messages</NavLink></li>
+        <li><NavLink to="/profile" className={navLinkClass}>Profile</NavLink></li>
       </ul>
     </nav>
   );

@@ -78,23 +78,23 @@ function AuthForm() {
         name: signupValues.name,
         surname: signupValues.surname,
         email: signupValues.email,
-        phoneNumber: signupValues.number, 
-        age: parseInt(signupValues.age, 10), 
+        phoneNumber: signupValues.number,
+        age: parseInt(signupValues.age, 10),
         password: signupValues.password,
         confirmPassword: signupValues.confirmPassword
       });
 
       setSignupStatus({ message: 'User created successfully. You may now sign in.', type: 'success' });
-      
+
       // Automatically slide back to the login screen after a short delay
       setTimeout(() => {
         setIsSignUpActive(false);
       }, 1500);
 
     } catch (error) {
-      setSignupStatus({ 
-        message: error.response?.data || 'An error occurred during registration.', 
-        type: 'error' 
+      setSignupStatus({
+        message: error.response?.data || 'An error occurred during registration.',
+        type: 'error'
       });
     }
   };
@@ -109,160 +109,160 @@ function AuthForm() {
       </div>
       <div className="signin-signup-container">
         <div className={`signin-signup ${isSignUpActive ? 'sign-up-mode' : ''}`}>
-        <div className="form-container sign-in-container">
-          <form onSubmit={submitLogin} className="form">
-            <h2 className="form-title">Sign in</h2>
-            <p className="form-subtitle">Enter details to login</p>
+          <div className="form-container sign-in-container">
+            <form onSubmit={submitLogin} className="form">
+              <h2 className="form-title">Sign in</h2>
+              <p className="form-subtitle">Enter details to login</p>
 
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              value={loginValues.email}
-              onChange={handleLoginChange}
-              placeholder="Email"
-              required
-            />
-            <input
-              id="login-password"
-              name="password"
-              type="password"
-              value={loginValues.password}
-              onChange={handleLoginChange}
-              placeholder="Password"
-              required
-            />
-
-            <div className="role-grid">
-              <label className="radio-label">
-                <input
-                  id="login-role-explorer"
-                  type="radio"
-                  name="role"
-                  value="explorer"
-                  checked={loginValues.role === 'explorer'}
-                  onChange={handleLoginChange}
-                />
-                Explorer
-              </label>
-              <label className="radio-label">
-                <input
-                  id="login-role-guide"
-                  type="radio"
-                  name="role"
-                  value="guide"
-                  checked={loginValues.role === 'guide'}
-                  onChange={handleLoginChange}
-                />
-                Local Guide
-              </label>
-            </div>
-
-            <a href="#forgot" className="forgot-link">Forgot password?</a>
-            <button type="submit" className="btn solid">Sign In</button>
-          </form>
-        </div>
-
-        <div className="form-container sign-up-container">
-          <form onSubmit={submitSignup} className="form">
-            <h2 className="form-title">Create account</h2>
-            <p className="form-subtitle">Use your email for registration</p>
-
-            <div className="input-grid-two">
               <input
-                id="signup-name"
-                name="name"
-                type="text"
-                value={signupValues.name}
-                onChange={handleSignupChange}
-                placeholder="Name"
+                id="login-email"
+                name="email"
+                type="email"
+                value={loginValues.email}
+                onChange={handleLoginChange}
+                placeholder="Email"
                 required
               />
               <input
-                id="signup-surname"
-                name="surname"
-                type="text"
-                value={signupValues.surname}
-                onChange={handleSignupChange}
-                placeholder="Surname"
+                id="login-password"
+                name="password"
+                type="password"
+                value={loginValues.password}
+                onChange={handleLoginChange}
+                placeholder="Password"
                 required
               />
-            </div>
 
-            <input
-              id="signup-email"
-              name="email"
-              type="email"
-              value={signupValues.email}
-              onChange={handleSignupChange}
-              placeholder="Email"
-              required
-            />
-            <input
-              id="signup-number"
-              name="number"
-              type="tel"
-              value={signupValues.number}
-              onChange={handleSignupChange}
-              placeholder="Phone number"
-              required
-            />
-            <input
-              id="signup-age"
-              name="age"
-              type="number"
-              min="12"
-              value={signupValues.age}
-              onChange={handleSignupChange}
-              placeholder="Age"
-              required
-            />
-            <input
-              id="signup-password"
-              name="password"
-              type="password"
-              value={signupValues.password}
-              onChange={handleSignupChange}
-              placeholder="Password"
-              required
-            />
-            <input
-              id="signup-confirm-password"
-              name="confirmPassword"
-              type="password"
-              value={signupValues.confirmPassword}
-              onChange={handleSignupChange}
-              placeholder="Confirm Password"
-              required
-            />
+              <div className="role-grid">
+                <label className="radio-label">
+                  <input
+                    id="login-role-explorer"
+                    type="radio"
+                    name="role"
+                    value="explorer"
+                    checked={loginValues.role === 'explorer'}
+                    onChange={handleLoginChange}
+                  />
+                  Explorer
+                </label>
+                <label className="radio-label">
+                  <input
+                    id="login-role-guide"
+                    type="radio"
+                    name="role"
+                    value="guide"
+                    checked={loginValues.role === 'guide'}
+                    onChange={handleLoginChange}
+                  />
+                  Local Guide
+                </label>
+              </div>
 
-            <button type="submit" className="btn">Sign Up</button>
-            {signupStatus.message && (
-              <p className={`signup-status ${signupStatus.type}`}>
-                {signupStatus.message}
-              </p>
-            )}
-          </form>
-        </div>
+              <a href="#forgot" className="forgot-link">Forgot password?</a>
+              <button type="submit" className="btn solid">Sign In</button>
+            </form>
+          </div>
 
-        <div className="overlay-container">
-          <div className="overlay">
-            <div className="overlay-panel overlay-left">
-              <h2>Welcome back!</h2>
-              <p>To keep connected with us, please login with your personal info.</p>
-              <button className="btn transparent" onClick={() => setIsSignUpActive(false)}>
-                Sign In
-              </button>
-            </div>
-            <div className="overlay-panel overlay-right">
-              <h2>Hello, friend!</h2>
-              <p>Enter your personal details and start your journey with WanderSync.</p>
-              <button className="btn transparent" onClick={() => setIsSignUpActive(true)}>
-                Sign Up
-              </button>
+          <div className="form-container sign-up-container">
+            <form onSubmit={submitSignup} className="form">
+              <h2 className="form-title">Create account</h2>
+              <p className="form-subtitle">Use your email for registration</p>
+
+              <div className="input-grid-two">
+                <input
+                  id="signup-name"
+                  name="name"
+                  type="text"
+                  value={signupValues.name}
+                  onChange={handleSignupChange}
+                  placeholder="Name"
+                  required
+                />
+                <input
+                  id="signup-surname"
+                  name="surname"
+                  type="text"
+                  value={signupValues.surname}
+                  onChange={handleSignupChange}
+                  placeholder="Surname"
+                  required
+                />
+              </div>
+
+              <input
+                id="signup-email"
+                name="email"
+                type="email"
+                value={signupValues.email}
+                onChange={handleSignupChange}
+                placeholder="Email"
+                required
+              />
+              <input
+                id="signup-number"
+                name="number"
+                type="tel"
+                value={signupValues.number}
+                onChange={handleSignupChange}
+                placeholder="Phone number"
+                required
+              />
+              <input
+                id="signup-age"
+                name="age"
+                type="number"
+                min="12"
+                value={signupValues.age}
+                onChange={handleSignupChange}
+                placeholder="Age"
+                required
+              />
+              <input
+                id="signup-password"
+                name="password"
+                type="password"
+                value={signupValues.password}
+                onChange={handleSignupChange}
+                placeholder="Password"
+                required
+              />
+              <input
+                id="signup-confirm-password"
+                name="confirmPassword"
+                type="password"
+                value={signupValues.confirmPassword}
+                onChange={handleSignupChange}
+                placeholder="Confirm Password"
+                required
+              />
+
+              <button type="submit" className="btn">Sign Up</button>
+              {signupStatus.message && (
+                <p className={`signup-status ${signupStatus.type}`}>
+                  {signupStatus.message}
+                </p>
+              )}
+            </form>
+          </div>
+
+          <div className="overlay-container">
+            <div className="overlay">
+              <div className="overlay-panel overlay-left">
+                <h2>Hello, Chommie!</h2>
+                <p>If this is not the first time you're here, it means you're back for more. Sign in to see your next adventure </p>
+                <button className="btn transparent" onClick={() => setIsSignUpActive(false)}>
+                  Sign In
+                </button>
+              </div>
+              <div className="overlay-panel overlay-right">
+                <h2>Hello, Traveller</h2>
+                <p>If this is your first time on WanderSync, click Sign Up to join our community.</p>
+                <button className="btn transparent" onClick={() => setIsSignUpActive(true)}>
+                  Sign Up
+                </button>
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
     </div>

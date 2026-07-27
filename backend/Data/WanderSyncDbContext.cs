@@ -18,5 +18,6 @@ namespace backend.Data
         //Generic of DbSet is the model class that represents the table in the database
 
         public DbSet<backend.Models.User> Users { get; set; }
+        public DbSet<backend.Models.Profile> Profiles { get; set; }
     }
 }
