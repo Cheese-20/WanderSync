@@ -127,5 +127,36 @@ namespace backend.Controllers
                 return StatusCode(500, "Internal server error while fetching profile.");
             }
         }
+
+        [HttpGet("matches/{currentUserId}")]
+        public async Task<IActionResult> GetMatches(int currentUserId)
+        {
+            try
+            {
+                var matches = await _context.Profiles
+                    .Include(p => p.User)
+                    .Where(p => p.UserID != currentUserId)
+                    .Select(p => new
+                    {
+                        pID = p.PID,
+                        userID = p.UserID,
+                        firstName = p.User.FirstName,
+                        lastName = p.User.LastName,
+                        age = p.User.Age,
+                        profilePictureLink = p.ProfilePictureLink,
+                        interests = p.Interests,
+                        description = p.Description,
+                        location = p.Location
+                    })
+                    .ToListAsync();
+
+                return Ok(matches);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching matches");
+                return StatusCode(500, "Internal server error while fetching matches.");
+            }
+        }
     }
 }

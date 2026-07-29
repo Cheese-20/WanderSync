@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import logo from './assets/images/logo.png';
+import logo from '../assets/images/logo.png';
 
 function AuthForm() {
   const [isSignUpActive, setIsSignUpActive] = useState(false);
@@ -255,7 +255,7 @@ function AuthForm() {
                 </button>
               </div>
               <div className="overlay-panel overlay-right">
-                <h2>Hello, Traveller</h2>
+                <h2>Aweh, Traveller</h2>
                 <p>If this is your first time on WanderSync, click Sign Up to join our community.</p>
                 <button className="btn transparent" onClick={() => setIsSignUpActive(true)}>
                   Sign Up

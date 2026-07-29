@@ -1,0 +1,18 @@
+# Functionality
+
+## Core Features
+1. **Authentication**
+   - User registration (Explorer or Guide roles).
+   - User login and session management (JWT/Local Storage).
+2. **Dashboard / Home**
+   - Distinct views for Guides (`GuideHome.jsx`) and Explorers (`ExplorerHome.jsx`).
+3. **Discover**
+   - Explore various travel spots, guides, and locations.
+4. **Matching System**
+   - `Match.jsx` handles matching explorers with suitable guides based on preferences.
+   - Features a Tinder-style swiping card interface for intuitive accept/reject actions.
+   - Sidebar displays pending match requests for quick review.
+5. **Messaging**
+   - Built-in chat (`Messages.jsx`) for communication between Explorers and Guides.
+6. **Profiles**
+   - User profiles (`Profile.jsx`) to manage personal information and role-specific details.

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AuthForm from './AuthForm.jsx';
+import AuthForm from './pages/AuthForm.jsx';
 import ExplorerHome from './pages/ExplorerHome.jsx';
 import GuideHome from './pages/GuideHome.jsx';
 import Discover from './pages/Discover.jsx';
