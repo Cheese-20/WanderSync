@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
-using MySql.EntityFrameworkCore.Metadata;
+using Pomelo.EntityFrameworkCore.MySql.Metadata;
 
 #nullable disable
 
@@ -15,8 +15,7 @@ namespace backend.Migrations
                 name: "User",
                 columns: table => new
                 {
-                    userID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    userID = table.Column<int>(type: "int", nullable: false),
                     firstName = table.Column<string>(type: "longtext", nullable: false),
                     lastName = table.Column<string>(type: "longtext", nullable: false),
                     email = table.Column<string>(type: "longtext", nullable: false),
@@ -30,7 +29,7 @@ namespace backend.Migrations
                 {
                     table.PrimaryKey("PK_User", x => x.userID);
                 })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                .Annotation("MySql:CharSet", "utf8mb4");
         }
 
         /// <inheritdoc />
