@@ -91,6 +91,20 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Tours` (
+                `tourID` int NOT NULL AUTO_INCREMENT,
+                `guideID` int NOT NULL,
+                `title` varchar(100) NOT NULL,
+                `type` varchar(50) NOT NULL,
+                `description` longtext NOT NULL,
+                `date` datetime(6) NOT NULL,
+                `maxPeople` int NOT NULL,
+                PRIMARY KEY (`tourID`),
+                CONSTRAINT `FK_Tours_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
