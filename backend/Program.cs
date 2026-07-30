@@ -91,6 +91,21 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Message` (
+                `mID` int NOT NULL AUTO_INCREMENT,
+                `matchID` int NOT NULL,
+                `senderID` int NOT NULL,
+                `receiverID` int NOT NULL,
+                `textMessage` longtext NOT NULL,
+                `sentAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`mID`),
+                CONSTRAINT `FK_Message_Match` FOREIGN KEY (`matchID`) REFERENCES `Matches` (`matchID`) ON DELETE CASCADE,
+                CONSTRAINT `FK_Message_Sender` FOREIGN KEY (`senderID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
+                CONSTRAINT `FK_Message_Receiver` FOREIGN KEY (`receiverID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",

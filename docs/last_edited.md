@@ -13,3 +13,4 @@
 - **UI Tweaks**: Centered header in `Match.jsx` and updated Match Card to read `Job` from API. Updated `Profile.jsx` so users can edit their Job role.
 - **Bug Fix**: Updated `Program.cs` to execute raw SQL (`ALTER TABLE Profile ADD COLUMN job`) on startup to fix 500 Internal Server Errors, bypassing EF migrations.
 - **Feature (Match Tracking)**: Implemented `UserMatch` database model and tracking. Swiping right creates a "pending" match, or "accepted" if the other user already swiped right. Refactored pending requests sidebar to pull dynamically from the backend instead of using mock data.
+- **Feature (Messages)**: Created `Message` table and `MessageController.cs`. Users can now send messages strictly to mutually accepted matches. Redesigned `Messages.jsx` to feature a sidebar of active connections and a chat window sorted with the newest messages appearing at the top.
