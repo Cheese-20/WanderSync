@@ -3,6 +3,8 @@
 ## Use Case 1: User Registration
 **Actor:** New User (Explorer or Guide)
 
+**Trigger:** The user opens the application for the first time or clicks "Sign Up".
+
 **Preconditions:** 
 - The user has accessed the WanderSync web application but is not currently authenticated.
 
@@ -24,6 +26,8 @@
 
 ## Use Case 2: Explorer Matching with a Guide
 **Actor:** Explorer
+
+**Trigger:** The Explorer clicks on the "Match" tab in the navigation menu to find a guide.
 
 **Preconditions:**
 - The Explorer is registered and logged into the application.
@@ -48,6 +52,8 @@
 ## Use Case 3: Guide Managing Profile
 **Actor:** Guide
 
+**Trigger:** The Guide navigates to their profile page and decides to edit their information.
+
 **Preconditions:**
 - The Guide is registered and logged into the application.
 
@@ -68,6 +74,8 @@
 
 ## Use Case 4: Messaging
 **Actor:** Explorer and Guide
+
+**Trigger:** A user clicks on a chat notification or opens the "Messages" tab to communicate with a match.
 
 **Preconditions:**
 - Both users are authenticated.

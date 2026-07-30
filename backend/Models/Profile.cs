@@ -31,6 +31,9 @@ namespace backend.Models
         [Column("location")]
         public string? Location { get; set; }
 
+        [Column("job")]
+        public string? Job { get; set; }
+
         [ForeignKey("UserID")]
         public User User { get; set; }
     }
