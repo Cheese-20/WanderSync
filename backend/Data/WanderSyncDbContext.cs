@@ -19,5 +19,6 @@ namespace backend.Data
 
         public DbSet<backend.Models.User> Users { get; set; }
         public DbSet<backend.Models.Profile> Profiles { get; set; }
+        public DbSet<backend.Models.UserMatch> Matches { get; set; }
     }
 }

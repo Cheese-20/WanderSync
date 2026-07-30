@@ -77,13 +77,28 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Matches` (
+                `matchID` int NOT NULL AUTO_INCREMENT,
+                `requesterID` int NOT NULL,
+                `receiverID` int NOT NULL,
+                `commonInterests` longtext NULL,
+                `status` longtext NOT NULL,
+                `dateMatched` datetime(6) NOT NULL,
+                PRIMARY KEY (`matchID`),
+                CONSTRAINT `FK_Matches_Requester` FOREIGN KEY (`requesterID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
+                CONSTRAINT `FK_Matches_Receiver` FOREIGN KEY (`receiverID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `interests` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `description` longtext NULL;",
-            "ALTER TABLE `Profile` ADD COLUMN `location` longtext NULL;"
+            "ALTER TABLE `Profile` ADD COLUMN `location` longtext NULL;",
+            "ALTER TABLE `Profile` ADD COLUMN `job` longtext NULL;"
         };
 
         foreach (var sql in profileColumnSqls)
