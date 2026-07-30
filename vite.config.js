@@ -11,10 +11,8 @@ export default defineConfig({
     // and Vite forwards the request to the backend.
     proxy: {
       '/api': {
-        // Backend address where dotnet run is serving the API
-        target: 'https://localhost:7001',
+        target: 'http://localhost:5200',
         changeOrigin: true,
-        // Allow self-signed or developer certificates (do not use in production)
         secure: false
       }
     }

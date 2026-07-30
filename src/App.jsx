@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AuthForm from './AuthForm.jsx';
+import AuthForm from './pages/AuthForm.jsx';
 import ExplorerHome from './pages/ExplorerHome.jsx';
 import GuideHome from './pages/GuideHome.jsx';
 import Discover from './pages/Discover.jsx';
@@ -23,13 +23,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<AuthForm />} />
-        <Route path="/" element={<HomeRouter />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/home" element={<HomeRouter />} />
         <Route path="/discover" element={<Discover />} />
         <Route path="/match" element={<Match />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

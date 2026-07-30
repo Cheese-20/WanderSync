@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -10,9 +11,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(WanderSyncDbContext))]
-    partial class WanderSyncDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727211413_AddProfileTable")]
+    partial class AddProfileTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,24 +34,24 @@ namespace backend.Migrations
                         .HasColumnName("createdAt");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("description");
 
                     b.Property<string>("Interests")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("interests");
 
-                    b.Property<string>("Job")
-                        .HasColumnType("longtext")
-                        .HasColumnName("job");
-
                     b.Property<string>("Location")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("location");
 
-                    b.Property<string>("ProfilePictureLink")
+                    b.Property<string>("ProfilePictureLi")
+                        .IsRequired()
                         .HasColumnType("longtext")
-                        .HasColumnName("profilePictureLink");
+                        .HasColumnName("profilePictureLi");
 
                     b.Property<int>("UserID")
                         .HasColumnType("int")

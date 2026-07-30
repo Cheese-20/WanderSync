@@ -61,6 +61,13 @@ button {
   font-size: 0.95rem;
 }
 
+.logo-text-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
 .signin-signup-container {
   width: min(980px, 100%);
   min-height: 680px;
