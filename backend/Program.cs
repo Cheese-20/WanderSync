@@ -5,9 +5,9 @@ using DotNetEnv;
 using backend.Data;
 
 
-Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
+Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+
 
 //  Grab the connection string from environment or configuration (appsettings.json or environment)
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__WanderSyncDb");
