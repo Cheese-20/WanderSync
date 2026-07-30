@@ -10,6 +10,7 @@ export default function Profile() {
     firstName: '',
     lastName: '',
     email: '',
+    job: '',
     interests: '',
     description: '',
     profilePictureLink: '', // will store data URL or uploaded URL
@@ -66,6 +67,7 @@ export default function Profile() {
         setForm(f => ({
           ...f,
           interests: profile.interests || f.interests,
+          job: profile.job || f.job,
           description: profile.description || f.description,
           profilePictureLink: profile.profilePictureLink || f.profilePictureLink,
           location: profile.location || f.location,
@@ -118,6 +120,7 @@ export default function Profile() {
     let payload = {
       userID: null,
       profilePictureLink: form.profilePictureLink,
+      job: form.job,
       interests: form.interests,
       description: form.description,
       location: form.location,
@@ -187,6 +190,13 @@ export default function Profile() {
             <div className="field-group full-width">
               <label>Interests</label>
               <input name="interests" value={form.interests} onChange={handleInput} placeholder="e.g. hiking, food, surfing" />
+            </div>
+          </div>
+
+          <div className="field-row">
+            <div className="field-group full-width">
+              <label>Job Title</label>
+              <input name="job" value={form.job} onChange={handleInput} placeholder="e.g. Digital Nomad, Photographer" />
             </div>
           </div>
 

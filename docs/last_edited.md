@@ -8,3 +8,6 @@
 - **Documentation**: Expanded `use_case_narratives.md` to include preconditions, postconditions, and main flows.
 - **Feature (Match Page)**: Redesigned `Match.jsx` to include Tinder-style swiping cards, added `match.css` for styling, and created a Pending Requests sidebar.
 - **Backend**: Added `GetMatches` endpoint to `ProfileController.cs` to fetch users for the Match page.
+- **Documentation**: Added Triggers to `use_case_narratives.md`.
+- **Database / Backend**: Added `Job` column to `Profile` model and generated EF migrations. Mapped `Job` across all Profile API requests.
+- **UI Tweaks**: Centered header in `Match.jsx` and updated Match Card to read `Job` from API. Updated `Profile.jsx` so users can edit their Job role.

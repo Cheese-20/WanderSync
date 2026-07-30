@@ -28,6 +28,7 @@ namespace backend.Controllers
             public string? Interests { get; set; }
             public string? Description { get; set; }
             public string? Location { get; set; }
+            public string? Job { get; set; }
             public string? CreatedAt { get; set; }
         }
 
@@ -67,6 +68,7 @@ namespace backend.Controllers
                     existingProfile.Interests = request.Interests ?? string.Empty;
                     existingProfile.Description = request.Description ?? string.Empty;
                     existingProfile.Location = request.Location ?? string.Empty;
+                    existingProfile.Job = request.Job ?? string.Empty;
                     existingProfile.CreatedAt = createdAt;
                     _context.Profiles.Update(existingProfile);
                 }
@@ -79,6 +81,7 @@ namespace backend.Controllers
                         Interests = request.Interests ?? string.Empty,
                         Description = request.Description ?? string.Empty,
                         Location = request.Location ?? string.Empty,
+                        Job = request.Job ?? string.Empty,
                         CreatedAt = createdAt
                     };
                     _context.Profiles.Add(profile);
@@ -118,6 +121,7 @@ namespace backend.Controllers
                     interests = profile.Interests,
                     description = profile.Description,
                     location = profile.Location,
+                    job = profile.Job,
                     createdAt = profile.CreatedAt.ToString("yyyy-MM-dd")
                 });
             }
@@ -146,7 +150,8 @@ namespace backend.Controllers
                         profilePictureLink = p.ProfilePictureLink,
                         interests = p.Interests,
                         description = p.Description,
-                        location = p.Location
+                        location = p.Location,
+                        job = p.Job
                     })
                     .ToListAsync();
 
