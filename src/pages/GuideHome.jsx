@@ -13,9 +13,9 @@ export default function GuideHome() {
       </header>
 
       <section className="guide-actions">
-        <div className="panel">Upcoming Bookings</div>
-        <div className="panel">Quick Actions</div>
-        <Link to="/activities" className="panel" style={{ textDecoration: 'none', color: 'inherit', display: 'block', textAlign: 'center', background: '#007bff', color: 'white' }}>
+        <div className="panel secondary-panel">Upcoming Bookings</div>
+        <div className="panel secondary-panel">Quick Actions</div>
+        <Link to="/activities" className="panel primary-panel">
           Manage Activities
         </Link>
       </section>
