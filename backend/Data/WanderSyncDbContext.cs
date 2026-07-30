@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using backend.Models;
 
 namespace backend.Data
 {
@@ -17,6 +18,7 @@ namespace backend.Data
         //To add database tables below
         //Generic of DbSet is the model class that represents the table in the database
 
-        public DbSet<backend.Models.User> Users { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
     }
 }
