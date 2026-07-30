@@ -6,25 +6,24 @@ import '../styles/match.css';
 export default function Match() {
   const [matches, setMatches] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [pendingRequests, setPendingRequests] = useState([
-    // Mock pending requests since we don't have this in the DB yet
-    { id: 101, name: 'Alice, 26', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop' },
-    { id: 102, name: 'David, 31', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop' }
-  ]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [animatingDir, setAnimatingDir] = useState(null); // 'left' or 'right'
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         const userJson = localStorage.getItem('user');
-        let currentUserId = 0;
+        let userId = 0;
         if (userJson) {
           const user = JSON.parse(userJson);
-          currentUserId = user.id || user.userID || 0;
+          userId = user.id || user.userID || 0;
+          setCurrentUserId(userId);
         }
         
-        if (currentUserId) {
-          const response = await axios.get(`/api/profile/matches/${currentUserId}`);
+        if (userId) {
+          // Fetch matches
+          const response = await axios.get(`/api/profile/matches/${userId}`);
           if (response.data && response.data.length > 0) {
             setMatches(response.data);
           } else {
@@ -39,7 +38,26 @@ export default function Match() {
       }
     };
     
+    const fetchPending = async () => {
+      try {
+        const userJson = localStorage.getItem('user');
+        if (userJson) {
+          const user = JSON.parse(userJson);
+          const userId = user.id || user.userID || 0;
+          if (userId) {
+            const res = await axios.get(`/api/profile/pending/${userId}`);
+            if (res.data) {
+              setPendingRequests(res.data);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch pending requests', err);
+      }
+    };
+
     fetchMatches();
+    fetchPending();
   }, []);
 
   const getMockMatches = () => [
@@ -65,11 +83,26 @@ export default function Match() {
     }
   ];
 
-  const handleAction = (direction) => {
+  const handleAction = async (direction) => {
     if (currentIndex >= matches.length) return;
     
+    const currentMatch = matches[currentIndex];
     setAnimatingDir(direction);
     
+    // Fire off API request to log the swipe
+    if (currentUserId && currentMatch) {
+      try {
+        await axios.post('/api/profile/swipe', {
+          requesterID: currentUserId,
+          receiverID: currentMatch.userID,
+          status: direction === 'right' ? 'accepted' : 'rejected',
+          commonInterests: currentMatch.interests
+        });
+      } catch (err) {
+        console.error("Error saving swipe action:", err);
+      }
+    }
+
     // Wait for animation to finish before moving to next card
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);

@@ -163,5 +163,101 @@ namespace backend.Controllers
                 return StatusCode(500, "Internal server error while fetching matches.");
             }
         }
+
+        public class SwipeRequest
+        {
+            public int RequesterID { get; set; }
+            public int ReceiverID { get; set; }
+            public string Status { get; set; } = string.Empty;
+            public string? CommonInterests { get; set; }
+        }
+
+        [HttpPost("swipe")]
+        public async Task<IActionResult> Swipe([FromBody] SwipeRequest request)
+        {
+            try
+            {
+                var reverseMatch = await _context.Matches
+                    .FirstOrDefaultAsync(m => m.RequesterID == request.ReceiverID && m.ReceiverID == request.RequesterID);
+
+                if (request.Status == "accepted")
+                {
+                    if (reverseMatch != null && reverseMatch.Status == "pending")
+                    {
+                        reverseMatch.Status = "accepted";
+                        _context.Matches.Update(reverseMatch);
+                        
+                        var match = new backend.Models.UserMatch {
+                            RequesterID = request.RequesterID,
+                            ReceiverID = request.ReceiverID,
+                            CommonInterests = request.CommonInterests,
+                            Status = "accepted",
+                            DateMatched = DateTime.UtcNow
+                        };
+                        _context.Matches.Add(match);
+                    }
+                    else
+                    {
+                        var match = new backend.Models.UserMatch {
+                            RequesterID = request.RequesterID,
+                            ReceiverID = request.ReceiverID,
+                            CommonInterests = request.CommonInterests,
+                            Status = "pending",
+                            DateMatched = DateTime.UtcNow
+                        };
+                        _context.Matches.Add(match);
+                    }
+                }
+                else
+                {
+                    var match = new backend.Models.UserMatch {
+                        RequesterID = request.RequesterID,
+                        ReceiverID = request.ReceiverID,
+                        CommonInterests = request.CommonInterests,
+                        Status = "rejected",
+                        DateMatched = DateTime.UtcNow
+                    };
+                    _context.Matches.Add(match);
+                    
+                    if (reverseMatch != null && reverseMatch.Status == "pending")
+                    {
+                         reverseMatch.Status = "rejected";
+                         _context.Matches.Update(reverseMatch);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing swipe");
+                return StatusCode(500, "Internal server error while processing swipe.");
+            }
+        }
+
+        [HttpGet("pending/{userId}")]
+        public async Task<IActionResult> GetPendingRequests(int userId)
+        {
+            try
+            {
+                var pending = await (from m in _context.Matches
+                                     join u in _context.Users on m.RequesterID equals u.UserID
+                                     join p in _context.Profiles on u.UserID equals p.User.UserID
+                                     where m.ReceiverID == userId && m.Status == "pending"
+                                     select new {
+                                         id = m.RequesterID,
+                                         name = u.FirstName,
+                                         image = p.ProfilePictureLink ?? "https://via.placeholder.com/150",
+                                         commonInterests = m.CommonInterests
+                                     }).ToListAsync();
+                return Ok(pending);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching pending requests");
+                return StatusCode(500, "Internal server error while fetching pending requests.");
+            }
+        }
     }
 }

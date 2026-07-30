@@ -15,4 +15,4 @@
 5. **Messaging**
    - Built-in chat (`Messages.jsx`) for communication between Explorers and Guides.
 6. **Profiles**
-   - User profiles (`Profile.jsx`) to manage personal information and role-specific details.
+   - User profiles (`Profile.jsx`) allow users to manage personal information (Bio, Interests, Location, and Job Title) and role-specific details.
