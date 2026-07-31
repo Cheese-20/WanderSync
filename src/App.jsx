@@ -12,7 +12,7 @@ function HomeRouter() {
   const userJson = localStorage.getItem('user');
   if (!userJson) return <Navigate to="/login" />;
   let user = {};
-  try { user = JSON.parse(userJson); } catch(e) {}
+  try { user = JSON.parse(userJson); } catch (e) { }
   const role = (user.role || '').toLowerCase();
   if (role.includes('guide')) return <GuideHome />;
   return <ExplorerHome />;

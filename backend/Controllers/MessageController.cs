@@ -34,20 +34,29 @@ namespace backend.Controllers
 
                 var contactIds = matches.Select(m => m.RequesterID == userId ? m.ReceiverID : m.RequesterID).ToList();
 
-                var contacts = await (from u in _context.Users
-                                      join p in _context.Profiles on u.UserID equals p.User.UserID
-                                      where contactIds.Contains(u.UserID)
-                                      select new
-                                      {
-                                          userID = u.UserID,
-                                          firstName = u.FirstName,
-                                          lastName = u.LastName,
-                                          profilePictureLink = p.ProfilePictureLink ?? "https://via.placeholder.com/150",
-                                          job = p.Job,
-                                          // Find the specific matchID for this pairing
-                                          matchID = matches.First(m => (m.RequesterID == userId && m.ReceiverID == u.UserID) || 
-                                                                       (m.ReceiverID == userId && m.RequesterID == u.UserID)).MatchID
-                                      }).ToListAsync();
+                var users = await (from u in _context.Users
+                                   join p in _context.Profiles on u.UserID equals p.UserID into profiles
+                                   from p in profiles.DefaultIfEmpty()
+                                   where contactIds.Contains(u.UserID)
+                                   select new
+                                   {
+                                       u.UserID,
+                                       u.FirstName,
+                                       u.LastName,
+                                       ProfilePictureLink = p != null ? p.ProfilePictureLink : null,
+                                       Job = p != null ? p.Job : null
+                                   }).ToListAsync();
+
+                var contacts = users.Select(u => new
+                {
+                    userID = u.UserID,
+                    firstName = u.FirstName,
+                    lastName = u.LastName,
+                    profilePictureLink = u.ProfilePictureLink ?? "https://via.placeholder.com/150",
+                    job = u.Job,
+                    matchID = matches.First(m => (m.RequesterID == userId && m.ReceiverID == u.UserID) || 
+                                                 (m.ReceiverID == userId && m.RequesterID == u.UserID)).MatchID
+                }).ToList();
 
                 return Ok(contacts);
             }

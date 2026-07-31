@@ -79,7 +79,7 @@
 
 **Preconditions:**
 - Both users are authenticated.
-- The Explorer and Guide have previously connected or matched.
+- A new chat will start if the status is "accepted" in the Matches table between the Explorer and Guide.
 
 **Main Flow (How it is accomplished):**
 1. Either user navigates to the 'Messages' page (`/messages`).
@@ -87,10 +87,10 @@
 3. The user selects a specific chat thread with their counterpart.
 4. The system loads the conversation history.
 5. The user types a message in the chat input and clicks "Send".
-6. The frontend sends a POST request (or emits a WebSocket event) containing the message content and recipient ID to the backend.
-7. The backend saves the message to the database and broadcasts the message to the recipient in real-time (or queues it for when they next poll/load the page).
-8. The frontend updates the chat UI to display the newly sent message.
+6. The frontend sends a POST request containing the message content to the backend.
+7. The backend saves the message to the database (collecting `mID`, `matchID`, `senderID`, `receiverID`, `textMessage`, and `sentAt`).
+8. The frontend updates the chat UI to display the newly sent message at the top.
 
 **Postconditions:**
-- The message is securely stored in the database.
+- The message is securely stored in the database in the `Message` table as shown in the schema.
 - The recipient receives the message in their chat interface.

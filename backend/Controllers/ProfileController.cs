@@ -137,9 +137,16 @@ namespace backend.Controllers
         {
             try
             {
+                // Filter out profiles the user has already interacted with (any match record exists)
+                var interactedUserIds = await _context.Matches
+                    .Where(m => m.RequesterID == currentUserId || m.ReceiverID == currentUserId)
+                    .Select(m => m.RequesterID == currentUserId ? m.ReceiverID : m.RequesterID)
+                    .Distinct()
+                    .ToListAsync();
+
                 var matches = await _context.Profiles
                     .Include(p => p.User)
-                    .Where(p => p.UserID != currentUserId)
+                    .Where(p => p.UserID != currentUserId && !interactedUserIds.Contains(p.UserID))
                     .Select(p => new
                     {
                         pID = p.PID,
@@ -243,12 +250,13 @@ namespace backend.Controllers
             {
                 var pending = await (from m in _context.Matches
                                      join u in _context.Users on m.RequesterID equals u.UserID
-                                     join p in _context.Profiles on u.UserID equals p.User.UserID
+                                     join p in _context.Profiles on u.UserID equals p.UserID into profiles
+                                     from p in profiles.DefaultIfEmpty()
                                      where m.ReceiverID == userId && m.Status == "pending"
                                      select new {
                                          id = m.RequesterID,
                                          name = u.FirstName,
-                                         image = p.ProfilePictureLink ?? "https://via.placeholder.com/150",
+                                         image = p != null && p.ProfilePictureLink != null ? p.ProfilePictureLink : "https://via.placeholder.com/150",
                                          commonInterests = m.CommonInterests
                                      }).ToListAsync();
                 return Ok(pending);
