@@ -31,6 +31,26 @@ export default function Activities() {
     navigate(`/edit-activity/${tourId}`);
   };
 
+  const handleDelete = (tourId) => {
+    if (window.confirm("Are you sure you want to delete this activity?")) {
+      fetch(`http://localhost:5200/api/tours/${tourId}`, {
+        method: 'DELETE',
+      })
+      .then(res => {
+        if (res.ok) {
+          window.alert("Deletion Successful");
+          setActivities(activities.filter(a => a.tourId !== tourId));
+        } else {
+          window.alert("Failed to delete activity.");
+        }
+      })
+      .catch(err => {
+        console.error('Error deleting activity:', err);
+        window.alert("An error occurred while deleting the activity.");
+      });
+    }
+  };
+
   return (
     <div className="guide-page">
       <NavBar />
@@ -39,22 +59,29 @@ export default function Activities() {
         <p>Manage the tours you offer</p>
       </header>
       
-      <section className="activities-list" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+      <section className="activities-list-container">
         {activities.length === 0 ? (
           <p>No activities found.</p>
         ) : (
           activities.map(activity => (
-            <div key={activity.tourId} className="panel" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
+            <div key={activity.tourId} className="panel activity-item">
+              <div className="activity-details">
                 <h3>{activity.title}</h3>
                 <p>{activity.type} - {new Date(activity.date).toLocaleDateString()}</p>
                 <p>Max People: {activity.maxPeople}</p>
               </div>
-              <button 
-                onClick={() => handleEdit(activity.tourId)}
-                style={{ padding: '0.5rem 1rem', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                Edit Activity
-              </button>
+              <div className="activity-actions">
+                <button 
+                  onClick={() => handleEdit(activity.tourId)}
+                  className="btn-edit">
+                  Edit Activity
+                </button>
+                <button 
+                  onClick={() => handleDelete(activity.tourId)}
+                  className="btn-delete">
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         )}

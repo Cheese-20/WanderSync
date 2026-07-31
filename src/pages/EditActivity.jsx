@@ -77,30 +77,30 @@ export default function EditActivity() {
         <h1>Edit Activity</h1>
       </header>
       
-      <section style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-        {message && <div style={{ padding: '1rem', background: '#d4edda', color: '#155724', marginBottom: '1rem' }}>{message}</div>}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <section className="edit-activity-container">
+        {message && <div className="alert-success">{message}</div>}
+        <form onSubmit={handleSubmit} className="edit-activity-form">
           <div>
             <label>Title</label><br />
-            <input type="text" name="title" value={formData.title} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem' }} />
+            <input type="text" name="title" value={formData.title} onChange={handleChange} required className="form-input" />
           </div>
           <div>
             <label>Type</label><br />
-            <input type="text" name="type" value={formData.type} onChange={handleChange} style={{ width: '100%', padding: '0.5rem' }} />
+            <input type="text" name="type" value={formData.type} onChange={handleChange} className="form-input" />
           </div>
           <div>
             <label>Description</label><br />
-            <textarea name="description" value={formData.description} onChange={handleChange} style={{ width: '100%', padding: '0.5rem', minHeight: '100px' }}></textarea>
+            <textarea name="description" value={formData.description} onChange={handleChange} className="form-input"></textarea>
           </div>
           <div>
             <label>Date</label><br />
-            <input type="date" name="date" value={formData.date} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem' }} />
+            <input type="date" name="date" value={formData.date} onChange={handleChange} required className="form-input" />
           </div>
           <div>
             <label>Max People</label><br />
-            <input type="number" name="maxPeople" value={formData.maxPeople} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem' }} />
+            <input type="number" name="maxPeople" value={formData.maxPeople} onChange={handleChange} required className="form-input" />
           </div>
-          <button type="submit" style={{ padding: '0.75rem', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem' }}>
+          <button type="submit" className="btn-submit">
             Save Changes
           </button>
         </form>
