@@ -72,6 +72,22 @@ namespace backend.Controllers
             return Ok(new { message = "Activity updated successfully!" });
         }
 
+        // DELETE: api/Tours/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTour(int id)
+        {
+            var tour = await _context.Tours.FindAsync(id);
+            if (tour == null)
+            {
+                return NotFound();
+            }
+
+            _context.Tours.Remove(tour);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Activity deleted successfully!" });
+        }
+
         private bool TourExists(int id)
         {
             return _context.Tours.Any(e => e.TourId == id);
