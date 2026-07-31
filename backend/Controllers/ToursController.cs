@@ -1,0 +1,80 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using backend.Data;
+using backend.Models;
+
+namespace backend.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ToursController : ControllerBase
+    {
+        private readonly WanderSyncDbContext _context;
+
+        public ToursController(WanderSyncDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Tours/guide/5
+        [HttpGet("guide/{guideId}")]
+        public async Task<ActionResult<IEnumerable<Tour>>> GetToursByGuide(int guideId)
+        {
+            return await _context.Tours.Where(t => t.GuideId == guideId).ToListAsync();
+        }
+
+        // GET: api/Tours/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Tour>> GetTour(int id)
+        {
+            var tour = await _context.Tours.FindAsync(id);
+
+            if (tour == null)
+            {
+                return NotFound();
+            }
+
+            return tour;
+        }
+
+        // PUT: api/Tours/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutTour(int id, Tour tour)
+        {
+            if (id != tour.TourId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(tour).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!TourExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Ok(new { message = "Activity updated successfully!" });
+        }
+
+        private bool TourExists(int id)
+        {
+            return _context.Tours.Any(e => e.TourId == id);
+        }
+    }
+}

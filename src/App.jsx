@@ -7,6 +7,8 @@ import Match from './pages/Match.jsx';
 import ExplorePage from './pages/ExplorePage.jsx';
 import Messages from './pages/Messages.jsx';
 import Profile from './pages/Profile.jsx';
+import Activities from './pages/Activities.jsx';
+import EditActivity from './pages/EditActivity.jsx';
 
 function HomeRouter() {
   const userJson = localStorage.getItem('user');
@@ -30,6 +32,8 @@ function App() {
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/edit-activity/:id" element={<EditActivity />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

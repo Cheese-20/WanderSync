@@ -5,9 +5,9 @@ using DotNetEnv;
 using backend.Data;
 
 
-Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
+Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+
 
 //  Grab the connection string from environment or configuration (appsettings.json or environment)
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__WanderSyncDb");
@@ -88,6 +88,20 @@ using (var scope = app.Services.CreateScope())
                 PRIMARY KEY (`matchID`),
                 CONSTRAINT `FK_Matches_Requester` FOREIGN KEY (`requesterID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
                 CONSTRAINT `FK_Matches_Receiver` FOREIGN KEY (`receiverID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Tours` (
+                `tourID` int NOT NULL AUTO_INCREMENT,
+                `guideID` int NOT NULL,
+                `title` varchar(100) NOT NULL,
+                `type` varchar(50) NOT NULL,
+                `description` longtext NOT NULL,
+                `date` datetime(6) NOT NULL,
+                `maxPeople` int NOT NULL,
+                PRIMARY KEY (`tourID`),
+                CONSTRAINT `FK_Tours_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
