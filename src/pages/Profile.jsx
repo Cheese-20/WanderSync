@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 
 export default function Profile() {
+  const locationHook = useLocation();
   const [activeTab, setActiveTab] = useState('info');
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -62,6 +63,14 @@ export default function Profile() {
       }
     } catch (e) {}
   }, []);
+
+  useEffect(() => {
+    if (locationHook.state && locationHook.state.message) {
+      setStatusModal({ open: true, success: false, message: locationHook.state.message });
+      // Clear the state so the message doesn't persist on subsequent reloads
+      window.history.replaceState({}, document.title);
+    }
+  }, [locationHook.state]);
 
   useEffect(() => {
     if (activeTab === 'bookings') {
@@ -139,6 +148,18 @@ export default function Profile() {
 
     if (!form.profilePictureLink) {
       setStatusModal({ open: true, success: false, message: 'Profile picture is required to save your profile.' });
+      return;
+    }
+    if (!form.interests || form.interests.trim() === '') {
+      setStatusModal({ open: true, success: false, message: 'Interests are required to save your profile.' });
+      return;
+    }
+    if (!form.description || form.description.trim() === '') {
+      setStatusModal({ open: true, success: false, message: 'Bio/Description is required to save your profile.' });
+      return;
+    }
+    if (!form.location || form.location.trim() === '') {
+      setStatusModal({ open: true, success: false, message: 'Location is required to save your profile.' });
       return;
     }
 
