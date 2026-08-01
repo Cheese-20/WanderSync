@@ -9,6 +9,7 @@ export default function Match() {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [animatingDir, setAnimatingDir] = useState(null); // 'left' or 'right'
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserInterests, setCurrentUserInterests] = useState([]);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -22,6 +23,17 @@ export default function Match() {
         }
 
         if (userId) {
+          // Fetch current user profile to get their interests for comparison
+          try {
+            const profileRes = await axios.get(`/api/profile/${userId}`);
+            if (profileRes.data && profileRes.data.interests) {
+              const userInterests = profileRes.data.interests.split(',').map(i => i.trim().toLowerCase());
+              setCurrentUserInterests(userInterests);
+            }
+          } catch (e) {
+            console.warn("Could not fetch user profile for interests");
+          }
+
           // Fetch matches
           const response = await axios.get(`/api/profile/matches/${userId}`);
           if (response.data && response.data.length > 0) {
@@ -115,6 +127,53 @@ export default function Match() {
 
   const currentMatch = matches[currentIndex];
 
+  const handleAcceptPending = async (e, req) => {
+    e.stopPropagation();
+    if (!currentUserId) return;
+    try {
+      await axios.post('/api/profile/swipe', {
+        requesterID: currentUserId,
+        receiverID: req.id,
+        status: 'accepted',
+        commonInterests: req.commonInterests
+      });
+      setPendingRequests(prev => prev.filter(p => p.id !== req.id));
+    } catch (err) {
+      console.error("Error accepting pending request", err);
+    }
+  };
+
+  const handleRejectPending = async (e, req) => {
+    e.stopPropagation();
+    if (!currentUserId) return;
+    try {
+      await axios.post('/api/profile/swipe', {
+        requesterID: currentUserId,
+        receiverID: req.id,
+        status: 'rejected',
+        commonInterests: req.commonInterests
+      });
+      setPendingRequests(prev => prev.filter(p => p.id !== req.id));
+    } catch (err) {
+      console.error("Error rejecting pending request", err);
+    }
+  };
+
+  const handleViewPending = (id) => {
+    const targetIdx = matches.findIndex(m => m.userID === id);
+    if (targetIdx !== -1) {
+      setCurrentIndex(targetIdx);
+    }
+  };
+
+  // Calculate shared interests
+  let currentMatchInterests = [];
+  let sharedInterestsCount = 0;
+  if (currentMatch) {
+    currentMatchInterests = currentMatch.interests ? currentMatch.interests.split(',').map(i => i.trim()) : ['Travel'];
+    sharedInterestsCount = currentMatchInterests.filter(i => currentUserInterests.includes(i.toLowerCase())).length;
+  }
+
   return (
     <div className="match-page">
       <NavBar />
@@ -131,11 +190,11 @@ export default function Match() {
             <h3>Pending Requests</h3>
             <div className="pending-list">
               {pendingRequests.map(req => (
-                <div key={req.id} className="pending-item">
+                <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)} style={{cursor: 'pointer'}}>
                   <img src={req.image} alt={req.name} className="pending-img" />
                   <span className="pending-name">{req.name}</span>
-                  <button className="pending-btn accept">✓</button>
-                  <button className="pending-btn reject">✕</button>
+                  <button className="pending-btn accept" onClick={(e) => handleAcceptPending(e, req)}>✓</button>
+                  <button className="pending-btn reject" onClick={(e) => handleRejectPending(e, req)}>✕</button>
                 </div>
               ))}
               {pendingRequests.length === 0 && <p className="no-pending">No pending requests</p>}
@@ -149,7 +208,7 @@ export default function Match() {
                 <div className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}>
                   <div className="card-image-section" style={{ backgroundImage: `url(${currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'})` }}>
                     <div className="shared-interests-badge">
-                      {Math.floor(Math.random() * 3) + 1} Shared interests
+                      {sharedInterestsCount} Shared interests
                     </div>
                     <div className="card-overlay">
                       <h2>{currentMatch.firstName} {currentMatch.lastName}, {currentMatch.age}</h2>
@@ -163,11 +222,14 @@ export default function Match() {
                     <div className="interests-section">
                       <h4>Interests</h4>
                       <div className="interests-tags">
-                        {(currentMatch.interests ? currentMatch.interests.split(',') : ['Travel']).map((interest, idx) => (
-                          <span key={idx} className={`interest-tag ${idx < 2 ? 'primary' : 'secondary'}`}>
-                            {interest.trim()}
-                          </span>
-                        ))}
+                        {currentMatchInterests.map((interest, idx) => {
+                          const isShared = currentUserInterests.includes(interest.toLowerCase());
+                          return (
+                            <span key={idx} className={`interest-tag ${isShared ? 'shared' : 'unshared'}`}>
+                              {interest}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
