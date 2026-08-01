@@ -92,17 +92,16 @@ using (var scope = app.Services.CreateScope())
         ");
 
         context.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS `Message` (
-                `mID` int NOT NULL AUTO_INCREMENT,
-                `matchID` int NOT NULL,
-                `senderID` int NOT NULL,
-                `receiverID` int NOT NULL,
-                `textMessage` longtext NOT NULL,
-                `sentAt` datetime(6) NOT NULL,
-                PRIMARY KEY (`mID`),
-                CONSTRAINT `FK_Message_Match` FOREIGN KEY (`matchID`) REFERENCES `Matches` (`matchID`) ON DELETE CASCADE,
-                CONSTRAINT `FK_Message_Sender` FOREIGN KEY (`senderID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
-                CONSTRAINT `FK_Message_Receiver` FOREIGN KEY (`receiverID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            CREATE TABLE IF NOT EXISTS `Tours` (
+                `tourID` int NOT NULL AUTO_INCREMENT,
+                `guideID` int NOT NULL,
+                `title` varchar(100) NOT NULL,
+                `type` varchar(50) NOT NULL,
+                `description` longtext NOT NULL,
+                `date` datetime(6) NOT NULL,
+                `maxPeople` int NOT NULL,
+                PRIMARY KEY (`tourID`),
+                CONSTRAINT `FK_Tours_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 

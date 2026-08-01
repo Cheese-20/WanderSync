@@ -200,32 +200,18 @@ export default function Profile() {
   return (
     <div className="profile-page">
       <NavBar />
-      <main className="page" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+      <main className="page profile-container">
         <h2>User Profile</h2>
         
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
+        <div className="profile-tabs">
           <button 
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              cursor: 'pointer',
-              fontSize: '1.1rem',
-              fontWeight: activeTab === 'info' ? 'bold' : 'normal',
-              color: activeTab === 'info' ? '#007BFF' : '#333'
-            }}
+            className={`tab-button ${activeTab === 'info' ? 'active' : ''}`}
             onClick={() => setActiveTab('info')}
           >
             Profile Info
           </button>
           <button 
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              cursor: 'pointer',
-              fontSize: '1.1rem',
-              fontWeight: activeTab === 'bookings' ? 'bold' : 'normal',
-              color: activeTab === 'bookings' ? '#007BFF' : '#333'
-            }}
+            className={`tab-button ${activeTab === 'bookings' ? 'active' : ''}`}
             onClick={() => setActiveTab('bookings')}
           >
             Bookings
@@ -242,7 +228,7 @@ export default function Profile() {
                   <div className="image-placeholder" />
                 )}
                 <div className="profile-photo-text">Change Photo</div>
-                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFileChange} />
+                <input ref={fileRef} type="file" accept="image/*" className="hidden-file-input" onChange={onFileChange} />
               </div>
             </div>
 
@@ -311,36 +297,21 @@ export default function Profile() {
             {bookings.length === 0 ? (
               <p>You have no bookings yet.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="bookings-list">
                 {bookings.map(booking => (
                   <div 
                     key={booking.bookingID} 
                     onClick={() => setSelectedBooking(booking)}
-                    style={{
-                      border: '1px solid #ddd',
-                      borderRadius: '8px',
-                      padding: '1.5rem',
-                      cursor: 'pointer',
-                      transition: 'box-shadow 0.2s',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)'}
-                    onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)'}
+                    className="booking-item"
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h4 style={{ margin: '0' }}>Booking #{booking.bookingID}</h4>
-                      <span style={{ 
-                        padding: '0.25rem 0.5rem', 
-                        borderRadius: '4px', 
-                        backgroundColor: booking.status === 'Confirmed' ? '#d4edda' : '#fff3cd',
-                        color: booking.status === 'Confirmed' ? '#155724' : '#856404',
-                        fontSize: '0.9rem'
-                      }}>
+                    <div className="booking-header">
+                      <h4 className="booking-title">Booking #{booking.bookingID}</h4>
+                      <span className={`booking-status ${booking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
                         {booking.status}
                       </span>
                     </div>
-                    <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>Type: {booking.bookingType}</p>
-                    <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
+                    <p className="booking-detail-text">Type: {booking.bookingType}</p>
+                    <p className="booking-detail-text">
                       Date: {new Date(booking.bookingDate).toLocaleDateString()}
                     </p>
                   </div>
@@ -352,83 +323,55 @@ export default function Profile() {
 
         {/* Modal for detailed booking view */}
         {selectedBooking && (
-          <div style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{ 
-              background: '#fff', 
-              padding: '2rem', 
-              borderRadius: '12px', 
-              width: '90%', 
-              maxWidth: '500px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h3 style={{ margin: 0 }}>Booking Details</h3>
+          <div className="booking-modal-overlay">
+            <div className="booking-modal-content">
+              <div className="booking-modal-header">
+                <h3 className="booking-modal-title">Booking Details</h3>
                 <button 
                   onClick={() => setSelectedBooking(null)} 
-                  style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    fontSize: '1.5rem', 
-                    cursor: 'pointer',
-                    lineHeight: 1 
-                  }}
+                  className="booking-modal-close"
                 >
                   &times;
                 </button>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr' }}>
-                  <strong style={{ color: '#555' }}>Booking ID:</strong>
+              <div className="booking-modal-body">
+                <div className="booking-modal-row">
+                  <strong className="booking-modal-label">Booking ID:</strong>
                   <span>{selectedBooking.bookingID}</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr' }}>
-                  <strong style={{ color: '#555' }}>Status:</strong>
-                  <span style={{ fontWeight: 'bold', color: selectedBooking.status === 'Confirmed' ? '#28a745' : '#ffc107' }}>
+                <div className="booking-modal-row">
+                  <strong className="booking-modal-label">Status:</strong>
+                  <span className={`booking-status ${selectedBooking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
                     {selectedBooking.status}
                   </span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr' }}>
-                  <strong style={{ color: '#555' }}>Type:</strong>
+                <div className="booking-modal-row">
+                  <strong className="booking-modal-label">Type:</strong>
                   <span>{selectedBooking.bookingType}</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr' }}>
-                  <strong style={{ color: '#555' }}>Date:</strong>
+                <div className="booking-modal-row">
+                  <strong className="booking-modal-label">Date:</strong>
                   <span>{new Date(selectedBooking.bookingDate).toLocaleString()}</span>
                 </div>
                 {selectedBooking.tourID !== 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr' }}>
-                    <strong style={{ color: '#555' }}>Tour ID:</strong>
+                  <div className="booking-modal-row">
+                    <strong className="booking-modal-label">Tour ID:</strong>
                     <span>{selectedBooking.tourID}</span>
                   </div>
                 )}
                 {selectedBooking.curatedSpotID !== 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr' }}>
-                    <strong style={{ color: '#555' }}>Curated Spot ID:</strong>
+                  <div className="booking-modal-row">
+                    <strong className="booking-modal-label">Curated Spot ID:</strong>
                     <span>{selectedBooking.curatedSpotID}</span>
                   </div>
                 )}
               </div>
               
-              <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+              <div className="booking-modal-footer">
                 <button 
                   onClick={() => setSelectedBooking(null)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#007BFF',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
+                  className="booking-modal-btn"
                 >
                   Close
                 </button>

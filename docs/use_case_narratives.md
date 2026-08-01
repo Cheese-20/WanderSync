@@ -94,3 +94,27 @@
 **Postconditions:**
 - The message is securely stored in the database in the `Message` table as shown in the schema.
 - The recipient receives the message in their chat interface.
+
+---
+
+## Use Case 5: Delete Activity (D300)
+**Actor:** Guide
+
+**Trigger:** The Guide selects the delete option in the activity dashboard for a specific activity.
+
+**Preconditions:**
+- The Guide is registered and logged into the application.
+- The Guide has at least one active activity listed.
+
+**Main Flow (How it is accomplished):**
+1. The Guide navigates to the 'Activity Dashboard'.
+2. The Guide selects the Delete option on a specific activity listing.
+3. The frontend system displays a warning confirmation dialog preventing accidental deletion.
+4. The Guide confirms the deletion request.
+5. The frontend sends a DELETE request to the backend API specifying the activity ID.
+6. The backend validates the request, removes the activity from the database, and responds with a success status.
+7. The frontend removes the listing from the platform and displays a "Deletion Successful" message.
+
+**Postconditions:**
+- The activity is permanently removed from the database and the list of activities.
+- A confirmation message is displayed to the Guide.
