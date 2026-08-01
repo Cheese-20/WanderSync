@@ -21,7 +21,7 @@ export default function Match() {
           userId = user.id || user.userID || 0;
           setCurrentUserId(userId);
         }
-        
+
         if (userId) {
           // Fetch current user profile to get their interests for comparison
           try {
@@ -42,14 +42,14 @@ export default function Match() {
             setMatches(getMockMatches());
           }
         } else {
-           setMatches(getMockMatches());
+          setMatches(getMockMatches());
         }
       } catch (err) {
         console.warn('Could not fetch matches, falling back to mock data', err);
         setMatches(getMockMatches());
       }
     };
-    
+
     const fetchPending = async () => {
       try {
         const userJson = localStorage.getItem('user');
@@ -97,10 +97,10 @@ export default function Match() {
 
   const handleAction = async (direction) => {
     if (currentIndex >= matches.length) return;
-    
+
     const currentMatch = matches[currentIndex];
     setAnimatingDir(direction);
-    
+
     // Fire off API request to log the swipe
     if (currentUserId && currentMatch) {
       try {
@@ -177,7 +177,7 @@ export default function Match() {
   return (
     <div className="match-page">
       <NavBar />
-      
+
       <main className="match-page-content">
         <div className="swipe-header">
           <h2>Find Your Travel Buddy</h2>
@@ -215,10 +215,10 @@ export default function Match() {
                       <span className="user-role-badge">{currentMatch.job || 'Explorer'}</span>
                     </div>
                   </div>
-                  
+
                   <div className="card-details-section">
                     <p className="bio-text">{currentMatch.description || "No description provided."}</p>
-                    
+
                     <div className="interests-section">
                       <h4>Interests</h4>
                       <div className="interests-tags">
@@ -250,7 +250,7 @@ export default function Match() {
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 </button>
-                
+
                 <button className="action-btn accept-btn" onClick={handleAccept} disabled={!!animatingDir}>
                   <svg width="45" height="45" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>

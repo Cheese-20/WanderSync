@@ -23,5 +23,6 @@ namespace backend.Data
         public DbSet<UserMatch> Matches { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Tour> Tours { get; set; }
     }
 }
