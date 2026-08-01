@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import '../styles/match.css';
 
 export default function Match() {
   const [matches, setMatches] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [animatingDir, setAnimatingDir] = useState(null); // 'left' or 'right'
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -26,12 +28,21 @@ export default function Match() {
           // Fetch current user profile to get their interests for comparison
           try {
             const profileRes = await axios.get(`/api/profile/${userId}`);
-            if (profileRes.data && profileRes.data.interests) {
-              const userInterests = profileRes.data.interests.split(',').map(i => i.trim().toLowerCase());
+            const p = profileRes.data;
+            if (!p || !p.profilePictureLink || !p.interests || !p.description || !p.location) {
+              navigate('/profile', { state: { message: "You must complete your profile before matching! All fields except Job are required." } });
+              return;
+            }
+            if (p.interests) {
+              const userInterests = p.interests.split(',').map(i => i.trim().toLowerCase());
               setCurrentUserInterests(userInterests);
             }
           } catch (e) {
             console.warn("Could not fetch user profile for interests");
+            if (e.response && e.response.status === 404) {
+              navigate('/profile', { state: { message: "You must complete your profile before matching! All fields except Job are required." } });
+              return;
+            }
           }
 
           // Fetch matches
