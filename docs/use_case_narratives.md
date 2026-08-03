@@ -49,26 +49,26 @@
 
 ---
 
-## Use Case 3: Guide Managing Profile
-**Actor:** Guide
+## Use Case 3: User Managing Profile
+**Actor:** User (Explorer or Guide)
 
-**Trigger:** The Guide navigates to their profile page and decides to edit their information.
+**Trigger:** The user navigates to their profile page and decides to edit their information.
 
 **Preconditions:**
-- The Guide is registered and logged into the application.
+- The user is registered and logged into the application.
 
 **Main Flow (How it is accomplished):**
-1. The Guide navigates to the 'Profile' page (`/profile`).
-2. The system fetches the Guide's current profile data from the backend and populates the form fields.
-3. The Guide edits fields such as their bio, availability, hourly rate, and areas of expertise.
-4. The Guide submits the updated profile form.
+1. The user navigates to the 'Profile' page (`/profile`).
+2. The system fetches the user's current profile data from the backend and populates the form fields.
+3. The user edits fields such as their profile picture, bio/description, interests, location, and job title.
+4. The user submits the updated profile form.
 5. The frontend sends a PUT or PATCH request to the backend API with the updated information.
-6. The backend validates the data, updates the Guide's record in the database, and responds with a success status.
-7. The frontend displays a success message to the Guide and updates the local state to reflect the new profile details.
+6. The backend validates the data, updates the user's Profile record in the database, and responds with a success status.
+7. The frontend displays a success message to the user and updates the local state to reflect the new profile details.
 
 **Postconditions:**
-- The Guide's profile information is updated in the database.
-- The new information is immediately visible to Explorers on the 'Discover' and 'Match' pages.
+- The user's profile information is updated in the database.
+- The new information is immediately visible to other users (e.g., Explorers viewing Guides on the 'Discover' and 'Match' pages).
 
 ---
 
