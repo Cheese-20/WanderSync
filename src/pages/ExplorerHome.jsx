@@ -51,11 +51,30 @@ export default function ExplorerHome() {
           {posts.map(post => (
             <div key={post.postID || Math.random()} className="post">
               <div className="post-header">
+                <div className="post-user-info">
+                  <div className="post-avatar"></div>
+                  <span className="post-username">{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</span>
+                </div>
                 <span className="experience-badge">{post.experienceType}</span>
+              </div>
+              
+              {post.pictureURL && (
+                <div className="post-image-container">
+                  <img src={post.pictureURL} alt="Experience" className="post-image" />
+                </div>
+              )}
+
+              <div className="post-body">
+                <div className="post-actions">
+                  <span className="action-icon">❤️</span>
+                  <span className="action-icon">💬</span>
+                  <span className="action-icon">↗️</span>
+                </div>
+                <p className="post-content">
+                  <strong>{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</strong> {post.content}
+                </p>
                 <span className="post-date">{new Date(post.createdAt).toLocaleDateString()}</span>
               </div>
-              <p className="post-content">{post.content}</p>
-              {post.pictureURL && <img src={post.pictureURL} alt="Experience" className="post-image" />}
             </div>
           ))}
           {posts.length === 0 && <p>No posts yet. Be the first to share an experience!</p>}

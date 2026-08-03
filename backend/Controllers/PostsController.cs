@@ -21,11 +21,26 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Post>>> GetPosts()
+        public async Task<IActionResult> GetPosts()
         {
-            return await _context.Posts
-                .OrderByDescending(p => p.CreatedAt)
+            var posts = await _context.Posts
+                .Join(_context.Users, 
+                      p => p.UserID, 
+                      u => u.UserID, 
+                      (p, u) => new {
+                          postID = p.PostID,
+                          userID = p.UserID,
+                          content = p.Content,
+                          pictureURL = p.PictureURL,
+                          createdAt = p.CreatedAt,
+                          updatedAt = p.UpdatedAt,
+                          experienceType = p.ExperienceType,
+                          firstName = u.FirstName,
+                          lastName = u.LastName
+                      })
+                .OrderByDescending(p => p.createdAt)
                 .ToListAsync();
+            return Ok(posts);
         }
 
         [HttpPost]
