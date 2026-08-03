@@ -31,8 +31,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddDbContext<WanderSyncDbContext>(options =>
-    // Use Pomelo MySQL provider and auto-detect server version
-    options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString))
+    // Use Pomelo MySQL provider with explicit server version
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)))
 );
 
 builder.Services.AddControllers();
@@ -105,6 +105,30 @@ using (var scope = app.Services.CreateScope())
         {
             try { context.Database.ExecuteSqlRaw(sql); } catch { }
         }
+
+        // Create LocalGuideApplication table if not exists
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `LocalGuideApplication` (
+                `appID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `firstName` longtext NOT NULL,
+                `lastName` longtext NOT NULL,
+                `email` longtext NOT NULL,
+                `phoneNumber` longtext NOT NULL,
+                `age` int NOT NULL,
+                `idNumber` longtext NOT NULL,
+                `location` longtext NOT NULL,
+                `experience` longtext NOT NULL,
+                `reason` longtext NOT NULL,
+                `activityCount` int NOT NULL DEFAULT 0,
+                `profileImageData` longblob NULL,
+                `idCopyData` longblob NULL,
+                `status` longtext NOT NULL DEFAULT 'Pending',
+                `submittedAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`appID`),
+                CONSTRAINT `FK_LocalGuideApplication_User_userID` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
     }
     catch (Exception ex)
     {
