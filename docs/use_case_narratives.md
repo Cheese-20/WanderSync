@@ -160,3 +160,53 @@
 **Postconditions:**
 - The Admin is authenticated and granted access to the chosen role's dashboard.
 - The Admin can perform functions corresponding to the role they selected during login.
+
+---
+
+## Use Case 7: Send Notification
+**Actor:** System (Triggered by Explorer or Guide actions)
+
+**Trigger:** A user performs an action that requires alerting another user (e.g., sending a message, requesting a match, or accepting a match).
+
+**Preconditions:**
+- The recipient user exists in the database.
+- The action triggering the notification (like a message insert or swipe) is valid and successfully processed by the backend.
+
+**Main Flow (How it is accomplished):**
+1. An actor performs a trigger action on the frontend (e.g., sending a chat message).
+2. The frontend sends an API request to the corresponding backend controller (e.g., `MessageController.cs`).
+3. The backend successfully processes the core action (saving the message).
+4. The backend automatically constructs a new `Notification` entity for the recipient, specifying the `type` (e.g., "NewMessage"), `message` content, and `relatedEntityID`.
+5. The backend saves the new `Notification` record into the database alongside the core action data within the same transaction/request scope.
+6. The system returns a success response for the core action.
+
+**Postconditions:**
+- A new unread notification record exists in the database for the recipient.
+- The recipient will receive this notification the next time they poll the API or refresh their UI.
+
+---
+
+## Use Case 8: View Notification
+**Actor:** Explorer and Guide
+
+**Trigger:** The user looks at their navigation bar or clicks the Notification bell icon.
+
+**Preconditions:**
+- The user is authenticated and logged into the application.
+- The user has at least one unread notification in the database (to see the unread badge).
+
+**Main Flow (How it is accomplished):**
+1. The user logs in and the frontend `NavBar` component mounts.
+2. The frontend automatically sends a GET request to the backend API (`/api/notification/{userId}`) to fetch all active notifications.
+3. The backend returns a list of notifications, omitting any future scheduled notifications.
+4. The frontend calculates the number of unread notifications and displays a red badge counter on the Notification bell icon.
+5. The user clicks the bell icon, opening a dropdown list of their notifications.
+6. The user clicks a specific notification to view it.
+7. The frontend sends a PUT request to the backend (`/api/notification/read/{notificationId}`) to mark it as read.
+8. The backend updates the `isRead` flag in the database to true and returns a success response.
+9. The frontend navigates the user to the relevant page (e.g., `/messages` or `/match`) based on the notification type, and the unread badge counter decreases.
+
+**Postconditions:**
+- The selected notification is marked as read in the database.
+- The user is navigated to the context of the notification.
+- The unread badge counter is accurately updated on the frontend.

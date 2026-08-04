@@ -136,6 +136,16 @@ namespace backend.Controllers
                 };
 
                 _context.Messages.Add(msg);
+
+                var notification = new Notification {
+                    UserID = request.ReceiverID,
+                    Type = "NewMessage",
+                    Message = "You have a new message.",
+                    RelatedEntityID = request.MatchID,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Notifications.Add(notification);
+
                 await _context.SaveChangesAsync();
 
                 return Ok(new { 

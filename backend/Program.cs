@@ -105,6 +105,21 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Notifications` (
+                `notificationID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `type` longtext NOT NULL,
+                `message` longtext NOT NULL,
+                `isRead` tinyint(1) NOT NULL DEFAULT 0,
+                `createdAt` datetime(6) NOT NULL,
+                `scheduledFor` datetime(6) NULL,
+                `relatedEntityID` int NULL,
+                PRIMARY KEY (`notificationID`),
+                CONSTRAINT `FK_Notifications_User` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",

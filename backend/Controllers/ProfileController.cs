@@ -198,12 +198,31 @@ namespace backend.Controllers
                         DateMatched = DateTime.UtcNow
                     };
                     _context.Matches.Add(match);
+                    
+                    if (request.Status == "accepted")
+                    {
+                        var notification = new backend.Models.Notification {
+                            UserID = request.ReceiverID,
+                            Type = "MatchRequest",
+                            Message = "You have a new match request!",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.Notifications.Add(notification);
+                    }
                 }
                 else
                 {
                     if (request.Status == "accepted" && existingMatch.Status == "pending")
                     {
                         existingMatch.Status = "accepted";
+
+                        var notification = new backend.Models.Notification {
+                            UserID = existingMatch.RequesterID,
+                            Type = "MatchAccepted",
+                            Message = "Your match request was accepted!",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.Notifications.Add(notification);
                     }
                     else if (request.Status == "rejected")
                     {
