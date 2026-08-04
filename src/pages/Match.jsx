@@ -47,17 +47,17 @@ export default function Match() {
 
           // Fetch matches
           const response = await axios.get(`/api/profile/matches/${userId}`);
-          if (response.data && response.data.length > 0) {
+          if (response.data) {
             setMatches(response.data);
           } else {
-            setMatches(getMockMatches());
+            setMatches([]);
           }
         } else {
-          setMatches(getMockMatches());
+          setMatches([]);
         }
       } catch (err) {
-        console.warn('Could not fetch matches, falling back to mock data', err);
-        setMatches(getMockMatches());
+        console.warn('Could not fetch matches', err);
+        setMatches([]);
       }
     };
 
@@ -83,28 +83,6 @@ export default function Match() {
     fetchPending();
   }, []);
 
-  const getMockMatches = () => [
-    {
-      userID: 1,
-      firstName: 'Bob Joe',
-      lastName: '',
-      age: 28,
-      job: 'Digital Nomad',
-      description: 'Love exploring hidden cafes and street art. Always up for a spontaneous hike!',
-      interests: 'Photography, Coffee Shops, Hiking, Street Art, Beaches',
-      profilePictureLink: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-      userID: 2,
-      firstName: 'Sarah',
-      lastName: 'Smith',
-      age: 25,
-      job: 'Travel Photographer',
-      description: 'Foodie and sunset lover. Let\'s find the best local eats!',
-      interests: 'Food, Sunset, Culture',
-      profilePictureLink: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop'
-    }
-  ];
 
   const handleAction = async (direction) => {
     if (currentIndex >= matches.length) return;

@@ -28,11 +28,11 @@ function App() {
       <Routes>
         <Route path="/login" element={<AuthForm />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
-        
+
         <Route element={<Layout />}>
           <Route path="/home" element={<HomeRouter />} />
-          <Route path="/match" element={<Match />} />
           <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/match" element={<Match />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/activities" element={<Activities />} />

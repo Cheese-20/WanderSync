@@ -184,53 +184,32 @@ namespace backend.Controllers
         {
             try
             {
-                var reverseMatch = await _context.Matches
-                    .FirstOrDefaultAsync(m => m.RequesterID == request.ReceiverID && m.ReceiverID == request.RequesterID);
+                var existingMatch = await _context.Matches
+                    .FirstOrDefaultAsync(m => (m.RequesterID == request.RequesterID && m.ReceiverID == request.ReceiverID) ||
+                                              (m.RequesterID == request.ReceiverID && m.ReceiverID == request.RequesterID));
 
-                if (request.Status == "accepted")
-                {
-                    if (reverseMatch != null && reverseMatch.Status == "pending")
-                    {
-                        reverseMatch.Status = "accepted";
-                        _context.Matches.Update(reverseMatch);
-                        
-                        var match = new backend.Models.UserMatch {
-                            RequesterID = request.RequesterID,
-                            ReceiverID = request.ReceiverID,
-                            CommonInterests = request.CommonInterests,
-                            Status = "accepted",
-                            DateMatched = DateTime.UtcNow
-                        };
-                        _context.Matches.Add(match);
-                    }
-                    else
-                    {
-                        var match = new backend.Models.UserMatch {
-                            RequesterID = request.RequesterID,
-                            ReceiverID = request.ReceiverID,
-                            CommonInterests = request.CommonInterests,
-                            Status = "pending",
-                            DateMatched = DateTime.UtcNow
-                        };
-                        _context.Matches.Add(match);
-                    }
-                }
-                else
+                if (existingMatch == null)
                 {
                     var match = new backend.Models.UserMatch {
                         RequesterID = request.RequesterID,
                         ReceiverID = request.ReceiverID,
                         CommonInterests = request.CommonInterests,
-                        Status = "rejected",
+                        Status = request.Status == "accepted" ? "pending" : "rejected",
                         DateMatched = DateTime.UtcNow
                     };
                     _context.Matches.Add(match);
-                    
-                    if (reverseMatch != null && reverseMatch.Status == "pending")
+                }
+                else
+                {
+                    if (request.Status == "accepted" && existingMatch.Status == "pending")
                     {
-                         reverseMatch.Status = "rejected";
-                         _context.Matches.Update(reverseMatch);
+                        existingMatch.Status = "accepted";
                     }
+                    else if (request.Status == "rejected")
+                    {
+                        existingMatch.Status = "rejected";
+                    }
+                    _context.Matches.Update(existingMatch);
                 }
 
                 await _context.SaveChangesAsync();

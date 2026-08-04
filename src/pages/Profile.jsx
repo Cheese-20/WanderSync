@@ -143,6 +143,12 @@ export default function Profile() {
     alert('Delete profile functionality is disabled for now.');
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
 
@@ -215,6 +221,13 @@ export default function Profile() {
             onClick={() => setActiveTab('bookings')}
           >
             Bookings
+          </button>
+          <button 
+            className="delete button" 
+            onClick={handleLogout} 
+            style={{ marginLeft: 'auto' }}
+          >
+            Logout
           </button>
         </div>
 

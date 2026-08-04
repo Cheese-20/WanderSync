@@ -2,6 +2,9 @@
 *Keep track of recent changes and updates in the project.*
 
 ## [2026-08-04]
+- **Backend / Feature**: Refactored the `Swipe` logic in `ProfileController.cs` to strictly enforce a single-record architecture for match requests between any two users, avoiding duplicate row insertions. It now checks for an existing match row (regardless of who the requester is) and strictly updates its status (`pending`, `accepted`, `rejected`) rather than creating a new reverse row.
+- **UI / Bug Fix**: Fixed a bug in `Match.jsx` where the frontend would loop back to hardcoded mock profiles (Bob Joe, Sarah Smith) when the backend returned an empty list of matches. Removed the `getMockMatches` fallback entirely so users correctly see the "No more matches available right now!" empty state.
+- **UI / Refactor**: Relocated the Logout button from the main navigation bar (`NavBar.jsx`) to the `Profile.jsx` page. It now sits next to the "Bookings" tab and shares the same styling as the "Delete Profile" button for visual consistency.
 - **Git / Merge**: Executed `git pull` again as requested. The codebase remains up to date.
 - **UI / Refactor**: Enforced navigation consistency across all pages. Created a central `Layout.jsx` wrapper for all protected routes in `App.jsx`, replacing the manual `<NavBar />` imports on each page.
 - **Feature**: Removed the "Discover" page and its route. Added a global "Logout" button to the `NavBar` so it's accessible everywhere, effectively unifying the layout used by Admin, Guide, and Explorer roles.
