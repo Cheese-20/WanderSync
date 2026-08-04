@@ -105,6 +105,8 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Notifications`;");
+
         context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS `Notifications` (
                 `notificationID` int NOT NULL AUTO_INCREMENT,
@@ -133,6 +135,47 @@ using (var scope = app.Services.CreateScope())
         foreach (var sql in profileColumnSqls)
         {
             try { context.Database.ExecuteSqlRaw(sql); } catch { }
+        }
+
+        string[] notificationColumnSqls = new[]
+        {
+            "ALTER TABLE `Notifications` ADD COLUMN `userID` int NOT NULL DEFAULT 0;",
+            "ALTER TABLE `Notifications` ADD COLUMN `type` longtext NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `message` longtext NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `isRead` tinyint(1) NOT NULL DEFAULT 0;",
+            "ALTER TABLE `Notifications` ADD COLUMN `createdAt` datetime(6) NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `scheduledFor` datetime(6) NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `relatedEntityID` int NULL;"
+        };
+
+        foreach (var sql in notificationColumnSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
+            }
+        }
+
+        string[] indexSqls = new[]
+        {
+            "CREATE INDEX `IX_Matches_Status` ON `Matches` (`status`);",
+            "CREATE INDEX `IX_Message_MatchID` ON `Message` (`matchID`);",
+            "CREATE INDEX `IX_Message_SentAt` ON `Message` (`sentAt`);"
+        };
+        
+        foreach (var sql in indexSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                // Ignore if index already exists
+                Console.WriteLine("FAIL (Expected if exists): " + sql + " ERROR: " + ex.Message);
+            }
         }
     }
     catch (Exception ex)
