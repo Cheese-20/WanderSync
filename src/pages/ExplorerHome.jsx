@@ -1,3 +1,4 @@
+import React from 'react';
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/NavBar';
 import CreatePostModal from '../components/CreatePostModal';
@@ -29,7 +30,6 @@ export default function ExplorerHome() {
 
   return (
     <div className="explorer-page">
-      <NavBar />
       <header className="explorer-hero">
         <h1>Happening Today</h1>
         <p>Discover activities around you</p>

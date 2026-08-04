@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import NavBar from '../components/NavBar';
+
 import '../styles/messages.css';
 
 export default function Messages() {
@@ -75,7 +75,7 @@ export default function Messages() {
 
   return (
     <div className="messages-page">
-      <NavBar />
+
       
       <div className="messages-layout">
         {/* Contacts Sidebar */}
