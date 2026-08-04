@@ -91,6 +91,35 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Tours` (
+                `tourID` int NOT NULL AUTO_INCREMENT,
+                `guideID` int NOT NULL,
+                `title` varchar(100) NOT NULL,
+                `type` varchar(50) NOT NULL,
+                `description` longtext NOT NULL,
+                `date` datetime(6) NOT NULL,
+                `maxPeople` int NOT NULL,
+                PRIMARY KEY (`tourID`),
+                CONSTRAINT `FK_Tours_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Posts` (
+                `postID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `content` longtext NOT NULL,
+                `pictureURL` longtext NULL,
+                `experienceType` varchar(50) NOT NULL,
+                `createdAt` datetime(6) NOT NULL,
+                `updatedAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`postID`),
+                CONSTRAINT `FK_Posts_User` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
@@ -98,7 +127,10 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `description` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `location` longtext NULL;",
-            "ALTER TABLE `Profile` ADD COLUMN `job` longtext NULL;"
+            "ALTER TABLE `Profile` ADD COLUMN `job` longtext NULL;",
+            "ALTER TABLE `Posts` ADD COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `Posts` MODIFY COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `Posts` ADD COLUMN `experienceType` varchar(50) NOT NULL DEFAULT 'Individual';"
         };
 
         foreach (var sql in profileColumnSqls)
