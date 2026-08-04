@@ -68,34 +68,51 @@
 
 **Postconditions:**
 - The user's profile information is updated in the database.
-- The new information is immediately visible to other users (e.g., Explorers viewing Guides on the 'Discover' and 'Match' pages).
+- The new information is immediately visible to other users (e.g., Explorers viewing Guides on the 'Match' page).
 
 ---
 
-## Use Case 4: Messaging
+## Use Case 4.1: Send Message
 **Actor:** Explorer and Guide
 
-**Trigger:** A user clicks on a chat notification or opens the "Messages" tab to communicate with a match.
+**Trigger:** A user decides to send a message to their match.
 
 **Preconditions:**
 - Both users are authenticated.
-- A new chat will start if the status is "accepted" in the Matches table between the Explorer and Guide.
+- A match status must be "accepted" in the Matches table.
+- The user is currently in an active chat thread with the matched user.
 
 **Main Flow (How it is accomplished):**
-1. Either user navigates to the 'Messages' page (`/messages`).
-2. The frontend fetches the user's active chat threads from the backend API.
-3. The user selects a specific chat thread with their counterpart.
-4. The system loads the conversation history.
-5. The user types a message in the chat input and clicks "Send".
-6. The frontend sends a POST request containing the message content to the backend.
-7. The backend saves the message to the database (collecting `mID`, `matchID`, `senderID`, `receiverID`, `textMessage`, and `sentAt`).
-8. The frontend updates the chat UI to display the newly sent message at the top.
+1. The user types a message in the chat input area on the 'Messages' page.
+2. The user clicks the "Send" button.
+3. The frontend sends a POST request containing the message content to the backend API.
+4. The backend receives the request and saves the message to the database (collecting `mID`, `matchID`, `senderID`, `receiverID`, `textMessage`, and `sentAt`).
+5. The frontend updates the local chat UI to display the newly sent message in the thread.
 
 **Postconditions:**
 - The message is securely stored in the database in the `Message` table as shown in the schema.
-- The recipient receives the message in their chat interface.
 
 ---
+
+## Use Case 4.2: View Message
+**Actor:** Explorer and Guide
+
+**Trigger:** A user opens the "Messages" tab or selects a specific chat thread to view their conversation history.
+
+**Preconditions:**
+- The user is authenticated.
+- The user has an existing accepted match and previous message history.
+
+**Main Flow (How it is accomplished):**
+1. The user navigates to the 'Messages' page (`/messages`).
+2. The frontend fetches the user's active chat threads from the backend API.
+3. The user selects a specific chat thread with their counterpart.
+4. The frontend sends a GET request to the backend to fetch the message history for that specific match.
+5. The backend queries the `Message` table for messages corresponding to the `matchID`.
+6. The system loads and displays the conversation history in chronological order.
+
+**Postconditions:**
+- The user can successfully view all past sent and received messages for that match.
 
 ## Use Case 5: Delete Activity (D300)
 **Actor:** Guide
@@ -118,3 +135,28 @@
 **Postconditions:**
 - The activity is permanently removed from the database and the list of activities.
 - A confirmation message is displayed to the Guide.
+
+---
+
+## Use Case 6: Admin Login
+**Actor:** Admin
+
+**Trigger:** The Admin attempts to log into the application using their specific credentials.
+
+**Preconditions:**
+- The Admin must exist in the `Admin` database table.
+- The `Admin` table stores `adminID`, `username` (starting with an 's', e.g., 's229274056'), and an unhashed `hashedPassword`.
+
+**Main Flow (How it is accomplished):**
+1. The Admin navigates to the login page (`/login`).
+2. The Admin selects their desired role from the radio buttons (Admin, Explorer, or Local Guide).
+3. The Admin enters either their 's' prefixed username (e.g. 's229274056') or their full email address (e.g. 's229274056@wandersync.com'), and their unhashed password.
+4. The frontend sends a POST request to the backend API for authentication, including the selected role.
+5. The backend strips the `@wandersync.com` suffix if present, recognizes the username pattern, and validates the credentials against the unhashed `hashedPassword` in the `Admin` table.
+6. The backend responds with a success status, an authentication token, and assigns the user the role they requested.
+7. The frontend receives the successful response and identifies the user's role.
+8. The frontend redirects the Admin to the appropriate dashboard (e.g., dedicated Admin home page, Explorer home, or Guide home) based on the role they chose to log in as.
+
+**Postconditions:**
+- The Admin is authenticated and granted access to the chosen role's dashboard.
+- The Admin can perform functions corresponding to the role they selected during login.

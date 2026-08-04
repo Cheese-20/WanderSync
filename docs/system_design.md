@@ -8,7 +8,7 @@ WanderSync is built using a modern stack:
 
 ## Key Components
 - **Client Application (`/src`)**: Holds all user-facing interfaces.
-  - `pages/`: Independent full-page components (e.g., `Discover.jsx`, `Match.jsx`, `ExplorePage.jsx`, `GuideHome.jsx`).
+  - `pages/`: Independent full-page components (e.g., `Match.jsx`, `ExplorePage.jsx`, `GuideHome.jsx`).
   - `components/`: Reusable UI elements (e.g., Navbars, Buttons, Modal forms).
 - **Backend API (`/backend`)**: Provides the data and authentication layer for the frontend.
 
@@ -24,3 +24,4 @@ The database uses raw SQL queries to initialize structure. Current tables includ
 - **Profile**: Stores user-specific extended data linked to a `User` (`pID`, `userID`, `profilePictureLink`, `interests`, `createdAt`, `description`, `location`, `job`).
 - **Matches**: Stores swipe interactions (`matchID`, `requesterID`, `receiverID`, `commonInterests`, `status`, `dateMatched`). Status handles "pending", "accepted", and "rejected" states.
 - **Message**: Stores chat data (`mID`, `matchID`, `senderID`, `receiverID`, `textMessage`, `sentAt`). Links back to Matches to enforce the rule that users must have an "accepted" match to chat.
+- **Admin**: Stores administrative account credentials (`adminID`, `username`, `hashedPassword`), where `username` starts with an 's' and `hashedPassword` is stored unhashed.

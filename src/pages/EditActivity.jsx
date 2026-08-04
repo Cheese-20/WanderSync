@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import NavBar from '../components/NavBar';
+
 import '../styles/guide.css';
 
 export default function EditActivity() {
@@ -72,7 +72,7 @@ export default function EditActivity() {
 
   return (
     <div className="guide-page">
-      <NavBar />
+
       <header className="guide-hero">
         <h1>Edit Activity</h1>
       </header>

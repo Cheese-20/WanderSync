@@ -47,7 +47,8 @@ function AuthForm() {
     try {
       const response = await axios.post('/api/auth/login', {
         email: loginValues.email,
-        password: loginValues.password
+        password: loginValues.password,
+        role: loginValues.role
       });
 
       const { token, user } = response.data;
@@ -117,7 +118,7 @@ function AuthForm() {
               <input
                 id="login-email"
                 name="email"
-                type="email"
+                type="text"
                 value={loginValues.email}
                 onChange={handleLoginChange}
                 placeholder="Email"

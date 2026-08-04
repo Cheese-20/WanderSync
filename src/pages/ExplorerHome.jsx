@@ -1,11 +1,9 @@
 import React from 'react';
-import NavBar from '../components/NavBar';
 import '../styles/explorer.css';
 
 export default function ExplorerHome() {
   return (
     <div className="explorer-page">
-      <NavBar />
       <header className="explorer-hero">
         <h1>Happening Today</h1>
         <p>Discover activities around you</p>
