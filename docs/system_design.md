@@ -16,7 +16,7 @@ WanderSync is built using a modern stack:
 1. User interacts with UI in the browser.
 2. React components execute API requests to the .NET backend.
 3. Backend processes logic, communicates with DB, and responds with JSON.
-4. UI state is updated, triggering a re-render.
+4. UI state is updated, triggering a re-render. 
 
 ## Database Schema
 The database uses raw SQL queries to initialize structure. Current tables include:
