@@ -2,6 +2,10 @@
 *Keep track of recent changes and updates in the project.*
 
 ## [2026-08-06]
+- **Feature (Multiple Images)**: Added support for uploading up to 7 images per post.
+  - Updated `CreatePostModal.jsx` to allow multiple image selection and preview generation.
+  - Serialized the images array into JSON and saved it to the existing `longtext` `pictureURL` column to prevent backend migrations.
+  - Updated `ExplorerHome.jsx` to parse and render multiple images as a horizontal carousel.
 - **Feature (Edit Experience Post)**: Implemented Use Case D600 (Edit experience post).
   - Added `UpdatePost` (PUT) endpoint in `PostsController.cs` to handle post modifications.
   - Updated `CreatePostModal.jsx` to support an edit mode with pre-populated fields.

@@ -5,19 +5,31 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
   const [step, setStep] = useState(1);
   const [experienceType, setExperienceType] = useState('');
   const [content, setContent] = useState('');
-  const [pictureURL, setPictureURL] = useState('');
+  const [pictures, setPictures] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && editPost) {
       setExperienceType(editPost.experienceType || '');
       setContent(editPost.content || '');
-      setPictureURL(editPost.pictureURL || '');
+
+      let parsedPictures = [];
+      if (editPost.pictureURL) {
+        try {
+          parsedPictures = JSON.parse(editPost.pictureURL);
+          if (!Array.isArray(parsedPictures)) {
+            parsedPictures = [editPost.pictureURL];
+          }
+        } catch (e) {
+          parsedPictures = [editPost.pictureURL];
+        }
+      }
+      setPictures(parsedPictures);
       setStep(1);
     } else if (isOpen && !editPost) {
       setExperienceType('');
       setContent('');
-      setPictureURL('');
+      setPictures([]);
       setStep(1);
     }
   }, [isOpen, editPost]);
@@ -39,19 +51,19 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
       }
 
       const isEdit = !!editPost;
-      const url = isEdit 
-        ? `http://localhost:5200/api/posts/${editPost.postID}`
+      const url = isEdit
+        ? `http://localhost:5200/api/posts/${editPost.postID || editPost.postId}` // fallback for id casing
         : 'http://localhost:5200/api/posts';
 
       const payload = {
         userID: userId,
         experienceType,
         content,
-        pictureURL
+        pictureURL: pictures.length > 0 ? JSON.stringify(pictures) : ""
       };
 
       if (isEdit) {
-         payload.postID = editPost.postID;
+        payload.postID = editPost.postID || editPost.postId;
       }
 
       const response = await fetch(url, {
@@ -68,7 +80,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
         setStep(1);
         setExperienceType('');
         setContent('');
-        setPictureURL('');
+        setPictures([]);
         onClose();
       } else {
         const errorText = await response.text();
@@ -82,21 +94,39 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    if (pictures.length + files.length > 7) {
+      alert(`You can only upload up to 7 photos. You tried to add ${files.length} more to your existing ${pictures.length} photos.`);
+      return;
+    }
+
+    const newPictures = [];
+    let processed = 0;
+
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPictureURL(reader.result);
+        newPictures.push(reader.result);
+        processed++;
+        if (processed === files.length) {
+          setPictures(prev => [...prev, ...newPictures]);
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const removePicture = (index) => {
+    setPictures(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleClose = () => {
     setStep(1);
     setExperienceType('');
     setContent('');
-    setPictureURL('');
+    setPictures([]);
     onClose();
   };
 
@@ -131,7 +161,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
             <h2>{editPost ? 'Edit Details' : 'Experience Details'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Add information about your experience:</label>
+                <label>Drop your caption or hashtags:</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -139,27 +169,37 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
                   required
                 />
               </div>
+
               <div className="form-group image-upload-group">
-                <label>Add a Photo:</label>
-                {pictureURL ? (
-                  <div className="image-preview-container" onClick={() => fileInputRef.current.click()}>
-                    <img src={pictureURL} alt="Preview" className="image-preview" />
-                    <div className="image-overlay"><span>Change Photo</span></div>
-                  </div>
-                ) : (
-                  <div className="upload-placeholder" onClick={() => fileInputRef.current.click()}>
-                    <div className="upload-icon">+</div>
-                    <p>Upload a Photo</p>
-                  </div>
-                )}
+                <label>Add Photos (Max 7):</label>
+
+                <div className="image-preview-grid">
+                  {pictures.map((pic, idx) => (
+                    <div key={idx} className="preview-thumbnail-container">
+                      <img src={pic} alt={`Preview ${idx + 1}`} className="preview-thumbnail" />
+                      <button type="button" className="remove-pic-btn" onClick={() => removePicture(idx)}>&times;</button>
+                    </div>
+                  ))}
+
+                  {pictures.length < 7 && (
+                    <div className="upload-placeholder-small" onClick={() => fileInputRef.current.click()}>
+                      <div className="upload-icon">+</div>
+                      <p>Add</p>
+                    </div>
+                  )}
+                </div>
+
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   ref={fileInputRef}
                   style={{ display: 'none' }}
                   onChange={handleImageUpload}
+                  value=""
                 />
               </div>
+
               <div className="modal-actions">
                 <button type="button" onClick={() => setStep(1)} className="btn-secondary">Back</button>
                 <button type="button" onClick={() => {

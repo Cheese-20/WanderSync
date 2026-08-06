@@ -35,10 +35,29 @@ export default function ExplorerHome() {
   };
 
   const handlePostCreated = (newOrUpdatedPost, isEdit) => {
+    // Normalize casing for postID/userID from backend POST/PUT requests
+    const normalizedPost = {
+      ...newOrUpdatedPost,
+      postID: newOrUpdatedPost.postID || newOrUpdatedPost.postId,
+      userID: newOrUpdatedPost.userID || newOrUpdatedPost.userId,
+    };
+
+    // Inject user's name if missing (e.g. for newly created/updated posts)
+    if (!normalizedPost.firstName) {
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          normalizedPost.firstName = user.firstName || user.FirstName || '';
+          normalizedPost.lastName = user.lastName || user.LastName || '';
+        }
+      } catch(e) {}
+    }
+
     if (isEdit) {
-      setPosts(posts.map(p => p.postID === newOrUpdatedPost.postID ? { ...p, ...newOrUpdatedPost } : p));
+      setPosts(posts.map(p => p.postID === normalizedPost.postID ? { ...p, ...normalizedPost } : p));
     } else {
-      setPosts([newOrUpdatedPost, ...posts]);
+      setPosts([normalizedPost, ...posts]);
     }
     setEditingPost(null);
   };
@@ -89,11 +108,32 @@ export default function ExplorerHome() {
                 <span className="experience-badge">{post.experienceType}</span>
               </div>
               
-              {post.pictureURL && (
-                <div className="post-image-container">
-                  <img src={post.pictureURL} alt="Experience" className="post-image" />
-                </div>
-              )}
+              {(() => {
+                if (!post.pictureURL) return null;
+                let images = [];
+                try {
+                  images = JSON.parse(post.pictureURL);
+                  if (!Array.isArray(images)) images = [post.pictureURL];
+                } catch(e) {
+                  images = [post.pictureURL];
+                }
+
+                if (images.length === 1) {
+                  return (
+                    <div className="post-image-container">
+                      <img src={images[0]} alt="Experience" className="post-image" />
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="post-images-carousel">
+                    {images.map((imgSrc, idx) => (
+                      <img key={idx} src={imgSrc} alt={`Experience ${idx + 1}`} className="carousel-image" />
+                    ))}
+                  </div>
+                );
+              })()}
 
               <div className="post-body">
                 <div className="post-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
