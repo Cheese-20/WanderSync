@@ -67,6 +67,25 @@ export default function ExplorerHome() {
     setIsModalOpen(true);
   };
 
+  const handleDeleteClick = async (post) => {
+    if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      try {
+        const response = await fetch(`http://localhost:5200/api/posts/${post.postID}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          setPosts(posts.filter(p => p.postID !== post.postID));
+          alert('Post Successfully Deleted');
+        } else {
+          alert('Failed to delete post. Error: ' + response.status);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Network error. Is the backend running?');
+      }
+    }
+  };
+
   const handleOpenNewPostModal = () => {
     setEditingPost(null);
     setIsModalOpen(true);
@@ -141,14 +160,24 @@ export default function ExplorerHome() {
                   <span className="action-icon" title="Comment">💬</span>
                   <span className="action-icon" title="Share">↗️</span>
                   {loggedInUserId === post.userID && (
-                    <span 
-                      className="action-icon edit-icon" 
-                      title="Edit Post" 
-                      onClick={() => handleEditClick(post)} 
-                      style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '1.2rem' }}
-                    >
-                      ✏️
-                    </span>
+                    <>
+                      <span 
+                        className="action-icon edit-icon" 
+                        title="Edit Post" 
+                        onClick={() => handleEditClick(post)} 
+                        style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '1.2rem' }}
+                      >
+                        ✏️
+                      </span>
+                      <span 
+                        className="action-icon delete-icon" 
+                        title="Delete Post" 
+                        onClick={() => handleDeleteClick(post)} 
+                        style={{ cursor: 'pointer', fontSize: '1.2rem' }}
+                      >
+                        🗑️
+                      </span>
+                    </>
                   )}
                 </div>
                 <p className="post-content">

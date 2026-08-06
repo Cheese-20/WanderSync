@@ -11,6 +11,11 @@
   - Updated `CreatePostModal.jsx` to support an edit mode with pre-populated fields.
   - Modified `ExplorerHome.jsx` to show an edit icon for the user's own posts and update the post list without refreshing.
   - Documented Use Case D600 in `docs/use_case_narratives.md`.
+- **Feature (Delete Experience Post)**: Implemented Use Case D700 (Delete experience post).
+  - Added `DeletePost` (DELETE) endpoint in `PostsController.cs` to handle post deletion.
+  - Added a trash icon on the user's posts in `ExplorerHome.jsx`.
+  - Implemented `handleDeleteClick` with a confirmation dialog, API deletion logic, and feed refresh.
+  - Documented Use Case D700 in `docs/use_case_narratives.md`.
 
 ## [2026-08-03]
 - **Feature (Post Experience)**: Implemented the Post Experience Use Case (D100). Added `Post` backend model, `PostsController`, and updated `WanderSyncDbContext`.
