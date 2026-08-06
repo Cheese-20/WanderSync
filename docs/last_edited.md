@@ -1,6 +1,22 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-06]
+- **Feature (Multiple Images)**: Added support for uploading up to 7 images per post.
+  - Updated `CreatePostModal.jsx` to allow multiple image selection and preview generation.
+  - Serialized the images array into JSON and saved it to the existing `longtext` `pictureURL` column to prevent backend migrations.
+  - Updated `ExplorerHome.jsx` to parse and render multiple images as a horizontal carousel.
+- **Feature (Edit Experience Post)**: Implemented Use Case D600 (Edit experience post).
+  - Added `UpdatePost` (PUT) endpoint in `PostsController.cs` to handle post modifications.
+  - Updated `CreatePostModal.jsx` to support an edit mode with pre-populated fields.
+  - Modified `ExplorerHome.jsx` to show an edit icon for the user's own posts and update the post list without refreshing.
+  - Documented Use Case D600 in `docs/use_case_narratives.md`.
+- **Feature (Delete Experience Post)**: Implemented Use Case D700 (Delete experience post).
+  - Added `DeletePost` (DELETE) endpoint in `PostsController.cs` to handle post deletion.
+  - Added a trash icon on the user's posts in `ExplorerHome.jsx`.
+  - Implemented `handleDeleteClick` with a confirmation dialog, API deletion logic, and feed refresh.
+  - Documented Use Case D700 in `docs/use_case_narratives.md`.
+
 ## [2026-08-04]
 - **Backend / Bug Fix**: Fixed a critical database schema issue where sending messages failed due to an outdated `Notifications` table from a previous iteration of the project. The old table lacked the `userID` and `message` columns. Updated `Program.cs` to execute `DROP TABLE IF EXISTS Notifications` before recreating it, ensuring the schema perfectly matches the current Entity Framework `Notification.cs` model. Tests confirm this resolves the 500 server error and messages now send successfully.
 - **UI / Feature**: Implemented Optimistic UI updates in `Messages.jsx`. When a user sends a message, it is immediately appended to the chat interface and the input box is cleared, preventing double-submissions and providing instant visual feedback. The message is then silently replaced by the confirmed server response in the background.

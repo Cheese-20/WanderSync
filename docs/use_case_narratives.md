@@ -210,3 +210,23 @@
 - The selected notification is marked as read in the database.
 - The user is navigated to the context of the notification.
 - The unread badge counter is accurately updated on the frontend.
+
+---
+
+## Use Case 10: Delete Experience Post (D700)
+**Actors:** User (Tourist), Admin
+
+**Pre-Conditions:** User must be logged in and be the author, or an admin with moderating rights
+
+**Triggers:** Clicking the Delete icon on the post.
+
+**Post-Conditions:** The post will be removed from the system.
+
+**Basic Flow of Events / Main Success Scenario:**
+1. The actor clicks the Delete option on the specific experience post.
+2. The system displays a confirmation pop up to prevent accidental deletion.
+3. The actor confirms the deletion.
+4. The system executes a Delete command in the database based on the PostID.
+5. The system removes associated likes and comments linked to that post.
+6. The system removes the post image from the server's image folder.
+7. The system refreshes the actors feed and displays a Post Successfully Deleted message.
