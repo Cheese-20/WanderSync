@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import NavBar from '../components/NavBar';
+import { useNavigate } from 'react-router-dom';
+
 import '../styles/match.css';
 
 export default function Match() {
   const [matches, setMatches] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [animatingDir, setAnimatingDir] = useState(null); // 'left' or 'right'
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserInterests, setCurrentUserInterests] = useState([]);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -22,19 +25,39 @@ export default function Match() {
         }
 
         if (userId) {
+          // Fetch current user profile to get their interests for comparison
+          try {
+            const profileRes = await axios.get(`/api/profile/${userId}`);
+            const p = profileRes.data;
+            if (!p || !p.profilePictureLink || !p.interests || !p.description || !p.location) {
+              navigate('/profile', { state: { message: "You must complete your profile before matching! All fields except Job are required." } });
+              return;
+            }
+            if (p.interests) {
+              const userInterests = p.interests.split(',').map(i => i.trim().toLowerCase());
+              setCurrentUserInterests(userInterests);
+            }
+          } catch (e) {
+            console.warn("Could not fetch user profile for interests");
+            if (e.response && e.response.status === 404) {
+              navigate('/profile', { state: { message: "You must complete your profile before matching! All fields except Job are required." } });
+              return;
+            }
+          }
+
           // Fetch matches
           const response = await axios.get(`/api/profile/matches/${userId}`);
-          if (response.data && response.data.length > 0) {
+          if (response.data) {
             setMatches(response.data);
           } else {
-            setMatches(getMockMatches());
+            setMatches([]);
           }
         } else {
-          setMatches(getMockMatches());
+          setMatches([]);
         }
       } catch (err) {
-        console.warn('Could not fetch matches, falling back to mock data', err);
-        setMatches(getMockMatches());
+        console.warn('Could not fetch matches', err);
+        setMatches([]);
       }
     };
 
@@ -60,28 +83,6 @@ export default function Match() {
     fetchPending();
   }, []);
 
-  const getMockMatches = () => [
-    {
-      userID: 1,
-      firstName: 'Bob Joe',
-      lastName: '',
-      age: 28,
-      job: 'Digital Nomad',
-      description: 'Love exploring hidden cafes and street art. Always up for a spontaneous hike!',
-      interests: 'Photography, Coffee Shops, Hiking, Street Art, Beaches',
-      profilePictureLink: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=600&auto=format&fit=crop'
-    },
-    {
-      userID: 2,
-      firstName: 'Sarah',
-      lastName: 'Smith',
-      age: 25,
-      job: 'Travel Photographer',
-      description: 'Foodie and sunset lover. Let\'s find the best local eats!',
-      interests: 'Food, Sunset, Culture',
-      profilePictureLink: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop'
-    }
-  ];
 
   const handleAction = async (direction) => {
     if (currentIndex >= matches.length) return;
@@ -115,9 +116,56 @@ export default function Match() {
 
   const currentMatch = matches[currentIndex];
 
+  const handleAcceptPending = async (e, req) => {
+    e.stopPropagation();
+    if (!currentUserId) return;
+    try {
+      await axios.post('/api/profile/swipe', {
+        requesterID: currentUserId,
+        receiverID: req.id,
+        status: 'accepted',
+        commonInterests: req.commonInterests
+      });
+      setPendingRequests(prev => prev.filter(p => p.id !== req.id));
+    } catch (err) {
+      console.error("Error accepting pending request", err);
+    }
+  };
+
+  const handleRejectPending = async (e, req) => {
+    e.stopPropagation();
+    if (!currentUserId) return;
+    try {
+      await axios.post('/api/profile/swipe', {
+        requesterID: currentUserId,
+        receiverID: req.id,
+        status: 'rejected',
+        commonInterests: req.commonInterests
+      });
+      setPendingRequests(prev => prev.filter(p => p.id !== req.id));
+    } catch (err) {
+      console.error("Error rejecting pending request", err);
+    }
+  };
+
+  const handleViewPending = (id) => {
+    const targetIdx = matches.findIndex(m => m.userID === id);
+    if (targetIdx !== -1) {
+      setCurrentIndex(targetIdx);
+    }
+  };
+
+  // Calculate shared interests
+  let currentMatchInterests = [];
+  let sharedInterestsCount = 0;
+  if (currentMatch) {
+    currentMatchInterests = currentMatch.interests ? currentMatch.interests.split(',').map(i => i.trim()) : ['Travel'];
+    sharedInterestsCount = currentMatchInterests.filter(i => currentUserInterests.includes(i.toLowerCase())).length;
+  }
+
   return (
     <div className="match-page">
-      <NavBar />
+
 
       <main className="match-page-content">
         <div className="swipe-header">
@@ -131,11 +179,11 @@ export default function Match() {
             <h3>Pending Requests</h3>
             <div className="pending-list">
               {pendingRequests.map(req => (
-                <div key={req.id} className="pending-item">
+                <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)} style={{cursor: 'pointer'}}>
                   <img src={req.image} alt={req.name} className="pending-img" />
                   <span className="pending-name">{req.name}</span>
-                  <button className="pending-btn accept">✓</button>
-                  <button className="pending-btn reject">✕</button>
+                  <button className="pending-btn accept" onClick={(e) => handleAcceptPending(e, req)}>✓</button>
+                  <button className="pending-btn reject" onClick={(e) => handleRejectPending(e, req)}>✕</button>
                 </div>
               ))}
               {pendingRequests.length === 0 && <p className="no-pending">No pending requests</p>}
@@ -149,7 +197,7 @@ export default function Match() {
                 <div className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}>
                   <div className="card-image-section" style={{ backgroundImage: `url(${currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'})` }}>
                     <div className="shared-interests-badge">
-                      {Math.floor(Math.random() * 3) + 1} Shared interests
+                      {sharedInterestsCount} Shared interests
                     </div>
                     <div className="card-overlay">
                       <h2>{currentMatch.firstName} {currentMatch.lastName}, {currentMatch.age}</h2>
@@ -163,11 +211,14 @@ export default function Match() {
                     <div className="interests-section">
                       <h4>Interests</h4>
                       <div className="interests-tags">
-                        {(currentMatch.interests ? currentMatch.interests.split(',') : ['Travel']).map((interest, idx) => (
-                          <span key={idx} className={`interest-tag ${idx < 2 ? 'primary' : 'secondary'}`}>
-                            {interest.trim()}
-                          </span>
-                        ))}
+                        {currentMatchInterests.map((interest, idx) => {
+                          const isShared = currentUserInterests.includes(interest.toLowerCase());
+                          return (
+                            <span key={idx} className={`interest-tag ${isShared ? 'shared' : 'unshared'}`}>
+                              {interest}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>

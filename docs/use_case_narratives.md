@@ -49,53 +49,70 @@
 
 ---
 
-## Use Case 3: Guide Managing Profile
-**Actor:** Guide
+## Use Case 3: User Managing Profile
+**Actor:** User (Explorer or Guide)
 
-**Trigger:** The Guide navigates to their profile page and decides to edit their information.
+**Trigger:** The user navigates to their profile page and decides to edit their information.
 
 **Preconditions:**
-- The Guide is registered and logged into the application.
+- The user is registered and logged into the application.
 
 **Main Flow (How it is accomplished):**
-1. The Guide navigates to the 'Profile' page (`/profile`).
-2. The system fetches the Guide's current profile data from the backend and populates the form fields.
-3. The Guide edits fields such as their bio, availability, hourly rate, and areas of expertise.
-4. The Guide submits the updated profile form.
+1. The user navigates to the 'Profile' page (`/profile`).
+2. The system fetches the user's current profile data from the backend and populates the form fields.
+3. The user edits fields such as their profile picture, bio/description, interests, location, and job title.
+4. The user submits the updated profile form.
 5. The frontend sends a PUT or PATCH request to the backend API with the updated information.
-6. The backend validates the data, updates the Guide's record in the database, and responds with a success status.
-7. The frontend displays a success message to the Guide and updates the local state to reflect the new profile details.
+6. The backend validates the data, updates the user's Profile record in the database, and responds with a success status.
+7. The frontend displays a success message to the user and updates the local state to reflect the new profile details.
 
 **Postconditions:**
-- The Guide's profile information is updated in the database.
-- The new information is immediately visible to Explorers on the 'Discover' and 'Match' pages.
+- The user's profile information is updated in the database.
+- The new information is immediately visible to other users (e.g., Explorers viewing Guides on the 'Match' page).
 
 ---
 
-## Use Case 4: Messaging
+## Use Case 4.1: Send Message
 **Actor:** Explorer and Guide
 
-**Trigger:** A user clicks on a chat notification or opens the "Messages" tab to communicate with a match.
+**Trigger:** A user decides to send a message to their match.
 
 **Preconditions:**
 - Both users are authenticated.
-- The Explorer and Guide have previously connected or matched.
+- A match status must be "accepted" in the Matches table.
+- The user is currently in an active chat thread with the matched user.
 
 **Main Flow (How it is accomplished):**
-1. Either user navigates to the 'Messages' page (`/messages`).
-2. The frontend fetches the user's active chat threads from the backend API.
-3. The user selects a specific chat thread with their counterpart.
-4. The system loads the conversation history.
-5. The user types a message in the chat input and clicks "Send".
-6. The frontend sends a POST request (or emits a WebSocket event) containing the message content and recipient ID to the backend.
-7. The backend saves the message to the database and broadcasts the message to the recipient in real-time (or queues it for when they next poll/load the page).
-8. The frontend updates the chat UI to display the newly sent message.
+1. The user types a message in the chat input area on the 'Messages' page.
+2. The user clicks the "Send" button.
+3. The frontend sends a POST request containing the message content to the backend API.
+4. The backend receives the request and saves the message to the database (collecting `mID`, `matchID`, `senderID`, `receiverID`, `textMessage`, and `sentAt`).
+5. The frontend updates the local chat UI to display the newly sent message in the thread.
 
 **Postconditions:**
-- The message is securely stored in the database.
-- The recipient receives the message in their chat interface.
+- The message is securely stored in the database in the `Message` table as shown in the schema.
 
 ---
+
+## Use Case 4.2: View Message
+**Actor:** Explorer and Guide
+
+**Trigger:** A user opens the "Messages" tab or selects a specific chat thread to view their conversation history.
+
+**Preconditions:**
+- The user is authenticated.
+- The user has an existing accepted match and previous message history.
+
+**Main Flow (How it is accomplished):**
+1. The user navigates to the 'Messages' page (`/messages`).
+2. The frontend fetches the user's active chat threads from the backend API.
+3. The user selects a specific chat thread with their counterpart.
+4. The frontend sends a GET request to the backend to fetch the message history for that specific match.
+5. The backend queries the `Message` table for messages corresponding to the `matchID`.
+6. The system loads and displays the conversation history in chronological order.
+
+**Postconditions:**
+- The user can successfully view all past sent and received messages for that match.
 
 ## Use Case 5: Delete Activity (D300)
 **Actor:** Guide

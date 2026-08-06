@@ -248,13 +248,26 @@
 }
 
 .interest-tag.primary {
-  background-color: #a9e3d4;
+  background-color: var(--primary);
   color: white;
 }
 
-.interest-tag.secondary {
-  background-color: #9397a6;
+.interest-tag.shared {
+  background-color: rgba(169, 227, 212, 0.9);
   color: white;
+  border: 1px solid transparent; /* Match spacing of other tags if they have borders */
+}
+
+.interest-tag.unshared {
+  background-color: #808080;
+  color: white;
+  border: 1px solid #808080;
+}
+
+.interest-tag.secondary {
+  background-color: var(--background);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .action-buttons {

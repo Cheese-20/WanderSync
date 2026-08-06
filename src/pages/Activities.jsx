@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NavBar from '../components/NavBar';
+
 import '../styles/guide.css';
 
 export default function Activities() {
@@ -53,7 +53,7 @@ export default function Activities() {
 
   return (
     <div className="guide-page">
-      <NavBar />
+
       <header className="guide-hero">
         <h1>Your Activities</h1>
         <p>Manage the tours you offer</p>

@@ -85,6 +85,47 @@ namespace backend.Controllers
                 return BadRequest("Email and password are required.");
             }
 
+            string providedUsername = model.Email;
+            
+            // Normalize email to username if it ends with @wandersync.com
+            if (providedUsername.EndsWith("@wandersync.com", StringComparison.OrdinalIgnoreCase))
+            {
+                providedUsername = providedUsername.Substring(0, providedUsername.IndexOf("@"));
+            }
+
+            if (providedUsername.StartsWith("s", StringComparison.OrdinalIgnoreCase) && !providedUsername.Contains("@"))
+            {
+                var adminQueryUsername = providedUsername + "@wandersync.com";
+                var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Username == adminQueryUsername);
+                if (admin != null)
+                {
+                    _logger.LogInformation($"Admin DB password: '{admin.HashedPassword}', Provided: '{model.Password}'");
+                    // Admin passwords are not hashed according to schema requirements
+                    if (admin.HashedPassword == model.Password)
+                    {
+                        var returnedRole = "admin";
+                        var adminToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{admin.Username}:{Guid.NewGuid()}"));
+                        return Ok(new
+                        {
+                            message = "Login successful",
+                            token = adminToken,
+                            user = new
+                            {
+                                id = admin.AdminID,
+                                email = admin.Username,
+                                name = "Admin",
+                                surname = "User",
+                                role = returnedRole
+                            }
+                        });
+                    }
+                    else
+                    {
+                        return Unauthorized("Invalid email or password.");
+                    }
+                }
+            }
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
             if (user == null)
             {
