@@ -54,5 +54,52 @@ namespace backend.Controllers
 
             return CreatedAtAction(nameof(GetPosts), new { id = post.PostID }, post);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePost(int id, Post updatedPost)
+        {
+            if (id != updatedPost.PostID)
+            {
+                return BadRequest();
+            }
+
+            var existingPost = await _context.Posts.FindAsync(id);
+            if (existingPost == null)
+            {
+                return NotFound();
+            }
+
+            existingPost.Content = updatedPost.Content;
+            existingPost.ExperienceType = updatedPost.ExperienceType;
+            if (updatedPost.PictureURL != null) 
+            {
+                existingPost.PictureURL = updatedPost.PictureURL;
+            }
+            existingPost.UpdatedAt = DateTime.UtcNow;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PostExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            // Return the updated post so frontend can easily use it
+            return Ok(existingPost);
+        }
+
+        private bool PostExists(int id)
+        {
+            return _context.Posts.Any(e => e.PostID == id);
+        }
     }
 }

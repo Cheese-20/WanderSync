@@ -1,6 +1,13 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-06]
+- **Feature (Edit Experience Post)**: Implemented Use Case D600 (Edit experience post).
+  - Added `UpdatePost` (PUT) endpoint in `PostsController.cs` to handle post modifications.
+  - Updated `CreatePostModal.jsx` to support an edit mode with pre-populated fields.
+  - Modified `ExplorerHome.jsx` to show an edit icon for the user's own posts and update the post list without refreshing.
+  - Documented Use Case D600 in `docs/use_case_narratives.md`.
+
 ## [2026-08-03]
 - **Feature (Post Experience)**: Implemented the Post Experience Use Case (D100). Added `Post` backend model, `PostsController`, and updated `WanderSyncDbContext`.
 - **UI (Explorer Home)**: Created `CreatePostModal.jsx` for the Post Experience flow and updated `ExplorerHome.jsx` to fetch and display the feed. Added styles to `explorer.css`.
