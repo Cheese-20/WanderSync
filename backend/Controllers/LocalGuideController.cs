@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,63 +25,34 @@ namespace backend.Controllers
 
         /// <summary>
         /// POST /api/local-guide/apply
-        /// Accepts multipart/form-data with application fields + file uploads.
-        /// For now stores the application in the LocalGuideApplication table.
+        /// Submits a local guide application.
         /// </summary>
         [HttpPost("apply")]
-        public async Task<IActionResult> Apply([FromForm] LocalGuideApplicationRequest request)
+        public async Task<IActionResult> Apply([FromBody] GuideApplicationRequest request)
         {
-            _logger.LogInformation("Local guide application received for userId={UserId}", request.UserId);
+            _logger.LogInformation("Local guide application received for userId={UserId}", request.UserID);
 
-            if (request.UserId <= 0)
-                return BadRequest(new { message = "Valid userId is required." });
+            if (request.UserID <= 0)
+                return BadRequest(new { message = "Valid userID is required." });
 
             // Check user exists
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
             if (user == null)
                 return NotFound(new { message = "User not found." });
 
-            // Check for duplicate pending application
+            // Check for duplicate application
             var existing = await _context.LocalGuideApplications
-                .FirstOrDefaultAsync(a => a.UserId == request.UserId && a.Status == "Pending");
+                .FirstOrDefaultAsync(a => a.UserID == request.UserID);
             if (existing != null)
-                return Conflict(new { message = "You already have a pending application. Please wait for a review." });
-
-            // Save file bytes (in production you would store to cloud storage and save the URL)
-            byte[]? profileImageBytes = null;
-            byte[]? idCopyBytes = null;
-
-            if (request.ProfileImage != null)
-            {
-                using var ms = new System.IO.MemoryStream();
-                await request.ProfileImage.CopyToAsync(ms);
-                profileImageBytes = ms.ToArray();
-            }
-
-            if (request.IdCopy != null)
-            {
-                using var ms = new System.IO.MemoryStream();
-                await request.IdCopy.CopyToAsync(ms);
-                idCopyBytes = ms.ToArray();
-            }
+                return Conflict(new { message = "You already have a pending application." });
 
             var application = new LocalGuideApplication
             {
-                UserId = request.UserId,
-                FirstName = request.FirstName?.Trim() ?? string.Empty,
-                LastName = request.LastName?.Trim() ?? string.Empty,
-                Email = request.Email?.Trim() ?? string.Empty,
-                PhoneNumber = request.PhoneNumber?.Trim() ?? string.Empty,
-                Age = request.Age,
-                IdNumber = request.IdNumber?.Trim() ?? string.Empty,
-                Location = request.Location?.Trim() ?? string.Empty,
-                Experience = request.Experience?.Trim() ?? string.Empty,
-                Reason = request.Reason?.Trim() ?? string.Empty,
-                ActivityCount = request.ActivityCount,
-                ProfileImageData = profileImageBytes,
-                IdCopyData = idCopyBytes,
-                Status = "Pending",
-                SubmittedAt = DateTime.UtcNow
+                IDno = request.IDno,
+                Reason = request.Reason ?? string.Empty,
+                Location = request.Location ?? string.Empty,
+                Bio = string.IsNullOrEmpty(request.Bio) ? string.Empty : request.Bio.Length > 250 ? request.Bio.Substring(0, 250) : request.Bio,
+                UserID = request.UserID
             };
 
             try
@@ -87,7 +60,7 @@ namespace backend.Controllers
                 _context.LocalGuideApplications.Add(application);
                 await _context.SaveChangesAsync();
 
-                // Optionally mark user role as "PendingGuide"
+                // Update user role to PendingGuide
                 user.Role = "PendingGuide";
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
@@ -100,59 +73,181 @@ namespace backend.Controllers
                 return StatusCode(500, new { message = "Failed to save application. Please try again." });
             }
         }
-    }
 
-    /// <summary>
-    /// GET /api/user/activities/count/{userId}
-    /// Returns the number of activities the user has participated in.
-    /// </summary>
-    [ApiController]
-    [Route("api/user")]
-    public class UserActivityController : ControllerBase
-    {
-        private readonly ILogger<UserActivityController> _logger;
-        private readonly WanderSyncDbContext _context;
-
-        public UserActivityController(ILogger<UserActivityController> logger, WanderSyncDbContext context)
+        /// <summary>
+        /// GET /api/local-guide/list
+        /// Returns all approved local guides with their profile information.
+        /// </summary>
+        [HttpGet("list")]
+        public async Task<IActionResult> GetAllGuides()
         {
-            _logger = logger;
-            _context = context;
+            try
+            {
+                var guides = await _context.Users
+                    .Where(u => u.Role == "Guide")
+                    .Join(
+                        _context.Profiles,
+                        user => user.UserID,
+                        profile => profile.UserID,
+                        (user, profile) => new
+                        {
+                            guideId = user.UserID,
+                            firstName = user.FirstName,
+                            lastName = user.LastName,
+                            email = user.Email,
+                            profilePictureLink = profile.ProfilePictureLink,
+                            location = profile.Location,
+                            description = profile.Description,
+                            job = profile.Job,
+                            interests = profile.Interests
+                        }
+                    )
+                    .ToListAsync();
+
+                var guidesWithoutProfiles = await _context.Users
+                    .Where(u => u.Role == "Guide" && !_context.Profiles.Any(p => p.UserID == u.UserID))
+                    .Select(u => new
+                    {
+                        guideId = u.UserID,
+                        firstName = u.FirstName,
+                        lastName = u.LastName,
+                        email = u.Email,
+                        profilePictureLink = (string?)null,
+                        location = (string?)null,
+                        description = (string?)null,
+                        job = (string?)null,
+                        interests = (string?)null
+                    })
+                    .ToListAsync();
+
+                var allGuides = guides.Concat(guidesWithoutProfiles).ToList();
+                return Ok(allGuides);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching local guides list.");
+                return StatusCode(500, new { message = "Failed to retrieve guides." });
+            }
         }
 
-        [HttpGet("activities/count/{userId}")]
-        public async Task<IActionResult> GetActivityCount(int userId)
+        /// <summary>
+        /// GET /api/local-guide/search?query=...
+        /// Searches for local guides by name, location, or interests.
+        /// </summary>
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchGuides([FromQuery] string? query)
         {
-            if (userId <= 0)
-                return BadRequest(new { message = "Valid userId is required." });
+            try
+            {
+                var guidesQuery = _context.Users
+                    .Where(u => u.Role == "Guide")
+                    .Join(
+                        _context.Profiles,
+                        user => user.UserID,
+                        profile => profile.UserID,
+                        (user, profile) => new
+                        {
+                            user,
+                            profile
+                        }
+                    );
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
-            if (user == null)
-                return NotFound(new { message = "User not found." });
+                if (!string.IsNullOrWhiteSpace(query))
+                {
+                    var searchTerm = query.Trim().ToLower();
+                    guidesQuery = guidesQuery.Where(g =>
+                        (g.user.FirstName != null && g.user.FirstName.ToLower().Contains(searchTerm)) ||
+                        (g.user.LastName != null && g.user.LastName.ToLower().Contains(searchTerm)) ||
+                        (g.profile.Location != null && g.profile.Location.ToLower().Contains(searchTerm)) ||
+                        (g.profile.Interests != null && g.profile.Interests.ToLower().Contains(searchTerm)) ||
+                        (g.profile.Description != null && g.profile.Description.ToLower().Contains(searchTerm))
+                    );
+                }
 
-            // TODO: Replace with real activity participation count query
-            // e.g. var count = await _context.ActivityParticipants.CountAsync(p => p.UserId == userId);
-            var count = 0;
+                var results = await guidesQuery
+                    .Select(g => new
+                    {
+                        guideId = g.user.UserID,
+                        firstName = g.user.FirstName,
+                        lastName = g.user.LastName,
+                        email = g.user.Email,
+                        profilePictureLink = g.profile.ProfilePictureLink,
+                        location = g.profile.Location,
+                        description = g.profile.Description,
+                        job = g.profile.Job,
+                        interests = g.profile.Interests
+                    })
+                    .ToListAsync();
 
-            return Ok(new { activityCount = count });
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching local guides with query={Query}", query);
+                return StatusCode(500, new { message = "Failed to search guides." });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/local-guide/{guideId}
+        /// Returns a single guide's full profile details along with their tours.
+        /// </summary>
+        [HttpGet("{guideId:int}")]
+        public async Task<IActionResult> GetGuideDetails(int guideId)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == guideId && u.Role == "Guide");
+                if (user == null)
+                    return NotFound(new { message = "Guide not found." });
+
+                var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserID == guideId);
+
+                var tours = await _context.Tours
+                    .Where(t => t.GuideId == guideId)
+                    .Select(t => new
+                    {
+                        tourId = t.TourId,
+                        title = t.Title,
+                        type = t.Type,
+                        description = t.Description,
+                        date = t.Date,
+                        maxPeople = t.MaxPeople
+                    })
+                    .ToListAsync();
+
+                var guideDetails = new
+                {
+                    guideId = user.UserID,
+                    firstName = user.FirstName,
+                    lastName = user.LastName,
+                    email = user.Email,
+                    profilePictureLink = profile?.ProfilePictureLink,
+                    location = profile?.Location,
+                    description = profile?.Description,
+                    job = profile?.Job,
+                    interests = profile?.Interests,
+                    tours = tours
+                };
+
+                return Ok(guideDetails);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching guide details for guideId={GuideId}", guideId);
+                return StatusCode(500, new { message = "Failed to retrieve guide details." });
+            }
         }
     }
 
-    // ===== Request / Model DTOs =====
+    // ===== Request DTO =====
 
-    public class LocalGuideApplicationRequest
+    public class GuideApplicationRequest
     {
-        public int UserId { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public int Age { get; set; }
-        public string? IdNumber { get; set; }
-        public string? Location { get; set; }
-        public string? Experience { get; set; }
+        public int UserID { get; set; }
+        public int IDno { get; set; }
         public string? Reason { get; set; }
-        public int ActivityCount { get; set; }
-        public IFormFile? ProfileImage { get; set; }
-        public IFormFile? IdCopy { get; set; }
+        public string? Location { get; set; }
+        public string? Bio { get; set; }
     }
 }

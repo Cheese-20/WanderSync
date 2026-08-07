@@ -8,6 +8,9 @@ import ExplorePage from './pages/ExplorePage.jsx';
 import Messages from './pages/Messages.jsx';
 import Profile from './pages/Profile.jsx';
 import LocalGuideApplication from './pages/LocalGuideApplication.jsx';
+import Activities from './pages/Activities.jsx';
+import EditActivity from './pages/EditActivity.jsx';
+import GuideDetail from './pages/GuideDetail.jsx';
 
 function HomeRouter() {
   const userJson = localStorage.getItem('user');
@@ -32,6 +35,9 @@ function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/apply-guide" element={<LocalGuideApplication />} />
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/edit-activity/:id" element={<EditActivity />} />
+        <Route path="/guide/:guideId" element={<GuideDetail />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import '../styles/guide.css';
 
@@ -12,8 +13,11 @@ export default function GuideHome() {
       </header>
 
       <section className="guide-actions">
-        <div className="panel">Upcoming Bookings</div>
-        <div className="panel">Quick Actions</div>
+        <div className="panel secondary-panel">Upcoming Bookings</div>
+        <div className="panel secondary-panel">Quick Actions</div>
+        <Link to="/activities" className="panel primary-panel">
+          Manage Activities
+        </Link>
       </section>
     </div>
   );

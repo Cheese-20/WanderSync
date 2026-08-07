@@ -5,9 +5,16 @@ using DotNetEnv;
 using backend.Data;
 
 
-Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
+try
+{
+    Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+}
+catch (Exception)
+{
+    // .env parsing failed — fall through to appsettings.json
+}
+
 
 //  Grab the connection string from environment or configuration (appsettings.json or environment)
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__WanderSyncDb");
@@ -91,6 +98,35 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Tours` (
+                `tourID` int NOT NULL AUTO_INCREMENT,
+                `guideID` int NOT NULL,
+                `title` varchar(100) NOT NULL,
+                `type` varchar(50) NOT NULL,
+                `description` longtext NOT NULL,
+                `date` datetime(6) NOT NULL,
+                `maxPeople` int NOT NULL,
+                PRIMARY KEY (`tourID`),
+                CONSTRAINT `FK_Tours_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Posts` (
+                `postID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `content` longtext NOT NULL,
+                `pictureURL` longtext NULL,
+                `experienceType` varchar(50) NOT NULL,
+                `createdAt` datetime(6) NOT NULL,
+                `updatedAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`postID`),
+                CONSTRAINT `FK_Posts_User` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
@@ -98,7 +134,10 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `description` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `location` longtext NULL;",
-            "ALTER TABLE `Profile` ADD COLUMN `job` longtext NULL;"
+            "ALTER TABLE `Profile` ADD COLUMN `job` longtext NULL;",
+            "ALTER TABLE `Posts` ADD COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `Posts` MODIFY COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `Posts` ADD COLUMN `experienceType` varchar(50) NOT NULL DEFAULT 'Individual';"
         };
 
         foreach (var sql in profileColumnSqls)
@@ -106,29 +145,6 @@ using (var scope = app.Services.CreateScope())
             try { context.Database.ExecuteSqlRaw(sql); } catch { }
         }
 
-        // Create LocalGuideApplication table if not exists
-        context.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS `LocalGuideApplication` (
-                `appID` int NOT NULL AUTO_INCREMENT,
-                `userID` int NOT NULL,
-                `firstName` longtext NOT NULL,
-                `lastName` longtext NOT NULL,
-                `email` longtext NOT NULL,
-                `phoneNumber` longtext NOT NULL,
-                `age` int NOT NULL,
-                `idNumber` longtext NOT NULL,
-                `location` longtext NOT NULL,
-                `experience` longtext NOT NULL,
-                `reason` longtext NOT NULL,
-                `activityCount` int NOT NULL DEFAULT 0,
-                `profileImageData` longblob NULL,
-                `idCopyData` longblob NULL,
-                `status` longtext NOT NULL DEFAULT 'Pending',
-                `submittedAt` datetime(6) NOT NULL,
-                PRIMARY KEY (`appID`),
-                CONSTRAINT `FK_LocalGuideApplication_User_userID` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        ");
     }
     catch (Exception ex)
     {
@@ -138,6 +154,20 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var message = error?.Error?.Message ?? "An unexpected error occurred.";
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(error?.Error, "Unhandled exception");
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new { message }));
+    });
+});
+
 app.MapControllers();
 
 app.Run();

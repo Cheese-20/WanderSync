@@ -23,3 +23,4 @@ The database uses raw SQL queries to initialize structure. Current tables includ
 - **User**: Stores primary authentication and account details (`userID`, `firstName`, `lastName`, `email`, `cellNumber`, `age`, `hashedPword`, `role`, `accountStatus`).
 - **Profile**: Stores user-specific extended data linked to a `User` (`pID`, `userID`, `profilePictureLink`, `interests`, `createdAt`, `description`, `location`, `job`).
 - **Matches**: Stores swipe interactions (`matchID`, `requesterID`, `receiverID`, `commonInterests`, `status`, `dateMatched`). Status handles "pending", "accepted", and "rejected" states.
+- **Message**: Stores chat data (`mID`, `matchID`, `senderID`, `receiverID`, `textMessage`, `sentAt`). Links back to Matches to enforce the rule that users must have an "accepted" match to chat.

@@ -20,6 +20,11 @@ body {
 
 button {
   font: inherit;
+  transition: transform 0.1s ease-in-out;
+}
+
+button:active {
+  transform: scale(0.96) !important;
 }
 
 .page-container {

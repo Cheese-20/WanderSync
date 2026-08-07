@@ -1,110 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import '../styles/localGuide.css';
 
 export default function LocalGuideApplication() {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [isEligible, setIsEligible] = useState(false);
-    const [activityCount, setActivityCount] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [apiError, setApiError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        age: '',
-        idNumber: '',
-        location: '',
-        experience: '',
+        idNo: '',
         reason: '',
-        profileImage: null,
-        idCopy: null
+        location: '',
+        bio: ''
     });
 
     const [formErrors, setFormErrors] = useState({});
-    const [previewImages, setPreviewImages] = useState({
-        profile: null,
-        idCopy: null
-    });
+    const [userId, setUserId] = useState(null);
 
-    // Check user eligibility (must have participated in at least 5 activities)
     useEffect(() => {
-        const checkEligibility = async () => {
-            try {
-                // Get current user from localStorage or context
-                const user = JSON.parse(localStorage.getItem('user'));
+        const userJson = localStorage.getItem('user');
+        if (!userJson) {
+            navigate('/login', {
+                state: { message: 'Please login to apply as a Local Guide' }
+            });
+            return;
+        }
 
-                if (!user) {
-                    // No user in localStorage — redirect to login
-                    navigate('/login', {
-                        state: { message: 'Please login to apply as a Local Guide' }
-                    });
-                    return;
-                }
-
-                // Fetch user's activity participation count via Vite proxy (/api → localhost:5200)
-                const response = await fetch(`/api/user/activities/count/${user.id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    const count = data.activityCount || 0;
-                    setActivityCount(count);
-                    setIsEligible(count >= 5);
-
-                    // Pre-fill form with user data
-                    setFormData(prev => ({
-                        ...prev,
-                        firstName: user.name || '',
-                        lastName: user.surname || '',
-                        email: user.email || '',
-                        phoneNumber: user.phoneNumber || '',
-                        age: user.age || ''
-                    }));
-                } else {
-                    // If API fails, use mock data for demonstration
-                    // Remove this in production
-                    const mockCount = 7;
-                    setActivityCount(mockCount);
-                    setIsEligible(mockCount >= 5);
-
-                    // Pre-fill with mock user data
-                    const mockUser = {
-                        name: 'John',
-                        surname: 'Doe',
-                        email: 'john@example.com',
-                        phoneNumber: '0821234567',
-                        age: 28
-                    };
-                    setFormData(prev => ({
-                        ...prev,
-                        firstName: mockUser.name,
-                        lastName: mockUser.surname,
-                        email: mockUser.email,
-                        phoneNumber: mockUser.phoneNumber,
-                        age: mockUser.age
-                    }));
-                }
-            } catch (error) {
-                console.error('Error checking eligibility:', error);
-                // For demo purposes, set mock data
-                setActivityCount(7);
-                setIsEligible(true);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        checkEligibility();
+        try {
+            const user = JSON.parse(userJson);
+            setUserId(user.id || user.userID);
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
     }, [navigate]);
 
     const handleChange = (e) => {
@@ -114,7 +43,6 @@ export default function LocalGuideApplication() {
             [id]: value
         }));
 
-        // Clear error for this field
         if (formErrors[id]) {
             setFormErrors(prev => ({
                 ...prev,
@@ -123,109 +51,29 @@ export default function LocalGuideApplication() {
         }
     };
 
-    const handleFileChange = (e) => {
-        const { id, files } = e.target;
-        const file = files[0];
-
-        if (file) {
-            setFormData(prev => ({
-                ...prev,
-                [id]: file
-            }));
-
-            // Create preview
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewImages(prev => ({
-                    ...prev,
-                    [id === 'profileImage' ? 'profile' : 'idCopy']: reader.result
-                }));
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
     const validateForm = () => {
         const errors = {};
 
-        // First Name
-        if (!formData.firstName.trim()) {
-            errors.firstName = 'First name is required';
-        } else if (formData.firstName.trim().length < 2) {
-            errors.firstName = 'First name must be at least 2 characters';
+        // ID Number (required)
+        if (!formData.idNo.trim()) {
+            errors.idNo = 'ID number is required';
+        } else if (!/^\d+$/.test(formData.idNo.trim())) {
+            errors.idNo = 'ID number must contain only numbers';
         }
 
-        // Last Name
-        if (!formData.lastName.trim()) {
-            errors.lastName = 'Last name is required';
-        } else if (formData.lastName.trim().length < 2) {
-            errors.lastName = 'Last name must be at least 2 characters';
-        }
-
-        // Email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!formData.email.trim()) {
-            errors.email = 'Email is required';
-        } else if (!emailRegex.test(formData.email)) {
-            errors.email = 'Please enter a valid email address';
-        }
-
-        // Phone Number
-        const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-        if (!formData.phoneNumber.trim()) {
-            errors.phoneNumber = 'Phone number is required';
-        } else if (!phoneRegex.test(formData.phoneNumber)) {
-            errors.phoneNumber = 'Please enter a valid phone number';
-        }
-
-        // Age
-        if (!formData.age) {
-            errors.age = 'Please select your age';
-        } else if (parseInt(formData.age) < 18) {
-            errors.age = 'You must be at least 18 years old to apply';
-        }
-
-        // ID Number
-        if (!formData.idNumber.trim()) {
-            errors.idNumber = 'ID number is required';
-        } else if (formData.idNumber.trim().length !== 13) {
-            errors.idNumber = 'Please enter a valid 13-digit ID number';
-        } else if (!/^\d{13}$/.test(formData.idNumber)) {
-            errors.idNumber = 'ID number must contain only numbers';
-        }
-
-        // Location
+        // Location (required)
         if (!formData.location.trim()) {
             errors.location = 'Location is required';
         }
 
-        // Experience
-        if (!formData.experience.trim()) {
-            errors.experience = 'Please describe your experience';
-        } else if (formData.experience.trim().length < 20) {
-            errors.experience = 'Please provide more detail (minimum 20 characters)';
+        // Bio (required, max 250 characters)
+        if (!formData.bio.trim()) {
+            errors.bio = 'Bio is required';
+        } else if (formData.bio.trim().length > 250) {
+            errors.bio = 'Bio must be 250 characters or less';
         }
 
-        // Reason
-        if (!formData.reason.trim()) {
-            errors.reason = 'Please tell us why you want to become a Local Guide';
-        } else if (formData.reason.trim().length < 30) {
-            errors.reason = 'Please provide more detail (minimum 30 characters)';
-        }
-
-        // Profile Image
-        if (!formData.profileImage) {
-            errors.profileImage = 'Profile picture is required';
-        } else if (formData.profileImage.size > 5 * 1024 * 1024) {
-            errors.profileImage = 'Profile picture must be less than 5MB';
-        }
-
-        // ID Copy
-        if (!formData.idCopy) {
-            errors.idCopy = 'ID copy is required';
-        } else if (formData.idCopy.size > 5 * 1024 * 1024) {
-            errors.idCopy = 'ID copy must be less than 5MB';
-        }
+        // Reason is optional - no validation
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -236,13 +84,7 @@ export default function LocalGuideApplication() {
         setApiError('');
         setSuccessMessage('');
 
-        if (!isEligible) {
-            setApiError(`You need to participate in at least 5 activities to apply. You have participated in ${activityCount} activities.`);
-            return;
-        }
-
         if (!validateForm()) {
-            // Scroll to first error
             const firstError = document.querySelector('.error-message');
             if (firstError) {
                 firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -253,52 +95,46 @@ export default function LocalGuideApplication() {
         setIsSubmitting(true);
 
         try {
-            // Get current user
             const user = JSON.parse(localStorage.getItem('user'));
+            const currentUserId = user?.id || user?.userID;
 
-            if (!user) {
-                throw new Error('You must be logged in to submit an application.');
+            if (!currentUserId || currentUserId <= 0) {
+                throw new Error('User not found. Please log in again.');
             }
 
-            // Create FormData for file uploads
-            const submitData = new FormData();
-            submitData.append('userId', user.id);
-            submitData.append('firstName', formData.firstName.trim());
-            submitData.append('lastName', formData.lastName.trim());
-            submitData.append('email', formData.email.trim());
-            submitData.append('phoneNumber', formData.phoneNumber.trim());
-            submitData.append('age', formData.age);
-            submitData.append('idNumber', formData.idNumber.trim());
-            submitData.append('location', formData.location.trim());
-            submitData.append('experience', formData.experience.trim());
-            submitData.append('reason', formData.reason.trim());
-            submitData.append('profileImage', formData.profileImage);
-            submitData.append('idCopy', formData.idCopy);
-            submitData.append('activityCount', activityCount);
+            const payload = {
+                userID: currentUserId,
+                idNo: parseInt(formData.idNo.trim(), 10),
+                reason: formData.reason.trim(),
+                location: formData.location.trim(),
+                bio: formData.bio.trim()
+            };
 
-            // Submit via Vite proxy (/api → localhost:5200)
             const response = await fetch('/api/local-guide/apply', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: submitData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
+            const contentType = response.headers.get('content-type');
+            let data;
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                throw new Error('Server error. Please ensure the backend is running correctly.');
+            }
 
             if (!response.ok) {
                 throw new Error(data.message || 'Application submission failed');
             }
 
-            setSuccessMessage('Your application has been submitted successfully! We will review it and get back to you within 48 hours.');
+            setSuccessMessage('Your application has been submitted successfully! Redirecting to your profile...');
 
-            // Reset form after successful submission
             setTimeout(() => {
-                navigate('/application-status', {
-                    state: { message: 'Application submitted successfully!' }
+                navigate('/profile', {
+                    state: { message: 'Local Guide application submitted successfully!' }
                 });
-            }, 3000);
+            }, 2000);
 
         } catch (error) {
             console.error('Application error:', error);
@@ -308,64 +144,22 @@ export default function LocalGuideApplication() {
         }
     };
 
-    // Generate age options
-    const ageOptions = [];
-    for (let i = 18; i <= 80; i++) {
-        ageOptions.push(i);
-    }
-
-    if (loading) {
-        return (
-            <div className="local-guide-page">
-                <NavBar />
-                <div className="loading-container">
-                    <div className="loading-spinner"></div>
-                    <p>Checking your eligibility...</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="local-guide-page">
             <NavBar />
 
             <div className="application-container">
                 <div className="application-card">
-                    {/* Eligibility Banner */}
-                    <div className={`eligibility-banner ${isEligible ? 'eligible' : 'not-eligible'}`}>
-                        <div className="eligibility-icon">
-                            {isEligible ? '✓' : '⚠'}
-                        </div>
-                        <div className="eligibility-content">
-                            <h3>
-                                {isEligible
-                                    ? 'You are eligible to apply!'
-                                    : 'You are not yet eligible'}
-                            </h3>
-                            <p>
-                                {isEligible
-                                    ? `You have participated in ${activityCount} activities. Great job!`
-                                    : `You have participated in ${activityCount} out of 5 required activities. Keep exploring!`}
-                            </p>
-                            {!isEligible && (
-                                <Link to="/explore" className="explore-link">
-                                    Discover more activities →
-                                </Link>
-                            )}
-                        </div>
-                    </div>
-
                     {apiError && (
                         <div className="api-error-message">
-                            <span className="error-icon">⚠</span>
+                            <span className="error-icon">!</span>
                             {apiError}
                         </div>
                     )}
 
                     {successMessage && (
                         <div className="success-message">
-                            <span className="success-icon">✓</span>
+                            <span className="success-icon">&#10003;</span>
                             {successMessage}
                         </div>
                     )}
@@ -375,99 +169,18 @@ export default function LocalGuideApplication() {
                         <p>Join our community of local guides and share your expertise</p>
                     </div>
 
-                    <form id="guideForm" onSubmit={handleSubmit} encType="multipart/form-data">
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="firstName">First Name *</label>
-                                <input
-                                    type="text"
-                                    id="firstName"
-                                    value={formData.firstName}
-                                    onChange={handleChange}
-                                    className={formErrors.firstName ? 'error' : ''}
-                                    disabled={!isEligible}
-                                    placeholder="Enter your first name"
-                                />
-                                {formErrors.firstName && <span className="error-message">{formErrors.firstName}</span>}
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="lastName">Last Name *</label>
-                                <input
-                                    type="text"
-                                    id="lastName"
-                                    value={formData.lastName}
-                                    onChange={handleChange}
-                                    className={formErrors.lastName ? 'error' : ''}
-                                    disabled={!isEligible}
-                                    placeholder="Enter your last name"
-                                />
-                                {formErrors.lastName && <span className="error-message">{formErrors.lastName}</span>}
-                            </div>
-                        </div>
-
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="email">Email *</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className={formErrors.email ? 'error' : ''}
-                                    disabled={!isEligible}
-                                    placeholder="Enter your email address"
-                                />
-                                {formErrors.email && <span className="error-message">{formErrors.email}</span>}
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="phoneNumber">Phone Number *</label>
-                                <input
-                                    type="tel"
-                                    id="phoneNumber"
-                                    value={formData.phoneNumber}
-                                    onChange={handleChange}
-                                    className={formErrors.phoneNumber ? 'error' : ''}
-                                    disabled={!isEligible}
-                                    placeholder="Enter your phone number"
-                                />
-                                {formErrors.phoneNumber && <span className="error-message">{formErrors.phoneNumber}</span>}
-                            </div>
-                        </div>
-
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label htmlFor="age">Age *</label>
-                                <select
-                                    id="age"
-                                    value={formData.age}
-                                    onChange={handleChange}
-                                    className={formErrors.age ? 'error' : ''}
-                                    disabled={!isEligible}
-                                >
-                                    <option value="">Select Age</option>
-                                    {ageOptions.map(age => (
-                                        <option key={age} value={age}>{age}</option>
-                                    ))}
-                                </select>
-                                {formErrors.age && <span className="error-message">{formErrors.age}</span>}
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="idNumber">ID Number *</label>
-                                <input
-                                    type="text"
-                                    id="idNumber"
-                                    maxLength="13"
-                                    value={formData.idNumber}
-                                    onChange={handleChange}
-                                    className={formErrors.idNumber ? 'error' : ''}
-                                    disabled={!isEligible}
-                                    placeholder="Enter 13-digit ID number"
-                                />
-                                {formErrors.idNumber && <span className="error-message">{formErrors.idNumber}</span>}
-                            </div>
+                    <form id="guideForm" onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="idNo">ID Number *</label>
+                            <input
+                                type="text"
+                                id="idNo"
+                                value={formData.idNo}
+                                onChange={handleChange}
+                                className={formErrors.idNo ? 'error' : ''}
+                                placeholder="Enter your ID number"
+                            />
+                            {formErrors.idNo && <span className="error-message">{formErrors.idNo}</span>}
                         </div>
 
                         <div className="form-group">
@@ -478,121 +191,42 @@ export default function LocalGuideApplication() {
                                 value={formData.location}
                                 onChange={handleChange}
                                 className={formErrors.location ? 'error' : ''}
-                                disabled={!isEligible}
                                 placeholder="Enter your city/area"
                             />
                             {formErrors.location && <span className="error-message">{formErrors.location}</span>}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="experience">Years of Experience *</label>
+                            <label htmlFor="bio">Bio * <span className="char-count">({formData.bio.length}/250)</span></label>
                             <textarea
-                                id="experience"
-                                rows="5"
-                                value={formData.experience}
+                                id="bio"
+                                rows="4"
+                                maxLength="250"
+                                value={formData.bio}
                                 onChange={handleChange}
-                                className={formErrors.experience ? 'error' : ''}
-                                disabled={!isEligible}
-                                placeholder="Describe your experience as a guide or in relevant fields..."
+                                className={formErrors.bio ? 'error' : ''}
+                                placeholder="Tell us about yourself and your guiding expertise..."
                             />
-                            {formErrors.experience && <span className="error-message">{formErrors.experience}</span>}
+                            {formErrors.bio && <span className="error-message">{formErrors.bio}</span>}
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="reason">Why do you want to become a Local Guide? *</label>
+                            <label htmlFor="reason">Why do you want to become a Local Guide? (Optional)</label>
                             <textarea
                                 id="reason"
-                                rows="6"
+                                rows="4"
                                 value={formData.reason}
                                 onChange={handleChange}
-                                className={formErrors.reason ? 'error' : ''}
-                                disabled={!isEligible}
-                                placeholder="Tell us your motivation and what you can contribute..."
+                                placeholder="Tell us your motivation..."
                             />
-                            {formErrors.reason && <span className="error-message">{formErrors.reason}</span>}
-                        </div>
-
-                        <div className="form-row">
-                            <div className="form-group file-upload-group">
-                                <label htmlFor="profileImage">Upload Profile Picture *</label>
-                                <div className="file-upload-wrapper">
-                                    <input
-                                        type="file"
-                                        id="profileImage"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        className={formErrors.profileImage ? 'error' : ''}
-                                        disabled={!isEligible}
-                                    />
-                                    <div className="file-upload-label">
-                                        <span>Choose a profile picture</span>
-                                    </div>
-                                </div>
-                                {formErrors.profileImage && <span className="error-message">{formErrors.profileImage}</span>}
-                                {previewImages.profile && (
-                                    <div className="image-preview">
-                                        <img src={previewImages.profile} alt="Profile preview" />
-                                        <button
-                                            type="button"
-                                            className="remove-image"
-                                            onClick={() => {
-                                                setPreviewImages(prev => ({ ...prev, profile: null }));
-                                                setFormData(prev => ({ ...prev, profileImage: null }));
-                                            }}
-                                        >
-                                            ×
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="form-group file-upload-group">
-                                <label htmlFor="idCopy">Upload ID Copy (PDF/Image) *</label>
-                                <div className="file-upload-wrapper">
-                                    <input
-                                        type="file"
-                                        id="idCopy"
-                                        accept=".pdf,image/*"
-                                        onChange={handleFileChange}
-                                        className={formErrors.idCopy ? 'error' : ''}
-                                        disabled={!isEligible}
-                                    />
-                                    <div className="file-upload-label">
-                                        <span>Upload ID document</span>
-                                    </div>
-                                </div>
-                                {formErrors.idCopy && <span className="error-message">{formErrors.idCopy}</span>}
-                                {previewImages.idCopy && (
-                                    <div className="image-preview">
-                                        <img src={previewImages.idCopy} alt="ID copy preview" />
-                                        <button
-                                            type="button"
-                                            className="remove-image"
-                                            onClick={() => {
-                                                setPreviewImages(prev => ({ ...prev, idCopy: null }));
-                                                setFormData(prev => ({ ...prev, idCopy: null }));
-                                            }}
-                                        >
-                                            ×
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
                         <button
                             type="submit"
                             className="submit-button"
-                            disabled={!isEligible || isSubmitting}
+                            disabled={isSubmitting}
                         >
-                            {isSubmitting ? (
-                                <>
-                                    <span className="spinner"></span>
-                                    Submitting Application...
-                                </>
-                            ) : (
-                                'Submit Application'
-                            )}
+                            {isSubmitting ? 'Submitting Application...' : 'Submit Application'}
                         </button>
                     </form>
                 </div>
