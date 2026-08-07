@@ -409,3 +409,31 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   flex-shrink: 0;
 }
+
+/* Replaced Inline Styles */
+.hidden-file-input {
+  display: none;
+}
+
+.btn-discard {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.post-actions-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.post-action-right {
+  margin-left: auto;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.post-action-btn {
+  cursor: pointer;
+  font-size: 1.2rem;
+}

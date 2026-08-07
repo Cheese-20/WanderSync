@@ -1,6 +1,12 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-07]
+- **Refactor (UI Styling)**: Removed all inline `style={{...}}` properties across the frontend and replaced them with CSS classes.
+  - Created `admin.css` to hold styling for `AdminHome.jsx`.
+  - Added new classes to `explorer.css`, `match.css`, `messages.css`, and `profile.css`.
+  - Refactored `CreatePostModal.jsx`, `ExplorerHome.jsx`, `Match.jsx`, `Messages.jsx`, and `Profile.jsx` to use external CSS instead of inline React styles.
+
 ## [2026-08-06]
 - **Feature (Multiple Images)**: Added support for uploading up to 7 images per post.
   - Updated `CreatePostModal.jsx` to allow multiple image selection and preview generation.

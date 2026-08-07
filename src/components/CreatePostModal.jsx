@@ -194,7 +194,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
                   accept="image/*"
                   multiple
                   ref={fileInputRef}
-                  style={{ display: 'none' }}
+                  className="hidden-file-input"
                   onChange={handleImageUpload}
                   value=""
                 />
@@ -206,7 +206,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
                   if (window.confirm('Are you sure you want to discard your changes? All details will be lost.')) {
                     handleClose();
                   }
-                }} className="btn-secondary" style={{ backgroundColor: '#fee2e2', color: '#b91c1c', borderColor: '#fca5a5' }}>Discard</button>
+                }} className="btn-secondary btn-discard">Discard</button>
                 <button type="submit" className="btn-primary">{editPost ? 'Update' : 'Post'}</button>
               </div>
             </form>

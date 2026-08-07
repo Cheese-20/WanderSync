@@ -372,3 +372,7 @@
     border-radius: 4px;
     cursor: pointer;
 }
+
+.logout-btn {
+    margin-left: auto;
+}

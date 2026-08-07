@@ -223,9 +223,8 @@ export default function Profile() {
             Bookings
           </button>
           <button 
-            className="delete button" 
+            className="delete button logout-btn" 
             onClick={handleLogout} 
-            style={{ marginLeft: 'auto' }}
           >
             Logout
           </button>

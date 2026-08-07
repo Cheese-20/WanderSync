@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import '../styles/admin.css';
 
 function AdminHome() {
   const navigate = useNavigate();
@@ -29,10 +30,10 @@ function AdminHome() {
   if (!adminUser) return <div>Loading...</div>;
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div className="admin-dashboard-container">
       <main>
-        <h1 style={{ marginBottom: '2rem' }}>WanderSync Admin Dashboard</h1>
-        <div style={{ padding: '1.5rem', backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #ddd' }}>
+        <h1 className="admin-title">WanderSync Admin Dashboard</h1>
+        <div className="admin-content-box">
           <h2>Welcome, {adminUser.email}</h2>
           <p>You have successfully logged into the restricted Admin portal.</p>
           <p>System metrics and administrative controls will appear here.</p>
