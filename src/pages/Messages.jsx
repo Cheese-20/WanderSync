@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import NavBar from '../components/NavBar';
+
 import '../styles/messages.css';
 
 export default function Messages() {
@@ -9,6 +9,7 @@ export default function Messages() {
   const [activeContact, setActiveContact] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
+  const messagesEndRef = useRef(null);
   
   useEffect(() => {
     const userJson = localStorage.getItem('user');
@@ -31,11 +32,9 @@ export default function Messages() {
     }
   };
 
-  const selectContact = async (contact) => {
-    setActiveContact(contact);
+  const fetchMessages = async (matchID) => {
     try {
-      // Fetch messages for this match
-      const res = await axios.get(`/api/message/chat/${contact.matchID}`);
+      const res = await axios.get(`/api/message/chat/${matchID}`);
       if (res.data) {
         setMessages(res.data);
       }
@@ -44,38 +43,80 @@ export default function Messages() {
     }
   };
 
+  const selectContact = (contact) => {
+    setActiveContact(contact);
+    fetchMessages(contact.matchID);
+  };
+
+  // Polling mechanism for "faster" real-time updates
+  useEffect(() => {
+    let interval;
+    if (activeContact) {
+      interval = setInterval(() => {
+        fetchMessages(activeContact.matchID);
+      }, 5000); // poll every 5 seconds
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    }
+  }, [activeContact]);
+
+  // Auto-scroll to bottom whenever messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputText.trim() || !activeContact || !currentUserId) return;
+    const text = inputText.trim();
+    if (!text || !activeContact || !currentUserId) return;
+
+    // 1. Optimistic UI Update: Show message immediately and clear input
+    const optimisticMsg = {
+      mID: Date.now(), // Temp ID
+      matchID: activeContact.matchID,
+      senderID: currentUserId,
+      receiverID: activeContact.userID,
+      textMessage: text,
+      sentAt: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, optimisticMsg]);
+    setInputText('');
 
     try {
       const payload = {
         matchID: activeContact.matchID,
         senderID: currentUserId,
         receiverID: activeContact.userID,
-        textMessage: inputText.trim()
+        textMessage: text
       };
       
       const res = await axios.post('/api/message', payload);
       
       if (res.data) {
-        // Because messages are sorted DESC (newest first), we prepend the new message to the top of the array
-        setMessages(prev => [res.data, ...prev]);
-        setInputText('');
+        // 2. Replace temporary message with the real server response
+        setMessages(prev => prev.map(msg => msg.mID === optimisticMsg.mID ? res.data : msg));
       }
     } catch (err) {
       console.error("Error sending message", err);
+      // Optional: If it fails, remove the optimistic message
+      setMessages(prev => prev.filter(msg => msg.mID !== optimisticMsg.mID));
     }
   };
 
   const formatTime = (isoString) => {
-    const date = new Date(isoString);
+    // Ensure the browser knows this is UTC time if the server omitted the 'Z'
+    const utcString = isoString.endsWith('Z') ? isoString : `${isoString}Z`;
+    const date = new Date(utcString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
     <div className="messages-page">
-      <NavBar />
+
       
       <div className="messages-layout">
         {/* Contacts Sidebar */}
@@ -122,6 +163,7 @@ export default function Messages() {
               </div>
               
               <div className="messages-list">
+                <div style={{ marginTop: 'auto' }}></div>
                 {messages.map(msg => {
                   const isSentByMe = msg.senderID === currentUserId;
                   return (
@@ -131,6 +173,7 @@ export default function Messages() {
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
               
               <form className="chat-input-area" onSubmit={handleSendMessage}>

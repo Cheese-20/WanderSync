@@ -1,12 +1,38 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '../styles/explorer.css'; // Will add modal styles here
 
-export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
+export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPost = null }) {
   const [step, setStep] = useState(1);
   const [experienceType, setExperienceType] = useState('');
   const [content, setContent] = useState('');
-  const [pictureURL, setPictureURL] = useState('');
+  const [pictures, setPictures] = useState([]);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && editPost) {
+      setExperienceType(editPost.experienceType || '');
+      setContent(editPost.content || '');
+
+      let parsedPictures = [];
+      if (editPost.pictureURL) {
+        try {
+          parsedPictures = JSON.parse(editPost.pictureURL);
+          if (!Array.isArray(parsedPictures)) {
+            parsedPictures = [editPost.pictureURL];
+          }
+        } catch (e) {
+          parsedPictures = [editPost.pictureURL];
+        }
+      }
+      setPictures(parsedPictures);
+      setStep(1);
+    } else if (isOpen && !editPost) {
+      setExperienceType('');
+      setContent('');
+      setPictures([]);
+      setStep(1);
+    }
+  }, [isOpen, editPost]);
 
   if (!isOpen) return null;
 
@@ -24,32 +50,42 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
         userId = user.id || user.userID || 1;
       }
 
-      const response = await fetch('http://localhost:5200/api/posts', {
-        method: 'POST',
+      const isEdit = !!editPost;
+      const url = isEdit
+        ? `http://localhost:5200/api/posts/${editPost.postID || editPost.postId}` // fallback for id casing
+        : 'http://localhost:5200/api/posts';
+
+      const payload = {
+        userID: userId,
+        experienceType,
+        content,
+        pictureURL: pictures.length > 0 ? JSON.stringify(pictures) : ""
+      };
+
+      if (isEdit) {
+        payload.postID = editPost.postID || editPost.postId;
+      }
+
+      const response = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userID: userId,
-          experienceType,
-          content,
-          pictureURL
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        const newPost = await response.json();
-        onPostCreated(newPost);
-        // Reset and close
+        const resultPost = await response.json();
+        onPostCreated(resultPost, isEdit);
         setStep(1);
         setExperienceType('');
         setContent('');
-        setPictureURL('');
+        setPictures([]);
         onClose();
       } else {
         const errorText = await response.text();
-        console.error('Failed to create post:', errorText);
-        alert('Failed to create post. Did you restart the backend server? Error: ' + response.status);
+        console.error('Failed to save post:', errorText);
+        alert('Failed to save post. Error: ' + response.status);
       }
     } catch (err) {
       console.error(err);
@@ -58,21 +94,39 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    if (pictures.length + files.length > 7) {
+      alert(`You can only upload up to 7 photos. You tried to add ${files.length} more to your existing ${pictures.length} photos.`);
+      return;
+    }
+
+    const newPictures = [];
+    let processed = 0;
+
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPictureURL(reader.result);
+        newPictures.push(reader.result);
+        processed++;
+        if (processed === files.length) {
+          setPictures(prev => [...prev, ...newPictures]);
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const removePicture = (index) => {
+    setPictures(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleClose = () => {
     setStep(1);
     setExperienceType('');
     setContent('');
-    setPictureURL('');
+    setPictures([]);
     onClose();
   };
 
@@ -82,7 +136,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
         <button className="close-btn" onClick={handleClose}>&times;</button>
         {step === 1 ? (
           <div className="step-1">
-            <h2>Post Experience</h2>
+            <h2>{editPost ? 'Edit Experience' : 'Post Experience'}</h2>
             <p>Is this post for an individual experience or group experience?</p>
             <div className="experience-options">
               <button
@@ -104,10 +158,10 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
           </div>
         ) : (
           <div className="step-2">
-            <h2>Experience Details</h2>
+            <h2>{editPost ? 'Edit Details' : 'Experience Details'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Add information about your experience:</label>
+                <label>Drop your caption or hashtags:</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -115,38 +169,45 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }) {
                   required
                 />
               </div>
+
               <div className="form-group image-upload-group">
-                <label>Add a Photo:</label>
-                {pictureURL ? (
-                  <div className="image-preview-container" onClick={() => fileInputRef.current.click()}>
-                    <img src={pictureURL} alt="Preview" className="image-preview" />
-                    <div className="image-overlay"><span>Change Photo</span></div>
-                  </div>
-                ) : (
-                  <div className="upload-placeholder" onClick={() => fileInputRef.current.click()}>
-                    <div className="upload-icon">+</div>
-                    <p>Upload a Photo</p>
-                  </div>
-                )}
+                <label>Add Photos (Max 7):</label>
+
+                <div className="image-preview-grid">
+                  {pictures.map((pic, idx) => (
+                    <div key={idx} className="preview-thumbnail-container">
+                      <img src={pic} alt={`Preview ${idx + 1}`} className="preview-thumbnail" />
+                      <button type="button" className="remove-pic-btn" onClick={() => removePicture(idx)}>&times;</button>
+                    </div>
+                  ))}
+
+                  {pictures.length < 7 && (
+                    <div className="upload-placeholder-small" onClick={() => fileInputRef.current.click()}>
+                      <div className="upload-icon">+</div>
+                      <p>Add</p>
+                    </div>
+                  )}
+                </div>
+
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   ref={fileInputRef}
                   style={{ display: 'none' }}
                   onChange={handleImageUpload}
+                  value=""
                 />
               </div>
+
               <div className="modal-actions">
                 <button type="button" onClick={() => setStep(1)} className="btn-secondary">Back</button>
                 <button type="button" onClick={() => {
-                  if (window.confirm('Are you sure you want to discard your post? All details will be lost.')) {
-                    setStep(1);
-                    setExperienceType('');
-                    setContent('');
-                    setPictureURL('');
+                  if (window.confirm('Are you sure you want to discard your changes? All details will be lost.')) {
+                    handleClose();
                   }
                 }} className="btn-secondary" style={{ backgroundColor: '#fee2e2', color: '#b91c1c', borderColor: '#fca5a5' }}>Discard</button>
-                <button type="submit" className="btn-primary">Post</button>
+                <button type="submit" className="btn-primary">{editPost ? 'Update' : 'Post'}</button>
               </div>
             </form>
           </div>
