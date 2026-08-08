@@ -2,6 +2,49 @@
 *Keep track of recent changes and updates in the project.*
 
 ## [2026-08-08]
+- **Feature (Local Guide Authentication)**: Added strict role validation for Local Guides during login.
+  - Updated `AuthController.cs` to return a 401 Unauthorized with a custom error message if an Explorer attempts to log in as a Local Guide.
+  - Replaced the standard browser alert in `AuthForm.jsx` with a custom visual modal popup to display login errors gracefully.
+- **Feature (Local Guide Dashboard)**: Introduced a new Dashboard page exclusively for Local Guides.
+  - Created `Dashboard.jsx` as a new page for guide management.
+  - Implemented the complete Dashboard UI matching the design mockup. Added interactive state management to the tab navigation, allowing seamless toggling between "Overview" (default view with summary cards, experiences, and bookings), "Bookings", and "Spot verification" without reloading the page.
+  - Implemented full Spot Verification UI logic: fetches pending spots from the backend API, displays them nicely, and handles sending Approve/Reject votes to the backend. Added a custom, animated loading spinner (mint green) while the data is being fetched.
+  - Refined the dashboard's aesthetics by updating the tab navigation container to a smooth pill-shape (`border-radius: 999px`) and updating structural borders to a clean, uniform gray (`#e2e8f0`).
+  - Updated the backend `SpotController.cs` to fetch and return the `submitterName` and `submitterAvatar` of the user who submitted the spot so guides can see who submitted it.
+  - Added the `/dashboard` Spot Verification loading state flags for accept and decline using the global full-screen spinner overlay!
+  - Redesigned the Spot Verification pending spot cards to match the user's two-column card mockup (image on the left, info on the right) with a slightly smaller max-width (700px).
+  - Enforced a strict 300x300px image size on Spot Verification cards to keep the design uniform.
+
+- **Database Refactor (Bookings):**
+  - **Tours**: Added `Price` (decimal) to calculate total earnings.
+  - **Bookings**: Added `numberOfGuests` (int) and `timeOfBooking` (string) to natively support all dashboard fields. Dropped the redundant `UserBooking` associative table to improve performance by merging its fields (`userID`) straight into `Bookings`.
+  - Updated the actual Aiven MySQL remote database schema to reflect these changes.
+
+- **Bookings API (`BookingsController.cs`):**
+  - Added `GET /api/bookings/guide/{guideId}` to fetch and join a guide's bookings across `Tours`, `Users`, and `Profiles`.
+  - Added `PUT /api/bookings/{id}/accept` to accept a booking.
+  - Added `PUT /api/bookings/{id}/decline` to decline a booking.
+
+- **Bookings Dashboard UI (`Dashboard.jsx`):**
+  - Replaced the placeholder Bookings tab with a fully functional interface.
+  - Implemented dynamic **Tour Type** and **Status** dropdown filters.
+  - Created dynamic Booking Cards that parse API data: User Avatar, User Name, Number of Guests, Date, Time, Tour Title, and Earnings (`Price * NumberOfGuests`).
+  - Added conditional dynamic background colors based on booking status: Pending (Yellow gradient), Accepted (Green gradient), and Declined (Red gradient).
+  - Integrated the Accept/Decline action buttons with the Bookings API endpoints and the global full-screen loading spinner.
+  - Enforced a uniform height (`300px`) and `100%` width constraints across all Spot Verification cards, ensuring consistent dimensions regardless of image aspect ratios or text lengths (using line-clamping to truncate long descriptions).
+  - Enforced exact uniform `300px` by `300px` dimensions for the spot images within the cards to ensure pictures never stretch unevenly.
+  - Updated the backend `SpotController.cs` to fetch and return the `submitterName` and `submitterAvatar` of the user who submitted the spot so guides can see who submitted it.
+  - Added the `/dashboard` route in `App.jsx`.
+  - **Feature (Global Loading States & Button Disabling)**: Implemented full-screen loading overlays and disabled button states across the entire system for API interactions.
+    - **Why:** To prevent duplicate API submissions if a user clicks a button multiple times rapidly, and to provide clear visual feedback that a background process (like network fetching or saving) is occurring.
+    - **How it works:** Added `.global-loading-overlay`, `.global-spinner`, and `.btn:disabled` CSS rules to `styles.css`. Then, introduced `useState` flags (like `isLoading`, `isVoting`, `isSubmitting`, `isDeleting`, `isSaving`) to `AuthForm.jsx`, `Dashboard.jsx`, `CreatePostModal.jsx`, `Activities.jsx`, and `EditActivity.jsx`. When an API call starts, the flag is set to `true`, which disables the submit button and renders the full-screen overlay (with a blur effect and spinner). In the `finally` block of the API call, the flag is reset to `false`.
+  - **Bug Fix**: Fixed a bug where `guideId` was returning `undefined` because the login model stores the ID as `id`, not `userID`, preventing the fetch from firing.
+  - Updated `NavBar.jsx` to dynamically render the "Dashboard" navigation link before "Profile" only when the logged-in user's role includes 'guide'.
+- **Frontend / Bug Fix**: Fixed a compilation error in `src/pages/ExplorerHome.jsx` caused by a duplicate `import React from 'react';` declaration which prevented the Vite development server from compiling.
+- **UI / Styling**: Updated the primary solid button colors across the application (including the Sign In, Sign Up, and Close buttons) to use the mint green brand color (`#a4ddbc`) extracted from the WanderSync logo.
+- **General / Cleanup**: Deleted the unnecessary file `Android Studio - Quail 3 | ` from the project root. This appeared to be an accidentally created file or web shortcut with no purpose.
+- **General / Cleanup**: Deleted leftover `vite.config.js.timestamp-*.mjs` temporary files. These are sometimes left behind if the Vite development server process is forcefully stopped or crashes. They are not required for the code to run.
+- **Config**: Added `vite.config.js.timestamp-*` to `.gitignore` to prevent these temporary files from accidentally being committed in the future.
 - **Documentation (Local Guide Application)**: Documented the Local Guide Application feature (Use Case C400) in `docs/LGApplication.md`.
   - The feature allows users to apply as a Local Guide via a form at `/apply-guide`, accessible from a button on the Profile page.
   - The form collects ID Number, Location, Bio (max 250 chars), and an optional Reason field, then submits to `POST /api/local-guide/apply`.

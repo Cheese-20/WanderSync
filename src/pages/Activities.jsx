@@ -5,6 +5,7 @@ import '../styles/guide.css';
 
 export default function Activities() {
   const [activities, setActivities] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function Activities() {
 
   const handleDelete = (tourId) => {
     if (window.confirm("Are you sure you want to delete this activity?")) {
+      setIsDeleting(true);
       fetch(`http://localhost:5200/api/tours/${tourId}`, {
         method: 'DELETE',
       })
@@ -47,12 +49,22 @@ export default function Activities() {
       .catch(err => {
         console.error('Error deleting activity:', err);
         window.alert("An error occurred while deleting the activity.");
+      })
+      .finally(() => {
+        setIsDeleting(false);
       });
     }
   };
 
   return (
-    <div className="guide-page">
+    <>
+      {isDeleting && (
+        <div className="global-loading-overlay">
+          <div className="global-spinner"></div>
+          <div className="global-loading-text">Deleting Activity...</div>
+        </div>
+      )}
+      <div className="guide-page">
 
       <header className="guide-hero">
         <h1>Your Activities</h1>
@@ -78,7 +90,8 @@ export default function Activities() {
                 </button>
                 <button 
                   onClick={() => handleDelete(activity.tourId)}
-                  className="btn-delete">
+                  className="btn-delete"
+                  disabled={isDeleting}>
                   Delete
                 </button>
               </div>
@@ -87,5 +100,6 @@ export default function Activities() {
         )}
       </section>
     </div>
+    </>
   );
 }

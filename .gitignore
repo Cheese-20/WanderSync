@@ -2,6 +2,7 @@ node_modules/
 dist/
 build/
 .npm/
+vite.config.js.timestamp-*
 
 backend/bin/
 backend/obj/
