@@ -5,7 +5,6 @@ import logo from '../assets/images/logo.png';
 
 function AuthForm() {
   const [isSignUpActive, setIsSignUpActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginValues, setLoginValues] = useState({
     email: '',
@@ -45,7 +44,6 @@ function AuthForm() {
   // NOTE: Use a relative `/api` path; on success store token and user and navigate to home
   const submitLogin = async event => {
     event.preventDefault();
-    setIsLoading(true);
 
     try {
       const response = await axios.post('/api/auth/login', {
@@ -63,15 +61,13 @@ function AuthForm() {
     } catch (error) {
       let errorMsg = 'Login failed. Please check your credentials.';
       if (error.response?.data) {
-          if (typeof error.response.data === 'string') {
-              errorMsg = error.response.data;
-          } else if (error.response.data.message) {
-              errorMsg = error.response.data.message;
-          }
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
+        }
       }
       setLoginError(errorMsg);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -85,8 +81,6 @@ function AuthForm() {
       setSignupStatus({ message: 'Passwords do not match.', type: 'error' });
       return;
     }
-
-    setIsLoading(true);
 
     try {
       // Send data to C# AuthController
@@ -112,20 +106,11 @@ function AuthForm() {
         message: error.response?.data || 'An error occurred during registration.',
         type: 'error'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <>
-      {isLoading && (
-        <div className="global-loading-overlay">
-          <div className="global-spinner"></div>
-          <div className="global-loading-text">Processing...</div>
-        </div>
-      )}
-      <div className="signin-signup-page">
+    <div className="signin-signup-page">
       <div className="logo-top">
         <img src={logo} alt="WanderSync logo" className="brand-logo" />
         <button type="button" className="logo-text-button" onClick={() => navigate('/home')}>
@@ -179,14 +164,12 @@ function AuthForm() {
                     checked={loginValues.role === 'guide'}
                     onChange={handleLoginChange}
                   />
-                  Local Guide
+                  Guide
                 </label>
               </div>
 
               <a href="#forgot" className="forgot-link">Forgot password?</a>
-              <button type="submit" className="btn solid" disabled={isLoading}>
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </button>
+              <button type="submit" className="btn solid">Sign In</button>
             </form>
           </div>
 
@@ -263,9 +246,7 @@ function AuthForm() {
                 required
               />
 
-              <button type="submit" className="btn" disabled={isLoading}>
-                {isLoading ? 'Signing Up...' : 'Sign Up'}
-              </button>
+              <button type="submit" className="btn">Sign Up</button>
               {signupStatus.message && (
                 <p className={`signup-status ${signupStatus.type}`}>
                   {signupStatus.message}
@@ -297,8 +278,8 @@ function AuthForm() {
 
       {loginError && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
-          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999, 
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999,
           display: 'flex', justifyContent: 'center', alignItems: 'center'
         }}>
           <div style={{
@@ -306,7 +287,7 @@ function AuthForm() {
             maxWidth: '400px', width: '90%', textAlign: 'center',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}>
-            <img src={logo} alt="WanderSync logo" style={{ width: '80px', margin: '0 auto 20px', display: 'block' }} />
+            <h3 style={{ marginBottom: '15px', color: '#333' }}>Login Failed</h3>
             <p style={{ marginBottom: '25px', color: '#666', lineHeight: '1.5' }}>{loginError}</p>
             <button className="btn solid" onClick={() => setLoginError('')} style={{ margin: '0 auto', display: 'block' }}>
               Close
@@ -316,7 +297,6 @@ function AuthForm() {
       )}
 
     </div>
-    </>
   );
 }
 

@@ -1,6 +1,16 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-09]
+- **Documentation**: Added Use Case A800 (Set up User profile) to `docs/use_case_narratives.md`, matching the required basic flow and UI fields (Full Name, Location, Age, Interests).
+- **Bug Fix**: Fixed a bug in `NavBar.jsx` where clicking a `MatchRequest` notification incorrectly routed the user to `/messages` instead of `/match`. Now, the user correctly lands on the Match page to view and accept their pending requests.
+- **Feature (Automated Messaging)**: Added logic in `ProfileController.cs` to automatically insert a welcome chat message ("It's a match! Say hi!") into the `Messages` table when a match is successfully accepted.
+- **Documentation**: Refined the Main Flow for Use Case 2 (Explorer Matching) in `docs/use_case_narratives.md` to use a succinct, sentence-by-sentence style while accurately capturing the actual backend behavior (e.g., dispatching `MatchRequest` and `MatchAccepted` notifications during a right swipe).
+- **Feature (Rejection Confirmation UI)**: Added a custom confirmation modal in `src/pages/Dashboard.jsx` when a Local Guide attempts to decline a booking. The modal displays the WanderSync logo, details of the booking (Explorer name, Tour title), and asks for explicit confirmation before triggering the decline API. This was added to prevent accidental booking rejections and ensure a smoother, safer user experience.
+- **Feature (Automated Messaging)**: Updated `AcceptBooking` in `BookingsController.cs` to automatically dispatch a confirmation chat message (A200) from the Local Guide to the Explorer upon booking acceptance.
+- **Documentation**: Refined Use Cases 12.1 (Accept Booking) and 12.2 (Reject Booking) in `docs/use_case_narratives.md` to incorporate the requested clarifications from the annotated table (e.g., navigating to bookings section, automated message dispatch, UI background color changes).
+- **Documentation**: Split Use Case 12 into Use Case 12.1 "Accept Booking" and Use Case 12.2 "Reject Booking" in `docs/use_case_narratives.md` based on existing system business rules and notification flows.
+
 ## [2026-08-08]
 - **Documentation**: Completely rewrote the `README.md` to professionally present the project's problem statement, solution, tech stack, and team contributors for the 3rd-year 2026 group project.
 - **Documentation**: Compiled and centralized all active system behaviors into a new `docs/business_rules.md` file, covering authentication, messaging, booking lifecycles, and notification rules.

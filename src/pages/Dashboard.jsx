@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [isUpdatingBooking, setIsUpdatingBooking] = useState(false);
+  const [bookingToDecline, setBookingToDecline] = useState(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [tourTypeFilter, setTourTypeFilter] = useState('All');
 
@@ -138,6 +139,38 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Decline Confirmation Modal */}
+      {bookingToDecline && (
+        <div className="global-loading-overlay" style={{ zIndex: 1000 }}>
+          <div className="global-loading-popup" style={{ textAlign: 'center', padding: '2rem', maxWidth: '400px' }}>
+            <img src={logo} alt="WanderSync" className="brand-logo" style={{ width: '80px', height: 'auto', marginBottom: '1.5rem' }} />
+            <h3 style={{ marginBottom: '1rem', color: '#1f2937' }}>Decline Booking?</h3>
+            <p style={{ color: '#4b5563', marginBottom: '2rem', lineHeight: '1.5' }}>
+              Are you sure you want to decline the booking from <strong>{bookingToDecline.userName}</strong> for <strong>{bookingToDecline.tourTitle}</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button 
+                className="b-btn" 
+                style={{ backgroundColor: '#f1f5f9', color: '#475569' }}
+                onClick={() => setBookingToDecline(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="b-btn b-btn-decline" 
+                onClick={() => {
+                  updateBookingStatus(bookingToDecline.bookingId, 'decline');
+                  setBookingToDecline(null);
+                }}
+              >
+                Yes, Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-container">
           {/* Top Tabs */}
           <div className="dashboard-tabs">
@@ -346,7 +379,7 @@ export default function Dashboard() {
                             <button 
                               className="b-btn b-btn-decline" 
                               disabled={isUpdatingBooking}
-                              onClick={() => updateBookingStatus(booking.bookingId, 'decline')}
+                              onClick={() => setBookingToDecline(booking)}
                             >
                               Decline
                             </button>
