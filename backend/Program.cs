@@ -6,7 +6,14 @@ using backend.Data;
 
 
 var builder = WebApplication.CreateBuilder(args);
-Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+try
+{
+    Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+}
+catch (Exception)
+{
+    // .env parsing failed — fall through to appsettings.json
+}
 
 
 //  Grab the connection string from environment or configuration (appsettings.json or environment)
@@ -31,8 +38,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddDbContext<WanderSyncDbContext>(options =>
-    // Use Pomelo MySQL provider and auto-detect server version
-    options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString))
+    // Use Pomelo MySQL provider with explicit server version
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)))
 );
 
 builder.Services.AddControllers();
@@ -149,6 +156,20 @@ using (var scope = app.Services.CreateScope())
                 UNIQUE KEY `IX_SpotVotes_UniqueVote` (`spotID`, `guideID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
+            CREATE TABLE IF NOT EXISTS `GuideApplication` (
+                `applicationID` int NOT NULL AUTO_INCREMENT,
+                `IDno` bigint NOT NULL,
+                `reason` longtext NULL,
+                `loaction` varchar(100) NULL,
+                `bio` varchar(250) NULL,
+                `userID` int NOT NULL,
+                PRIMARY KEY (`applicationID`),
+                CONSTRAINT `FK_GuideApplication_User` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` ADD COLUMN `loaction` varchar(100) NULL;"); } catch { }
+        try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` MODIFY COLUMN `IDno` bigint NOT NULL;"); } catch { }
 
         string[] profileColumnSqls = new[]
         {
@@ -236,6 +257,20 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var message = error?.Error?.Message ?? "An unexpected error occurred.";
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(error?.Error, "Unhandled exception");
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new { message }));
+    });
+});
+
 app.MapControllers();
 
 app.Run();

@@ -45,6 +45,19 @@
 - **General / Cleanup**: Deleted the unnecessary file `Android Studio - Quail 3 | ` from the project root. This appeared to be an accidentally created file or web shortcut with no purpose.
 - **General / Cleanup**: Deleted leftover `vite.config.js.timestamp-*.mjs` temporary files. These are sometimes left behind if the Vite development server process is forcefully stopped or crashes. They are not required for the code to run.
 - **Config**: Added `vite.config.js.timestamp-*` to `.gitignore` to prevent these temporary files from accidentally being committed in the future.
+- **Documentation (Local Guide Application)**: Documented the Local Guide Application feature (Use Case C400) in `docs/LGApplication.md`.
+  - The feature allows users to apply as a Local Guide via a form at `/apply-guide`, accessible from a button on the Profile page.
+  - The form collects ID Number, Location, Bio (max 250 chars), and an optional Reason field, then submits to `POST /api/local-guide/apply`.
+  - The backend validates the request, checks for duplicate applications, inserts into the `GuideApplication` table, and updates the user's role to "PendingGuide".
+  - Frontend implementation lives in `src/pages/LocalGuideApplication.jsx` with the apply button in `src/pages/Profile.jsx`.
+- **Double Navigation Fix**: Removed the duplicate `<NavBar />` from `src/pages/LocalGuideApplication.jsx` because the page is already wrapped in `Layout.jsx` which renders the global navigation.
+  - Changed `IDno` type from `int` to `long` in `backend/Models/LocalGuideApplication.cs` and `GuideApplicationRequest` in `backend/Controllers/LocalGuideController.cs` to prevent integer overflows with 13-digit ID numbers.
+  - Added table creation raw SQL for `GuideApplication` (using `bigint` for `IDno`) inside `backend/Program.cs` to automatically initialize the table if it is missing.
+  - Added an `ALTER TABLE` statement in `backend/Program.cs` to add the `loaction` column if it is missing in the database schema, resolving the `Unknown column 'g.loaction'` error for pre-existing tables.
+  - Added an `ALTER TABLE` statement in `backend/Program.cs` to modify the `IDno` column type to `bigint` for pre-existing tables, preventing overflow errors on database save.
+  - Updated `docs/LGApplication.md` to reflect `bigint` type for `IDno`.
+- **Bug Fix (ExplorerHome)**: Removed duplicate `import React from 'react'` line in `src/pages/ExplorerHome.jsx` that was causing build failure.
+- **Bug Fix (App.jsx)**: Added missing `Discover` component import to `src/App.jsx` which was referenced in a route but never imported.
 
 ## [2026-08-06]
 - **Feature (Multiple Images)**: Added support for uploading up to 7 images per post.
