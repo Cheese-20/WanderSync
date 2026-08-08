@@ -36,7 +36,8 @@ namespace backend.Controllers
                         u.lastName, 
                         IFNULL(p.profilePictureLink, 'https://via.placeholder.com/150') as profilePictureLink,
                         p.job,
-                        m.matchID
+                        m.matchID,
+                        u.role
                     FROM Matches m
                     JOIN User u ON u.userID = m.receiverID
                     LEFT JOIN Profile p ON p.userID = u.userID
@@ -50,7 +51,8 @@ namespace backend.Controllers
                         u.lastName, 
                         IFNULL(p.profilePictureLink, 'https://via.placeholder.com/150') as profilePictureLink,
                         p.job,
-                        m.matchID
+                        m.matchID,
+                        u.role
                     FROM Matches m
                     JOIN User u ON u.userID = m.requesterID
                     LEFT JOIN Profile p ON p.userID = u.userID
@@ -72,7 +74,8 @@ namespace backend.Controllers
                         lastName = reader.GetString(2),
                         profilePictureLink = reader.GetString(3),
                         job = reader.IsDBNull(4) ? null : reader.GetString(4),
-                        matchID = reader.GetInt32(5)
+                        matchID = reader.GetInt32(5),
+                        role = reader.GetString(6)
                     });
                 }
                 

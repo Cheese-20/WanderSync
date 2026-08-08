@@ -3,6 +3,7 @@
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using backend.Data;
+using backend.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +37,9 @@ builder.Services.AddDbContext<WanderSyncDbContext>(options =>
 );
 
 builder.Services.AddControllers();
+
+// Register background service for booking reminders
+builder.Services.AddHostedService<BookingReminderService>();
 
 var app = builder.Build();
 

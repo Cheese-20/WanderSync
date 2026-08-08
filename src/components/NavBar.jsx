@@ -19,7 +19,7 @@ export default function NavBar() {
       const userId = user.id || user.userID;
       if (userId) {
         try {
-          const res = await axios.get(`/api/notification/${userId}`);
+          const res = await axios.get(`/api/notifications/${userId}`);
           setNotifications(res.data);
         } catch (e) {
           console.error("Error fetching notifications", e);
@@ -47,7 +47,7 @@ export default function NavBar() {
   const handleNotificationClick = async (notif) => {
     if (!notif.isRead) {
       try {
-        await axios.put(`/api/notification/read/${notif.notificationID}`);
+        await axios.put(`/api/notifications/${notif.notificationID}/read`);
         setNotifications(prev => prev.map(n => n.notificationID === notif.notificationID ? { ...n, isRead: true } : n));
       } catch (e) {
         console.error("Error marking read", e);
@@ -57,8 +57,12 @@ export default function NavBar() {
     
     if (notif.type === "NewMessage") {
       navigate('/messages');
-    } else if (notif.type === "MatchRequest" || notif.type === "MatchAccepted") {
-      navigate('/match');
+    } else if (notif.type === "MatchRequest" || notif.type === "MatchAccepted" || notif.type === "BookingAccepted") {
+      navigate('/messages'); // Route to messages for match/booking acceptance per user request
+    } else if (notif.type === "BookingReminder" || notif.type === "BookingDeclined") {
+      navigate('/profile'); // We can't directly append state to ?tab=bookings here unless Profile handles it, but /profile works
+    } else if (notif.type === "NewBooking") {
+      navigate('/dashboard');
     }
   };
 

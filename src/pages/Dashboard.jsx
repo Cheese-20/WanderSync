@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/dashboard.css';
+import logo from '../assets/images/logo.png';
 
 // SVG Icons
 const UsersIcon = () => (
@@ -132,8 +133,8 @@ export default function Dashboard() {
       {(isVoting || isUpdatingBooking) && (
         <div className="global-loading-overlay">
           <div className="global-loading-popup">
-            <div className="global-loading-logo">Wander<span>Sync</span></div>
-            <div className="global-loading-text">{isVoting ? "Recording Vote..." : "Updating Booking..."}</div>
+            <img src={logo} alt="WanderSync" className="brand-logo" style={{ width: '60px', height: 'auto', marginBottom: '1rem', animation: 'pulse 1.5s infinite' }} />
+            <div className="global-loading-text">Updating, please wait</div>
           </div>
         </div>
       )}
@@ -281,6 +282,16 @@ export default function Dashboard() {
               {bookings
                 .filter(b => statusFilter === 'All' || b.status === statusFilter)
                 .filter(b => tourTypeFilter === 'All' || b.tourType === tourTypeFilter)
+                .sort((a, b) => {
+                  const statusOrder = { 'Pending': 1, 'Accepted': 2, 'Declined': 3 };
+                  const orderA = statusOrder[a.status] || 4;
+                  const orderB = statusOrder[b.status] || 4;
+                  // If statuses are the same, sort by booking date (newest first)
+                  if (orderA === orderB) {
+                    return new Date(b.bookingDate) - new Date(a.bookingDate);
+                  }
+                  return orderA - orderB;
+                })
                 .map(booking => {
                   
                   let statusText = booking.status;
