@@ -5,11 +5,7 @@
 ### The Problem
 When visiting new areas, tourists often struggle to find authentic, verified local experiences and reliable guides outside of generic tourist traps. Furthermore, solo travelers often find it difficult to explore safely or meet like-minded adventure buddies. 
 
-The modern travel experience is often fragmented and disconnected from authentic local culture. Currently, travelers face several distinct challenges:
-1. **The "Tourist Trap" Dilemma:** Mainstream travel platforms overwhelmingly promote highly commercialized, overcrowded tourist traps. Finding genuine, off-the-beaten-path locations requires extensive research and is often gated by locals.
-2. **Trust & Safety for Solo Travelers:** Exploring unfamiliar areas, especially for solo travelers, can be intimidating and potentially unsafe without a trusted companion who knows the area.
-3. **Friction in Finding Local Experts:** While many locals possess incredible knowledge of their hometowns, there is no standardized, centralized platform for them to easily monetize this expertise or connect safely with tourists looking for guides.
-4. **Fragmented Tooling:** Travelers typically have to juggle multiple apps—one for social networking/meeting people, another for booking generic tours, and yet another for mapping out locations.
+The modern travel experience is often fragmented and disconnected from authentic local culture. Currently, travelers face several distinct challenges. The "Tourist Trap" Dilemma, Mainstream travel platforms overwhelmingly promote highly commercialized, overcrowded tourist traps. Finding genuine, off-the-beaten-path locations requires extensive research and is often gated by locals. Trust & Safety for Solo Travelers, Exploring unfamiliar areas, especially for solo travelers, can be intimidating and potentially unsafe without a trusted companion who knows the area. Friction in Finding Local Experts, While many locals possess incredible knowledge of their hometowns, there is no standardized, centralized platform for them to easily monetize this expertise or connect safely with tourists looking for guides.Fragmented Tooling, Travelers typically have to juggle multiple apps—one for social networking/meeting people, another for booking generic tours, and yet another for mapping out locations.
 
 ### The Solution
 **WanderSync** bridges this gap by acting as a unified, experience-based ecosystem that combines social networking with a tour-booking marketplace. It directly addresses the problems above by providing:
