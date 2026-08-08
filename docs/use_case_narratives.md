@@ -230,3 +230,28 @@
 5. The system removes associated likes and comments linked to that post.
 6. The system removes the post image from the server's image folder.
 7. The system refreshes the actors feed and displays a Post Successfully Deleted message.
+
+---
+
+## Use Case 11: View Recommended Location/Spot
+**Actor:** Explorer
+
+**Trigger:** The Explorer clicks on the "Recommended Spots" or "Verified Spots" section on their home feed or map view.
+
+**Preconditions:**
+- The user is authenticated and logged in as an Explorer.
+- The system has active verified/curated spots (spots that have been approved by at least 5 Local Guides) stored in the database.
+
+**Main Flow (How it is accomplished):**
+1. The Explorer navigates to the map interface or the dedicated recommended spots feed.
+2. The frontend sends a GET request to the backend API to retrieve a list of fully verified curated spots (`/api/spot/verified`).
+3. The backend queries the `CuratedSpot` table, filtering for spots where `isVerified` is explicitly marked as 'Approved' (having received 5 guide approvals).
+4. The backend returns a JSON payload containing the verified spots, including their coordinates, title, description, uploaded images, and the submitter's details.
+5. The frontend plots these locations dynamically on the map interface using custom markers, or renders them in a scrolling feed.
+6. The Explorer clicks on a specific spot marker or card.
+7. The system opens a detailed modal or page displaying the high-resolution image, the description, location data, and the submitter's credit.
+
+**Postconditions:**
+- The Explorer successfully views detailed, reliable information about a verified location.
+- The map or feed remains actively open for further exploration.
+

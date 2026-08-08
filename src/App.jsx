@@ -9,6 +9,7 @@ import Messages from './pages/Messages.jsx';
 import Profile from './pages/Profile.jsx';
 import Activities from './pages/Activities.jsx';
 import EditActivity from './pages/EditActivity.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 import Layout from './components/Layout.jsx';
 
 function HomeRouter() {
@@ -34,6 +35,7 @@ function App() {
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/match" element={<Match />} />
           <Route path="/messages" element={<Messages />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/edit-activity/:id" element={<EditActivity />} />

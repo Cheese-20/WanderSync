@@ -136,6 +136,19 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `SpotVotes` (
+                `voteID` int NOT NULL AUTO_INCREMENT,
+                `spotID` int NOT NULL,
+                `guideID` int NOT NULL,
+                `voteType` varchar(50) NOT NULL,
+                `votedAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`voteID`),
+                CONSTRAINT `FK_SpotVotes_Spot` FOREIGN KEY (`spotID`) REFERENCES `curatedSpots` (`spotID`) ON DELETE CASCADE,
+                CONSTRAINT `FK_SpotVotes_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
+                UNIQUE KEY `IX_SpotVotes_UniqueVote` (`spotID`, `guideID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
 
         string[] profileColumnSqls = new[]
         {
@@ -167,6 +180,25 @@ using (var scope = app.Services.CreateScope())
         };
 
         foreach (var sql in notificationColumnSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
+            }
+        }
+
+        string[] curatedSpotsColumnSqls = new[]
+        {
+            "ALTER TABLE `curatedSpots` ADD COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedByUserID` int NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedAt` datetime(6) NULL;",
+            "ALTER TABLE `curatedSpots` MODIFY COLUMN `isVerified` varchar(50) DEFAULT 'pending';"
+        };
+
+        foreach (var sql in curatedSpotsColumnSqls)
         {
             try { 
                 context.Database.ExecuteSqlRaw(sql); 

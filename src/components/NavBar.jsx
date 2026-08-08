@@ -8,12 +8,14 @@ export default function NavBar() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [userRole, setUserRole] = useState('');
   const dropdownRef = useRef(null);
 
   const fetchNotifications = async () => {
     const userJson = localStorage.getItem('user');
     if (userJson) {
       const user = JSON.parse(userJson);
+      setUserRole((user.role || '').toLowerCase());
       const userId = user.id || user.userID;
       if (userId) {
         try {
@@ -74,6 +76,9 @@ export default function NavBar() {
         <li><NavLink to="/explore" className={navLinkClass}>Explore</NavLink></li>
         <li><NavLink to="/match" className={navLinkClass}>Match</NavLink></li>
         <li><NavLink to="/messages" className={navLinkClass}>Messages</NavLink></li>
+        {userRole.includes('guide') && (
+          <li><NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink></li>
+        )}
         <li><NavLink to="/profile" className={navLinkClass}>Profile</NavLink></li>
         
         <li className="notification-container" ref={dropdownRef}>
