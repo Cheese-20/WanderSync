@@ -245,7 +245,7 @@ namespace backend.Controllers
     public class GuideApplicationRequest
     {
         public int UserID { get; set; }
-        public int IDno { get; set; }
+        public long IDno { get; set; }
         public string? Reason { get; set; }
         public string? Location { get; set; }
         public string? Bio { get; set; }

@@ -11,6 +11,7 @@ import LocalGuideApplication from './pages/LocalGuideApplication.jsx';
 import Activities from './pages/Activities.jsx';
 import EditActivity from './pages/EditActivity.jsx';
 import GuideDetail from './pages/GuideDetail.jsx';
+import Discover from './pages/Discover.jsx';
 import Layout from './components/Layout.jsx';
 
 function HomeRouter() {

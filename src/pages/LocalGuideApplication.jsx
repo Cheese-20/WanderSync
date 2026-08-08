@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NavBar from '../components/NavBar';
 import '../styles/localGuide.css';
 
 export default function LocalGuideApplication() {
@@ -50,7 +49,6 @@ export default function LocalGuideApplication() {
             }));
         }
     };
-
     const validateForm = () => {
         const errors = {};
 
@@ -146,8 +144,6 @@ export default function LocalGuideApplication() {
 
     return (
         <div className="local-guide-page">
-            <NavBar />
-
             <div className="application-container">
                 <div className="application-card">
                     {apiError && (

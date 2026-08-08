@@ -11,7 +11,7 @@ namespace backend.Models
         public int ApplicationID { get; set; }
 
         [Column("IDno")]
-        public int IDno { get; set; }
+        public long IDno { get; set; }
 
         [Column("reason")]
         public string? Reason { get; set; }
