@@ -2,6 +2,20 @@
 *Keep track of recent changes and updates in the project.*
 
 ## [2026-08-08]
+- **Documentation**: Completely rewrote the `README.md` to professionally present the project's problem statement, solution, tech stack, and team contributors for the 3rd-year 2026 group project.
+- **Documentation**: Compiled and centralized all active system behaviors into a new `docs/business_rules.md` file, covering authentication, messaging, booking lifecycles, and notification rules.
+- **Feature (Notification System):** Implemented a complete booking-based notification and matching system.
+  - Added `NotificationsController.cs` with GET and PUT endpoints for fetching and reading notifications.
+  - Added a `POST /api/bookings` endpoint in `BookingsController.cs` to handle tourists creating bookings, which instantly dispatches a `NewBooking` notification to the tour guide.
+  - Updated the `PUT /api/bookings/{id}/accept` endpoint to automatically create a `BookingAccepted` notification for the tourist, AND seamlessly generate a mutually accepted `UserMatch` between the guide and the tourist so they can communicate via the existing Messages page.
+  - Updated the `PUT /api/bookings/{id}/decline` endpoint to generate a `BookingDeclined` notification for the tourist.
+  - Created a `.NET BackgroundService` (`BookingReminderService.cs`) that runs continuously in the background, polling the database for `Accepted` bookings happening in the next 24 hours. It automatically generates `BookingReminder` notifications for both the tourist and the guide exactly one day before the tour.
+  - Added a Notification Bell to the `NavBar.jsx` with an unread counter badge. Clicking it opens a dropdown list of recent notifications.
+  - Implemented dynamic notification routing: Clicking a `MatchRequest` or `BookingAccepted` routes the user to `/messages`, clicking a `BookingReminder` routes to `/profile` (bookings), and clicking a `NewBooking` routes the guide to their `/dashboard`.
+  - Upgraded `ExplorerHome.jsx` to dynamically fetch all available tours from the backend (`GET /api/tours`) instead of showing static placeholder cards.
+  - Added a "Book Now" flow to the `ExplorerHome.jsx` tour cards, allowing tourists to actually create real bookings for real tours, directly triggering the new notification lifecycle.
+  - Added a data retention and visibility rule to `BookingsController.cs` (`GetGuideBookings`). All bookings are permanently retained in the database, but any bookings strictly older than 7 days from the current date are dynamically filtered out and hidden from the Local Guide's Dashboard to keep the UI clean.
+  - Updated the global loading popup in `Dashboard.jsx` to display a pulsing image of the WanderSync logo instead of text, and simplified the loading text to just say "Updating, please wait" for both Spot Verification voting and Booking accept/reject actions.
 - **Feature (Local Guide Authentication)**: Added strict role validation for Local Guides during login.
   - Updated `AuthController.cs` to return a 401 Unauthorized with a custom error message if an Explorer attempts to log in as a Local Guide.
   - Replaced the standard browser alert in `AuthForm.jsx` with a custom visual modal popup to display login errors gracefully.

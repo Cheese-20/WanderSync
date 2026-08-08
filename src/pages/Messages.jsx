@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import logo from '../assets/images/logo.png';
 
 import '../styles/messages.css';
 
 export default function Messages() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [contacts, setContacts] = useState([]);
+  const [loadingContacts, setLoadingContacts] = useState(true);
   const [activeContact, setActiveContact] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -22,6 +24,7 @@ export default function Messages() {
   }, []);
 
   const fetchContacts = async (userId) => {
+    setLoadingContacts(true);
     try {
       const res = await axios.get(`/api/message/contacts/${userId}`);
       if (res.data) {
@@ -29,6 +32,8 @@ export default function Messages() {
       }
     } catch (err) {
       console.error("Error fetching contacts", err);
+    } finally {
+      setLoadingContacts(false);
     }
   };
 
@@ -126,7 +131,12 @@ export default function Messages() {
           </div>
           
           <div className="contacts-list">
-            {contacts.length === 0 ? (
+            {loadingContacts ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '4rem 1rem', height: '100%' }}>
+                <img src={logo} alt="Loading" style={{ width: '45px', height: 'auto', animation: 'pulse 1.5s infinite', marginBottom: '12px' }} />
+                <span style={{ color: '#10b981', fontSize: '0.95rem', fontWeight: '500' }}>Fetching connections...</span>
+              </div>
+            ) : contacts.length === 0 ? (
               <div className="no-contacts">
                 <p>No connections yet.</p>
                 <p>Start matching to chat!</p>
@@ -140,8 +150,15 @@ export default function Messages() {
                 >
                   <img src={contact.profilePictureLink} alt={contact.firstName} className="contact-avatar" />
                   <div className="contact-info">
-                    <span className="contact-name">{contact.firstName} {contact.lastName}</span>
-                    <span className="contact-job">{contact.job || 'Explorer'}</span>
+                    <span className="contact-name" style={{ display: 'flex', alignItems: 'center' }}>
+                      {contact.firstName} {contact.lastName}
+                      {(contact.role?.toLowerCase() === 'guide' || contact.role?.toLowerCase() === 'local guide') && (
+                        <svg title="Verified Local Guide" style={{ marginLeft: '4px', color: '#10b981', flexShrink: 0 }} width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-13 5l-4-4 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                      )}
+                    </span>
+                    <span className="contact-job">{contact.job || (contact.role?.toLowerCase() === 'guide' ? 'Local Guide' : contact.role)}</span>
                   </div>
                 </div>
               ))
@@ -159,7 +176,14 @@ export default function Messages() {
             <>
               <div className="chat-header">
                 <img src={activeContact.profilePictureLink} alt={activeContact.firstName} className="chat-header-avatar" />
-                <span className="chat-header-name">{activeContact.firstName} {activeContact.lastName}</span>
+                <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center' }}>
+                  {activeContact.firstName} {activeContact.lastName}
+                  {(activeContact.role?.toLowerCase() === 'guide' || activeContact.role?.toLowerCase() === 'local guide') && (
+                    <svg title="Verified Local Guide" style={{ marginLeft: '6px', color: '#10b981', flexShrink: 0 }} width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-13 5l-4-4 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  )}
+                </span>
               </div>
               
               <div className="messages-list">

@@ -1,11 +1,47 @@
 # WanderSync
-Is an experience-based social networking site that allows users to explore the area they are in with either explorer buddies or with a local guides. The platform allows for the users to even go on activity by themselves. 
 
-Tech Stack -> C#, Javascript, React
-Database -> mySQL
+**WanderSync** is an experience-based social networking platform designed to seamlessly connect travelers ("Explorers") with knowledgeable "Local Guides." 
 
-Contributors: 
-Mendy, Sibusiso, Anathi, Malibongwe 
+### The Problem
+When visiting new areas, tourists often struggle to find authentic, verified local experiences and reliable guides outside of generic tourist traps. Furthermore, solo travelers often find it difficult to explore safely or meet like-minded adventure buddies. 
 
-Third year group project 2026.
+The modern travel experience is often fragmented and disconnected from authentic local culture. Currently, travelers face several distinct challenges:
+1. **The "Tourist Trap" Dilemma:** Mainstream travel platforms overwhelmingly promote highly commercialized, overcrowded tourist traps. Finding genuine, off-the-beaten-path locations requires extensive research and is often gated by locals.
+2. **Trust & Safety for Solo Travelers:** Exploring unfamiliar areas, especially for solo travelers, can be intimidating and potentially unsafe without a trusted companion who knows the area.
+3. **Friction in Finding Local Experts:** While many locals possess incredible knowledge of their hometowns, there is no standardized, centralized platform for them to easily monetize this expertise or connect safely with tourists looking for guides.
+4. **Fragmented Tooling:** Travelers typically have to juggle multiple apps—one for social networking/meeting people, another for booking generic tours, and yet another for mapping out locations.
 
+### The Solution
+**WanderSync** bridges this gap by acting as a unified, experience-based ecosystem that combines social networking with a tour-booking marketplace. It directly addresses the problems above by providing:
+
+- **Personality-First Matching:** We eliminate the awkwardness of finding a guide. Using an intuitive, Tinder-style swipe interface, Explorers and Local Guides are matched based on shared interests and detailed profiles, establishing a personal connection *before* a tour is even booked.
+- **Empowering Local Economies:** WanderSync provides a streamlined dashboard for locals to easily create, price, and schedule authentic tours. This empowers individuals to monetize their hometown expertise safely and efficiently.
+- **Strictly Peer-Reviewed Curation:** To combat generic tourist traps, our platform features a "Curated Spots" system. A spot is only marked as "Verified" and shown to tourists if it receives explicit approval from at least 5 different authenticated Local Guides, ensuring uncompromising quality and authenticity.
+- **An Integrated Hub:** From discovering a guide, chatting securely in real-time, booking a scheduled tour, to receiving automated 24-hour reminders—the entire lifecycle of the travel experience is handled within a single, cohesive platform.
+
+---
+
+### Tech Stack
+This project leverages a modern, robust full-stack architecture:
+
+**Frontend:**
+- **React.js** (via Vite)
+- **JavaScript (ES6+)**
+- **Vanilla CSS & TailwindCSS** for responsive, dynamic styling
+- **React Router** for seamless SPA navigation
+
+**Backend:**
+- **C# / .NET 8 Web API**
+- **Entity Framework Core (EF Core)** for ORM database interactions
+- **MySQL** (Cloud Database)
+
+---
+
+### Project Context
+This application was developed as a **3rd-Year Group Project (2026)**.
+
+**Contributors:**
+- Mendy
+- Sibusiso
+- Anathi
+- Malibongwe
