@@ -33,5 +33,10 @@ namespace backend.Models
 
         [Column("price")]
         public decimal Price { get; set; }
+        [Column("pictureURL")]
+        public string? PictureURL { get; set; }
+
+        [Column("imageURL")]
+        public string? ImageURL { get; set; }
     }
 }

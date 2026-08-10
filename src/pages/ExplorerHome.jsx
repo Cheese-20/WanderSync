@@ -66,7 +66,7 @@ export default function ExplorerHome() {
           normalizedPost.firstName = user.firstName || user.FirstName || '';
           normalizedPost.lastName = user.lastName || user.LastName || '';
         }
-      } catch(e) {}
+      } catch (e) { }
     }
 
     if (isEdit) {
@@ -126,14 +126,14 @@ export default function ExplorerHome() {
             <p style={{ margin: 0, fontSize: '0.85rem' }}>
               {new Date(tour.date).toLocaleDateString()} at {new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
-            <button 
-              className="btn-primary" 
+            <button
+              className="btn-primary"
               style={{ marginTop: 'auto', alignSelf: 'flex-start' }}
               onClick={async () => {
                 const userJson = localStorage.getItem('user');
                 if (!userJson) {
-                   navigate('/login');
-                   return;
+                  navigate('/login');
+                  return;
                 }
                 const user = JSON.parse(userJson);
                 const userId = user.id || user.userID;
@@ -176,14 +176,14 @@ export default function ExplorerHome() {
                 </div>
                 <span className="experience-badge">{post.experienceType}</span>
               </div>
-              
+
               {(() => {
                 if (!post.pictureURL) return null;
                 let images = [];
                 try {
                   images = JSON.parse(post.pictureURL);
                   if (!Array.isArray(images)) images = [post.pictureURL];
-                } catch(e) {
+                } catch (e) {
                   images = [post.pictureURL];
                 }
 
@@ -211,18 +211,18 @@ export default function ExplorerHome() {
                   <span className="action-icon" title="Share">↗️</span>
                   {loggedInUserId === post.userID && (
                     <>
-                      <span 
-                        className="action-icon edit-icon" 
-                        title="Edit Post" 
-                        onClick={() => handleEditClick(post)} 
+                      <span
+                        className="action-icon edit-icon"
+                        title="Edit Post"
+                        onClick={() => handleEditClick(post)}
                         style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '1.2rem' }}
                       >
                         ✏️
                       </span>
-                      <span 
-                        className="action-icon delete-icon" 
-                        title="Delete Post" 
-                        onClick={() => handleDeleteClick(post)} 
+                      <span
+                        className="action-icon delete-icon"
+                        title="Delete Post"
+                        onClick={() => handleDeleteClick(post)}
                         style={{ cursor: 'pointer', fontSize: '1.2rem' }}
                       >
                         🗑️
@@ -240,6 +240,65 @@ export default function ExplorerHome() {
           {posts.length === 0 && <p>No posts yet. Be the first to share an experience!</p>}
         </div>
       </section>
+
+
+      {isBookingModalOpen && selectedTour && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', position: 'relative' }}>
+            <button className="close-btn" onClick={() => setIsBookingModalOpen(false)}>&times;</button>
+            <div style={{ marginBottom: '20px' }}>
+              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 10px auto', display: 'block' }} />
+              <h2 style={{ margin: '0 0 5px 0', fontSize: '1.5rem', color: '#1a1a1a' }}>Request to Join</h2>
+              <p style={{ margin: 0, color: '#666' }}>{selectedTour.title}</p>
+            </div>
+
+            {bookingStatus === 'idle' ? (
+              <>
+                <div className="form-group" style={{ textAlign: 'left', marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Number of Guests</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedTour.maxPeople - (selectedTour.currentGuests || 0)}
+                    value={guestCount}
+                    onChange={(e) => setGuestCount(Number(e.target.value))}
+                    style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '12px', fontSize: '1rem' }}
+                  />
+                </div>
+
+                <div className="modal-actions" style={{ display: 'flex', gap: '10px' }}>
+                  <button className="btn-secondary" onClick={() => setIsBookingModalOpen(false)} style={{ flex: 1 }}>Cancel</button>
+                  <button className="btn-primary" style={{ flex: 1 }} onClick={async () => {
+                    try {
+                      await axios.post('http://localhost:5200/api/bookings', {
+                        userID: loggedInUserId,
+                        tourID: selectedTour.tourId || selectedTour.tourID,
+                        bookingDate: selectedTour.date,
+                        timeOfBooking: new Date(selectedTour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        numberOfGuests: guestCount,
+                        bookingType: "Standard"
+                      });
+                      setBookingStatus('success');
+                    } catch (e) {
+                      console.error(e);
+                      alert('Error creating booking');
+                    }
+                  }}>Submit Request</button>
+                </div>
+              </>
+            ) : (
+              <div>
+                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1a8f66', marginBottom: '20px' }}>
+                  Success, sending request to guide
+                </p>
+                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%' }}>OK</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <CreatePostModal
         isOpen={isModalOpen}

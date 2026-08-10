@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 
@@ -168,7 +168,7 @@ function AuthForm() {
                 </label>
               </div>
 
-              <a href="#forgot" className="forgot-link">Forgot password?</a>
+              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
               <button type="submit" className="btn solid">Sign In</button>
             </form>
           </div>

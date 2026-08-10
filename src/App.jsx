@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthForm from './pages/AuthForm.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
 import ExplorerHome from './pages/ExplorerHome.jsx';
 import GuideHome from './pages/GuideHome.jsx';
 import AdminHome from './pages/AdminHome.jsx';
@@ -31,6 +32,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<AuthForm />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route element={<Layout />}>
           <Route path="/home" element={<HomeRouter />} />

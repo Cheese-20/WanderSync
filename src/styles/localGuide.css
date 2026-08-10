@@ -79,7 +79,7 @@
   margin-top: 2px;
 }
 
-.eligible .eligibility-icon { color: #10b981; }
+.eligible .eligibility-icon { color: #a4ddbc; }
 .not-eligible .eligibility-icon { color: #f59e0b; }
 
 .eligibility-content h3 {
@@ -88,7 +88,7 @@
   font-weight: 600;
 }
 
-.eligible .eligibility-content h3 { color: #10b981; }
+.eligible .eligibility-content h3 { color: #a4ddbc; }
 .not-eligible .eligibility-content h3 { color: #f59e0b; }
 
 .eligibility-content p {
@@ -137,7 +137,7 @@
 }
 
 .error-icon { font-size: 1.1rem; }
-.success-icon { color: #10b981; font-size: 1.1rem; }
+.success-icon { color: #a4ddbc; font-size: 1.1rem; }
 
 /* ===== Form Title ===== */
 .form-title {

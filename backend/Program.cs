@@ -160,6 +160,7 @@ using (var scope = app.Services.CreateScope())
                 UNIQUE KEY `IX_SpotVotes_UniqueVote` (`spotID`, `guideID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
+        context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS `GuideApplication` (
                 `applicationID` int NOT NULL AUTO_INCREMENT,
                 `IDno` bigint NOT NULL,
