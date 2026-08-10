@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import CreatePostModal from '../components/CreatePostModal';
 import '../styles/explorer.css';
@@ -8,6 +9,7 @@ export default function ExplorerHome() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPosts();
@@ -121,7 +123,13 @@ export default function ExplorerHome() {
               <div className="post-header">
                 <div className="post-user-info">
                   <div className="post-avatar"></div>
-                  <span className="post-username">{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</span>
+                  <span 
+                    className="post-username clickable-username" 
+                    onClick={() => navigate(`/user/${post.userID}`)}
+                    title="View profile"
+                  >
+                    {post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}
+                  </span>
                 </div>
                 <span className="experience-badge">{post.experienceType}</span>
               </div>
@@ -180,7 +188,12 @@ export default function ExplorerHome() {
                   )}
                 </div>
                 <p className="post-content">
-                  <strong>{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</strong> {post.content}
+                  <strong 
+                    className="clickable-username" 
+                    onClick={() => navigate(`/user/${post.userID}`)}
+                  >
+                    {post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}
+                  </strong> {post.content}
                 </p>
                 <span className="post-date">{new Date(post.createdAt).toLocaleDateString()}</span>
               </div>

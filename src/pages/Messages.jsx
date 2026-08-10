@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import '../styles/messages.css';
@@ -10,6 +11,7 @@ export default function Messages() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const userJson = localStorage.getItem('user');
@@ -159,7 +161,19 @@ export default function Messages() {
             <>
               <div className="chat-header">
                 <img src={activeContact.profilePictureLink} alt={activeContact.firstName} className="chat-header-avatar" />
-                <span className="chat-header-name">{activeContact.firstName} {activeContact.lastName}</span>
+                <span 
+                  className="chat-header-name clickable-name" 
+                  onClick={() => navigate(`/user/${activeContact.userID}`)}
+                  title="View profile"
+                >
+                  {activeContact.firstName} {activeContact.lastName}
+                </span>
+                <button 
+                  className="btn-view-chat-profile" 
+                  onClick={() => navigate(`/user/${activeContact.userID}`)}
+                >
+                  View Profile
+                </button>
               </div>
               
               <div className="messages-list">

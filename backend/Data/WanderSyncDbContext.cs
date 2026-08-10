@@ -29,5 +29,6 @@ namespace backend.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<GuideRating> GuideRatings { get; set; }
+        public DbSet<UserSubmittedLocation> UserSubmittedLocations { get; set; }
     }
 }

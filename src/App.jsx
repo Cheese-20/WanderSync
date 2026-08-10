@@ -13,6 +13,7 @@ import EditActivity from './pages/EditActivity.jsx';
 import GuideDetail from './pages/GuideDetail.jsx';
 import Discover from './pages/Discover.jsx';
 import MyActivities from './pages/MyActivities.jsx';
+import UserProfile from './pages/UserProfile.jsx';
 import Layout from './components/Layout.jsx';
 
 function HomeRouter() {
@@ -44,6 +45,7 @@ function App() {
           <Route path="/apply-guide" element={<LocalGuideApplication />} />
           <Route path="/guide/:guideId" element={<GuideDetail />} />
           <Route path="/my-activities" element={<MyActivities />} />
+          <Route path="/user/:userId" element={<UserProfile />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
