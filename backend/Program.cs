@@ -217,6 +217,33 @@ using (var scope = app.Services.CreateScope())
                 Console.WriteLine("FAIL (Expected if exists): " + sql + " ERROR: " + ex.Message);
             }
         }
+
+        // Ensure Reviews table exists for guide ratings
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Reviews` (
+                `reviewID` int NOT NULL AUTO_INCREMENT,
+                `reviewerID` int NOT NULL,
+                `guideID` int NOT NULL,
+                `rating` int NOT NULL,
+                `comment` text NULL,
+                `sentAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`reviewID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        // Ensure Bookings table exists
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Bookings` (
+                `bookingID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `tourID` int NOT NULL,
+                `curatedSpotID` int NOT NULL DEFAULT 0,
+                `bookingType` longtext NOT NULL,
+                `status` longtext NOT NULL,
+                `bookingDate` datetime(6) NOT NULL,
+                PRIMARY KEY (`bookingID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
     }
     catch (Exception ex)
     {

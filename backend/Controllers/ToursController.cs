@@ -21,6 +21,33 @@ namespace backend.Controllers
             _context = context;
         }
 
+        // GET: api/Tours
+        // Returns all tours with guide information
+        [HttpGet]
+        public async Task<IActionResult> GetAllTours()
+        {
+            var tours = await _context.Tours
+                .Join(
+                    _context.Users,
+                    tour => tour.GuideId,
+                    user => user.UserID,
+                    (tour, user) => new
+                    {
+                        tourId = tour.TourId,
+                        guideId = tour.GuideId,
+                        title = tour.Title,
+                        type = tour.Type,
+                        description = tour.Description,
+                        date = tour.Date,
+                        maxPeople = tour.MaxPeople,
+                        guideName = user.FirstName + " " + user.LastName
+                    }
+                )
+                .ToListAsync();
+
+            return Ok(tours);
+        }
+
         // GET: api/Tours/guide/5
         [HttpGet("guide/{guideId}")]
         public async Task<ActionResult<IEnumerable<Tour>>> GetToursByGuide(int guideId)
