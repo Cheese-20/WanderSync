@@ -276,7 +276,7 @@
 
 **Main Flow (How it is accomplished):**
 1. The user views a post in the community feed on the Explorer Home Page or Explore Page.
-2. The user clicks on the ellipsis menu (⋯) in the top-left corner of the post.
+2. The user clicks on the ellipsis menu (⋯) in the top-right corner of the post.
 3. The system displays two options: "Report Account" and "Report Content".
 4. The user clicks on their desired option.
 
