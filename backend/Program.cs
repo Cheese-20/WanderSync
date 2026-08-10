@@ -142,7 +142,9 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `Profile` ADD COLUMN `job` longtext NULL;",
             "ALTER TABLE `Posts` ADD COLUMN `pictureURL` longtext NULL;",
             "ALTER TABLE `Posts` MODIFY COLUMN `pictureURL` longtext NULL;",
-            "ALTER TABLE `Posts` ADD COLUMN `experienceType` varchar(50) NOT NULL DEFAULT 'Individual';"
+            "ALTER TABLE `Posts` ADD COLUMN `experienceType` varchar(50) NOT NULL DEFAULT 'Individual';",
+            "ALTER TABLE `User` ADD COLUMN `suspendedUntil` datetime NULL;",
+            "CREATE TABLE IF NOT EXISTS `SpotReports` (`spotReportID` int NOT NULL AUTO_INCREMENT, `spotID` int NOT NULL, `reporterID` int NOT NULL, `reason` text, `sentAt` datetime, PRIMARY KEY (`spotReportID`), CONSTRAINT `FK_SpotReports_Spot` FOREIGN KEY (`spotID`) REFERENCES `Spots` (`spotID`) ON DELETE CASCADE, CONSTRAINT `FK_SpotReports_User` FOREIGN KEY (`reporterID`) REFERENCES `User` (`userID`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
         };
 
         foreach (var sql in profileColumnSqls)

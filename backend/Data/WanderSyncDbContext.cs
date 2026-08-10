@@ -28,5 +28,7 @@ namespace backend.Data
         public DbSet<GuideApplication> GuideApplications { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Spot> Spots { get; set; }
+        public DbSet<SpotReport> SpotReports { get; set; }
     }
 }

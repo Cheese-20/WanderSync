@@ -657,3 +657,134 @@
   cursor: not-allowed;
   transform: none;
 }
+
+
+/* ========== REPORTS SUB-TABS ========== */
+.reports-sub-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e6e6e6;
+}
+
+.sub-tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.sub-tab-btn:hover {
+  color: #1a8f66;
+}
+
+.sub-tab-btn.active {
+  color: #1a8f66;
+  border-bottom-color: #1a8f66;
+}
+
+/* ========== REPORTED SPOTS ========== */
+.spot-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-count-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.report-count-large {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e65100;
+  margin: 4px 0;
+}
+
+.status-flagged {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Spot image in detail view */
+.spot-image-container {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.spot-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Report history list */
+.report-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.report-history-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.report-history-item:last-child {
+  border-bottom: none;
+}
+
+.report-history-item strong {
+  color: #1a2332;
+}
+
+.report-history-date {
+  display: block;
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* Flag button (large) */
+.btn-flag-large {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #ff9800;
+  color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-flag-large:hover:not(:disabled) {
+  background: #e68900;
+  transform: translateY(-1px);
+}
+
+.btn-flag-large:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}

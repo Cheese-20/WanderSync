@@ -254,5 +254,121 @@ namespace backend.Controllers
 
             return Ok(new { message = "Report deleted permanently." });
         }
+
+        // ========== REPORTED SPOTS ==========
+
+        [HttpGet("reported-spots")]
+        public async Task<IActionResult> GetReportedSpots()
+        {
+            var reportedSpotIds = await _context.SpotReports
+                .Select(sr => sr.SpotID)
+                .Distinct()
+                .ToListAsync();
+
+            var spots = await _context.Spots
+                .Where(s => reportedSpotIds.Contains(s.SpotID))
+                .Include(s => s.SubmittedByUser)
+                .Select(s => new
+                {
+                    s.SpotID,
+                    s.ActivityName,
+                    s.ActivityType,
+                    s.Location,
+                    s.IsVerified,
+                    s.PictureURL,
+                    s.SubmittedAt,
+                    submittedByName = s.SubmittedByUser.FirstName + " " + s.SubmittedByUser.LastName,
+                    reportCount = _context.SpotReports.Count(sr => sr.SpotID == s.SpotID)
+                })
+                .OrderByDescending(s => s.reportCount)
+                .ToListAsync();
+
+            return Ok(spots);
+        }
+
+        [HttpGet("reported-spots/{id}")]
+        public async Task<IActionResult> GetReportedSpotDetail(int id)
+        {
+            var spot = await _context.Spots
+                .Include(s => s.SubmittedByUser)
+                .FirstOrDefaultAsync(s => s.SpotID == id);
+
+            if (spot == null)
+                return NotFound("Spot not found.");
+
+            var reportCount = await _context.SpotReports.CountAsync(sr => sr.SpotID == id);
+            var reports = await _context.SpotReports
+                .Where(sr => sr.SpotID == id)
+                .Include(sr => sr.Reporter)
+                .OrderByDescending(sr => sr.SentAt)
+                .Select(sr => new
+                {
+                    sr.SpotReportID,
+                    reporterName = sr.Reporter.FirstName + " " + sr.Reporter.LastName,
+                    sr.Reason,
+                    sr.SentAt
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                spot.SpotID,
+                spot.ActivityName,
+                spot.ActivityType,
+                spot.Description,
+                spot.Location,
+                spot.IsVerified,
+                spot.PictureURL,
+                spot.SubmittedByUserID,
+                submittedByName = spot.SubmittedByUser.FirstName + " " + spot.SubmittedByUser.LastName,
+                spot.SubmittedAt,
+                reportCount,
+                reports
+            });
+        }
+
+        [HttpPatch("reported-spots/{id}/flag")]
+        public async Task<IActionResult> FlagSpot(int id)
+        {
+            var spot = await _context.Spots.FirstOrDefaultAsync(s => s.SpotID == id);
+
+            if (spot == null)
+                return NotFound("Spot not found.");
+
+            var reportCount = await _context.SpotReports.CountAsync(sr => sr.SpotID == id);
+
+            if (reportCount < 3)
+                return BadRequest("A spot must have at least 3 reports to be flagged.");
+
+            spot.IsVerified = "Flagged";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Spot has been flagged.", spotID = id, reportCount });
+        }
+
+        [HttpDelete("reported-spots/{id}")]
+        public async Task<IActionResult> DeleteSpot(int id)
+        {
+            var spot = await _context.Spots.FirstOrDefaultAsync(s => s.SpotID == id);
+
+            if (spot == null)
+                return NotFound("Spot not found.");
+
+            var reportCount = await _context.SpotReports.CountAsync(sr => sr.SpotID == id);
+
+            if (reportCount <= 5)
+                return BadRequest("A spot must have more than 5 reports to be deleted.");
+
+            // Remove all reports for this spot
+            var spotReports = await _context.SpotReports.Where(sr => sr.SpotID == id).ToListAsync();
+            _context.SpotReports.RemoveRange(spotReports);
+
+            // Remove the spot
+            _context.Spots.Remove(spot);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Spot has been permanently deleted.", spotID = id });
+        }
     }
 }

@@ -316,3 +316,65 @@
 - If the user navigates to the Report Form page but clicks "Back" or closes the page without submitting, no report is created.
 - If the reason field is left empty and the user clicks "Submit Report", the system displays a validation error message (e.g., "Please provide a reason for your report").
 - If a network error occurs during submission, the system displays an error message and the user can retry.
+
+---
+
+## Use Case 10: Managing Reported Spots/Locations
+**Actor:** Administrator
+
+**Trigger:** The Admin clicks the "Reports" tab on the Admin Home Page.
+
+**Preconditions:**
+- The Admin is authenticated with an administrator role.
+- The "Reports" tab displays two sub-sections: "Reported Accounts" and "Reported Spots".
+- There are one or more reported spots in the system.
+- The `Spots` table exists in the database with columns: `spotID` (PK, auto-increment), `activityName` (varchar 100, NOT NULL), `activityType` (varchar 50), `description` (text), `location` (varchar 255), `isVerified` (varchar 50), `pictureURL` (longtext), `submittedByUserID` (int), `submittedAt` (datetime).
+
+**Main Flow (How it is accomplished):**
+1. The Admin clicks the "Reports" tab on the Admin Home Page.
+2. The Admin sees two sub-sections: "Reported Accounts" and "Reported Spots".
+3. The Admin clicks on "Reported Spots" to view the list of spots that have been reported by users.
+4. The frontend sends a GET request to the backend API (`/api/admin/reported-spots`) to retrieve a list of reported spots.
+5. The backend queries the database, aggregates the reports per spot, and returns the list including the total number of reports for each spot.
+6. The Admin views a list of reported spots, each displaying:
+   - The spot's activity name
+   - The spot's location
+   - The total number of reports received
+   - The current status (Active, Flagged, or Deleted)
+7. The Admin clicks the "View" button on a specific reported spot to view its full details.
+8. The system displays the full spot details including:
+   - **Activity Name** (`activityName`)
+   - **Activity Type** (`activityType`)
+   - **Description** (`description`)
+   - **Location** (`location`)
+   - **Verification Status** (`isVerified`)
+   - **Picture** (`pictureURL`)
+   - **Submitted By** (user who created the spot, from `submittedByUserID`)
+   - **Date Submitted** (`submittedAt`)
+   - **Number of Reports** (total count of reports for this spot)
+9. The Admin reviews the spot and investigates the reports.
+
+### Flag Flow (3 or more reports):
+10a. The spot has at least 3 reports. The Admin clicks the "Flag" button.
+11a. The frontend sends a PATCH request to the backend API (`/api/admin/reported-spots/{spotID}/flag`).
+12a. The backend updates the spot's `isVerified` field to "Flagged" in the `Spots` table.
+13a. The flagged spot remains visible to users but displays a warning indicator so users become wary of it.
+14a. The Admin is returned to the reported spots list, where the spot now shows a "Flagged" status.
+
+### Delete Flow (more than 5 reports):
+10b. The spot has more than 5 reports. The Admin clicks the "Delete" button.
+11b. The frontend sends a DELETE request to the backend API (`/api/admin/reported-spots/{spotID}`).
+12b. The backend permanently removes the spot record from the `Spots` table.
+13b. The spot is no longer visible to any users on the platform.
+14b. The Admin is returned to the reported spots list, where the deleted spot is no longer displayed.
+
+**Postconditions:**
+- If flagged: The spot's `isVerified` status is updated to "Flagged". The spot remains visible to users but with a warning indicator. Users are made aware that the spot may not be reliable.
+- If deleted: The spot is permanently removed from the database. It is no longer accessible to any user.
+
+**Alternative Flows:**
+- If there are no reported spots, the "Reported Spots" section displays an empty state message (e.g., "No reported spots").
+- If a spot has fewer than 3 reports, the Admin can still investigate but the "Flag" and "Delete" buttons are disabled. The Admin must wait for more reports before taking action.
+- If a network error occurs during the flag or delete action, the system displays an error message and the spot remains unchanged.
+- If the Admin tries to delete a spot with 5 or fewer reports, the system prevents the action and displays a message (e.g., "A spot must have more than 5 reports to be deleted").
+- If the Admin tries to flag a spot with fewer than 3 reports, the system prevents the action and displays a message (e.g., "A spot must have at least 3 reports to be flagged").
