@@ -1,6 +1,7 @@
 //setup code 
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.InMemory;
 using DotNetEnv;
 using backend.Data;
 
@@ -11,7 +12,7 @@ Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
 
 //  Grab the connection string from environment or configuration (appsettings.json or environment)
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__WanderSyncDb");
-if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("PLACEHOLDER"))
+if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("PLACEHOLDER") || connectionString.Contains("YOUR_MYSQL_PASSWORD_HERE"))
 {  
      connectionString = builder.Configuration.GetConnectionString("WanderSyncDb");
 }
@@ -30,10 +31,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddDbContext<WanderSyncDbContext>(options =>
-    // Use Pomelo MySQL provider and auto-detect server version
-    options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString))
-);
+// Try MySQL first; fall back to in-memory if connection string is missing/invalid
+if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("PLACEHOLDER"))
+{
+    builder.Services.AddDbContext<WanderSyncDbContext>(options =>
+        options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString))
+    );
+}
+else
+{
+    builder.Services.AddDbContext<WanderSyncDbContext>(options =>
+        options.UseInMemoryDatabase("WanderSyncDb")
+    );
+}
 
 builder.Services.AddControllers();
 
@@ -41,13 +51,15 @@ var app = builder.Build();
 
 app.UseCors("AllowViteApp");
 
-// Ensure database tables exist
+// Ensure database tables exist (only for relational databases)
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var context = scope.ServiceProvider.GetRequiredService<WanderSyncDbContext>();
-        context.Database.ExecuteSqlRaw(@"
+        if (!context.Database.IsInMemory())
+        {
+            context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS `User` (
                 `userID` int NOT NULL AUTO_INCREMENT,
                 `firstName` longtext NOT NULL,
@@ -136,6 +148,11 @@ using (var scope = app.Services.CreateScope())
         foreach (var sql in profileColumnSqls)
         {
             try { context.Database.ExecuteSqlRaw(sql); } catch { }
+        }
+        } // end of if (!IsInMemory)
+        else
+        {
+            context.Database.EnsureCreated();
         }
     }
     catch (Exception ex)

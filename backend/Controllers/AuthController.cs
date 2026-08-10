@@ -97,6 +97,24 @@ namespace backend.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
+            // Check if account is suspended
+            if (user.AccountStatus == "Suspended")
+            {
+                // Check if suspension period has expired
+                if (user.SuspendedUntil.HasValue && user.SuspendedUntil.Value <= DateTime.UtcNow)
+                {
+                    // Suspension expired — reactivate the account
+                    user.AccountStatus = "Active";
+                    user.SuspendedUntil = null;
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    var suspendedUntil = user.SuspendedUntil?.ToString("dd MMMM yyyy") ?? "unknown";
+                    return Unauthorized($"Your account has been suspended. You will be able to log in again after {suspendedUntil}.");
+                }
+            }
+
             var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Email}:{Guid.NewGuid()}") );
 
             return Ok(new

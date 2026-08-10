@@ -25,5 +25,8 @@ namespace backend.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Tour> Tours { get; set; }
         public DbSet<Post> Posts { get; set; }
+        public DbSet<GuideApplication> GuideApplications { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
     }
 }

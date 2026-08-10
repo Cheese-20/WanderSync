@@ -37,5 +37,8 @@ namespace backend.Models
 
         [Column("accountStatus")]
         public string AccountStatus { get; set; }
+
+        [Column("suspendedUntil")]
+        public DateTime? SuspendedUntil { get; set; }
     }
 }

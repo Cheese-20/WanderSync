@@ -118,3 +118,201 @@
 **Postconditions:**
 - The activity is permanently removed from the database and the list of activities.
 - A confirmation message is displayed to the Guide.
+
+---
+
+## Use Case 6: Admin Home Page
+**Actor:** Administrator
+
+**Trigger:** The Admin logs into the system and is redirected to the Admin Home Page (`/admin`).
+
+**Preconditions:**
+- The Admin is registered with an administrator role and is authenticated.
+- The system has user activity data, guide applications, and reported accounts available for review.
+
+**Main Flow (How it is accomplished):**
+
+### Tab 1: Overview (Default View)
+1. Upon login, the Admin is presented with the Admin Home Page which displays three tabs at the top: "Overview", "Applications", and "Reports".
+2. The "Overview" tab is selected by default.
+3. The Admin views a dashboard with options to generate various system activity reports, including:
+   - **Number of new profiles created** – Displays the count of user profiles created within a selected time period.
+   - **Reported accounts** – Displays the total number of accounts that have been reported by other users.
+   - **Number of active users** – Displays the count of users who have logged in or performed activity within a defined period.
+   - **Top rated experiences** – Displays a ranked list of the highest-rated tour experiences based on user reviews.
+   - **Top rated local guides** – Displays a ranked list of the highest-rated guides based on Explorer feedback.
+4. The Admin selects a report type to generate.
+5. The frontend sends a GET request to the backend API (e.g., `/api/admin/reports/{reportType}`) with any filter parameters.
+6. The backend queries the database, aggregates the requested data, and returns the report results.
+7. The frontend renders the report data in a visual format (e.g., cards, charts, or tables).
+
+### Tab 2: Applications
+1. The Admin clicks the "Applications" tab.
+2. The frontend sends a GET request to the backend API (`/api/admin/applications`) to retrieve a list of users who have applied to become local guides.
+3. The backend queries the database for pending guide applications and returns the list.
+4. The Admin views the list of applicants, including details such as the applicant's name, email, date of application, and relevant qualifications or experience.
+5. The Admin can review each application and take action (e.g., approve or reject the application).
+6. Upon approval or rejection, the frontend sends a PUT/PATCH request to the backend API to update the application status.
+7. The backend updates the applicant's role or application status in the database and responds with a success status.
+
+### Tab 3: Reports
+1. The Admin clicks the "Reports" tab.
+2. The frontend sends a GET request to the backend API (`/api/admin/reported-accounts`) to retrieve a list of reported user accounts.
+3. The backend queries the database for accounts that have been flagged or reported by other users and returns the list.
+4. The Admin views the list of reported accounts, including details such as the reported user's name, the reason for reporting, the reporting user, and the date of the report.
+5. The Admin can review each reported account and take action (e.g., issue a warning, suspend the account, or dismiss the report).
+6. Upon taking action, the frontend sends a PUT/PATCH request to the backend API to update the account status.
+7. The backend updates the reported account's status in the database and responds with a success status.
+
+**Postconditions:**
+- The Admin has a comprehensive view of system activity through the Overview dashboard reports.
+- Guide applications are reviewed and processed (approved or rejected), with applicant roles updated accordingly.
+- Reported accounts are reviewed and appropriate moderation actions are applied to maintain platform safety.
+
+**Alternative Flows:**
+- If there are no pending guide applications, the "Applications" tab displays an empty state message (e.g., "No pending applications").
+- If there are no reported accounts, the "Reports" tab displays an empty state message (e.g., "No reported accounts").
+- If a report fails to generate due to insufficient data, the system displays an informational message indicating no data is available for the selected report type.
+
+---
+
+## Use Case 7: Managing Local Guide Applications
+**Actor:** Administrator
+
+**Trigger:** The Admin clicks the "Applications" tab on the Admin Home Page.
+
+**Preconditions:**
+- The Admin is authenticated with an administrator role.
+- There are one or more pending local guide applications submitted by users.
+
+**Main Flow (How it is accomplished):**
+1. The Admin clicks the "Applications" tab on the Admin Home Page.
+2. The frontend sends a GET request to the backend API (`/api/admin/applications`) to retrieve a list of users who have applied to become local guides.
+3. The backend queries the database for pending guide applications and returns the list.
+4. The Admin views a list of applicants, each displaying the applicant's name, email, and date of application.
+5. The Admin clicks the "View" button on a specific application to view the full application details.
+6. The system displays the full application, including the applicant's name, email, qualifications, experience, and date of submission.
+7. At the bottom of the application, two action buttons are displayed: "Accept" and "Reject".
+
+### Accept Flow:
+8a. The Admin clicks the "Accept" button.
+9a. The frontend sends a PATCH request to the backend API (`/api/admin/applications/{id}/approve`).
+10a. The backend updates the application status to "Approved".
+11a. The backend updates the applicant's user role from "Explorer" to "Guide", storing their information as a local guide.
+12a. The system sends a notification to the applicant informing them of their successful application.
+13a. The Admin is returned to the applications list, where the accepted application is no longer displayed.
+
+### Reject Flow:
+8b. The Admin clicks the "Reject" button.
+9b. The frontend sends a DELETE request to the backend API (`/api/admin/applications/{id}/reject`).
+10b. The backend sends a notification to the applicant informing them of their unsuccessful application.
+11b. The backend permanently deletes the application record from the database.
+12b. The Admin is returned to the applications list, where the rejected application is no longer displayed.
+
+**Postconditions:**
+- If accepted: The applicant's role is updated to "Guide" in the system. The applicant is notified of their successful application. Their information is stored as a local guide.
+- If rejected: The applicant is notified of their unsuccessful application. The application is permanently deleted from the database.
+
+**Alternative Flows:**
+- If there are no pending applications, the "Applications" tab displays an empty state message (e.g., "No pending applications").
+- If a network error occurs during the accept or reject action, the system displays an error message and the application remains unchanged.
+
+---
+
+## Use Case 8: Suspending a Reported Account
+**Actor:** Administrator
+
+**Trigger:** The Admin clicks the "Reports" tab on the Admin Home Page.
+
+**Preconditions:**
+- The Admin is authenticated with an administrator role.
+- There are one or more reported accounts in the `Reports` table (columns: `reportID`, `reporterID`, `reportedUserID`, `reason`, `status`, `sentAt`).
+
+**Main Flow (How it is accomplished):**
+1. The Admin clicks the "Reports" tab on the Admin Home Page.
+2. The frontend sends a GET request to the backend API (`/api/admin/reported-accounts`) to retrieve a list of reported accounts.
+3. The backend queries the `Reports` table and joins with the `User` table to return report details including the reported user's name, the reporter's name, the reason, status, and date sent.
+4. The Admin views a list of reported accounts, each displaying the reported user's name, the reason for the report, and the date it was submitted.
+5. The Admin clicks the "View" button next to a specific reported account to view the full report details.
+6. The system displays the full report, including the reported user's name and email, the reporter's name, the reason for the report, and the date submitted.
+7. The Admin reads and investigates the report.
+
+### Suspend Flow (Report is Valid):
+8a. The Admin determines the report is valid and clicks the "Suspend" button.
+9a. The frontend sends a PATCH request to the backend API (`/api/admin/reported-accounts/{reportID}/suspend`).
+10a. The backend updates the reported user's `accountStatus` to "Suspended" and records the suspension end date as two weeks from the current date.
+11a. The backend updates the report's `status` to "Resolved".
+12a. The suspended user will not be able to log into their account for the duration of the two-week suspension period. The login endpoint checks the user's `accountStatus` and denies access if the account is suspended.
+13a. After two weeks, the user's account is automatically reactivated, allowing them to log in again.
+14a. The Admin is returned to the reports list, where the resolved report is no longer displayed as pending.
+
+### Delete Flow (Report is Invalid):
+8b. The Admin determines the report is not valid and clicks the "Delete" button.
+9b. The frontend sends a DELETE request to the backend API (`/api/admin/reported-accounts/{reportID}`).
+10b. The backend permanently deletes the report record from the `Reports` table.
+11b. The reported user's account remains unaffected.
+12b. The Admin is returned to the reports list, where the deleted report is no longer displayed.
+
+**Postconditions:**
+- If suspended: The reported user's account status is set to "Suspended" for two weeks. The user cannot log in during this period. After two weeks, access is restored. The report status is updated to "Resolved".
+- If deleted: The report is permanently removed from the database. The reported user's account is unaffected.
+
+**Alternative Flows:**
+- If there are no reported accounts, the "Reports" tab displays an empty state message (e.g., "No reported accounts").
+- If a network error occurs during the suspend or delete action, the system displays an error message and the report remains unchanged.
+- If the user attempts to log in while suspended, the system displays a message informing them that their account is suspended and the date when access will be restored.
+
+---
+
+## Use Case 9: Reporting a User or Content
+**Actor:** User (Explorer or Guide)
+
+**Trigger:** The user clicks on the ellipsis menu (⋯) in the top-left corner of a post.
+
+**Preconditions:**
+- The user is registered and logged into the application.
+- The user is viewing a post in the community feed.
+- The `Reports` table exists in the database with columns: `reportID` (PK, auto-increment), `reporterID` (FK MUL), `reportedUserID` (FK MUL), `reason` (text), `status` (varchar 20), `sentAt` (datetime).
+
+**Main Flow (How it is accomplished):**
+1. The user views a post in the community feed on the Explorer Home Page or Explore Page.
+2. The user clicks on the ellipsis menu (⋯) in the top-left corner of the post.
+3. The system displays two options: "Report Account" and "Report Content".
+4. The user clicks on their desired option.
+
+### Report Account Flow:
+5a. The user selects "Report Account".
+6a. The system navigates the user to a Report Form page, pre-filled with the reported user's ID (`reportedUserID`).
+7a. The user fills in the reason for reporting the account in a text field (e.g., inappropriate behaviour, harassment, fake account).
+8a. The user clicks the "Submit Report" button.
+9a. The frontend sends a POST request to the backend API (`/api/reports`) with the following data:
+    - `reporterID`: The currently logged-in user's ID.
+    - `reportedUserID`: The ID of the user who owns the post.
+    - `reason`: The text entered by the user explaining why they are reporting.
+10a. The backend creates a new record in the `Reports` table with `status` set to "Pending" and `sentAt` set to the current date and time.
+11a. The backend responds with a success status.
+12a. The frontend displays a confirmation message (e.g., "Report submitted successfully") and navigates the user back to the feed.
+
+### Report Content Flow:
+5b. The user selects "Report Content".
+6b. The system navigates the user to a Report Form page, pre-filled with the reported user's ID (`reportedUserID`) and a reference to the specific post.
+7b. The user fills in the reason for reporting the content in a text field (e.g., inappropriate content, misinformation, spam).
+8b. The user clicks the "Submit Report" button.
+9b. The frontend sends a POST request to the backend API (`/api/reports`) with the following data:
+    - `reporterID`: The currently logged-in user's ID.
+    - `reportedUserID`: The ID of the user who owns the post.
+    - `reason`: The text entered by the user explaining why they are reporting, prefixed with "[Content Report]" to distinguish it from account reports.
+10b. The backend creates a new record in the `Reports` table with `status` set to "Pending" and `sentAt` set to the current date and time.
+11b. The backend responds with a success status.
+12b. The frontend displays a confirmation message (e.g., "Report submitted successfully") and navigates the user back to the feed.
+
+**Postconditions:**
+- A new report record is created in the `Reports` table with the reporter's ID, the reported user's ID, the reason for reporting, a status of "Pending", and the date the report was sent.
+- The report is visible to the Admin under the "Reports" tab in the Admin Home Page for review.
+- The reported user is not notified that they have been reported.
+
+**Alternative Flows:**
+- If the user clicks the ellipsis menu but then closes it without selecting an option, no action is taken.
+- If the user navigates to the Report Form page but clicks "Back" or closes the page without submitting, no report is created.
+- If the reason field is left empty and the user clicks "Submit Report", the system displays a validation error message (e.g., "Please provide a reason for your report").
+- If a network error occurs during submission, the system displays an error message and the user can retry.

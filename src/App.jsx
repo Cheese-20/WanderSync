@@ -9,6 +9,8 @@ import Messages from './pages/Messages.jsx';
 import Profile from './pages/Profile.jsx';
 import Activities from './pages/Activities.jsx';
 import EditActivity from './pages/EditActivity.jsx';
+import AdminHome from './pages/AdminHome.jsx';
+import ReportForm from './pages/ReportForm.jsx';
 
 function HomeRouter() {
   const userJson = localStorage.getItem('user');
@@ -16,6 +18,7 @@ function HomeRouter() {
   let user = {};
   try { user = JSON.parse(userJson); } catch (e) { }
   const role = (user.role || '').toLowerCase();
+  if (role.includes('admin')) return <Navigate to="/admin" />;
   if (role.includes('guide')) return <GuideHome />;
   return <ExplorerHome />;
 }
@@ -34,6 +37,8 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/activities" element={<Activities />} />
         <Route path="/edit-activity/:id" element={<EditActivity />} />
+        <Route path="/admin" element={<AdminHome />} />
+        <Route path="/report" element={<ReportForm />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

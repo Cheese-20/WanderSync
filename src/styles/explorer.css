@@ -303,3 +303,60 @@
   color: #fff;
   font-weight: bold;
 }
+
+
+/* Post Ellipsis Menu */
+.post-menu-wrapper {
+  position: relative;
+}
+
+.post-ellipsis-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+  color: #666;
+  transition: background 0.2s, color 0.2s;
+  line-height: 1;
+}
+
+.post-ellipsis-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.post-ellipsis-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.post-ellipsis-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.post-ellipsis-menu button:hover {
+  background: #f5f5f5;
+}
+
+.post-ellipsis-menu button:first-child {
+  border-bottom: 1px solid #eee;
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import CreatePostModal from '../components/CreatePostModal';
 import '../styles/explorer.css';
@@ -6,6 +7,8 @@ import '../styles/explorer.css';
 export default function ExplorerHome() {
   const [posts, setPosts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPosts();
@@ -25,6 +28,15 @@ export default function ExplorerHome() {
 
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
+  };
+
+  const toggleMenu = (postId) => {
+    setOpenMenuId(openMenuId === postId ? null : postId);
+  };
+
+  const handleReport = (type, post) => {
+    setOpenMenuId(null);
+    navigate('/report', { state: { reportType: type, reportedUserID: post.userID, postID: post.postID } });
   };
 
   return (
@@ -51,6 +63,15 @@ export default function ExplorerHome() {
           {posts.map(post => (
             <div key={post.postID || Math.random()} className="post">
               <div className="post-header">
+                <div className="post-menu-wrapper">
+                  <button className="post-ellipsis-btn" onClick={() => toggleMenu(post.postID)}>⋯</button>
+                  {openMenuId === post.postID && (
+                    <div className="post-ellipsis-menu">
+                      <button onClick={() => handleReport('account', post)}>Report Account</button>
+                      <button onClick={() => handleReport('content', post)}>Report Content</button>
+                    </div>
+                  )}
+                </div>
                 <div className="post-user-info">
                   <div className="post-avatar"></div>
                   <span className="post-username">{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</span>
