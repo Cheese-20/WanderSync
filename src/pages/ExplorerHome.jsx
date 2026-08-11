@@ -155,21 +155,25 @@ export default function ExplorerHome() {
                 <img src={tour.pictureURL || tour.imageURL || 'https://via.placeholder.com/260x140'} alt="Tour" />
               </div>
               <div className="tour-card-body">
-                <h3 className="tour-title">{tour.title}</h3>
+                <h3 className="tour-title" style={{ marginBottom: '4px' }}>{tour.title}</h3>
+                <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{tour.type}</span>
                 <div className="tour-meta">
-                  <span style={{ fontSize: '0.85rem' }}>📍 {tour.type} • {tour.maxPeople} guests max</span>
-                  <span style={{ fontSize: '0.85rem' }}>🕒 {new Date(tour.date).toLocaleDateString()} at {new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <span style={{ fontStyle: 'italic', color: '#666', fontSize: '0.8rem', marginTop: '2px', display: 'block' }}>Hosted by: {tour.guideName}</span>
+                  <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    {tour.location || 'Sandton'} • {tour.maxPeople} guests max
+                  </span>
+                  <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    {new Date(tour.date).toLocaleDateString()} at {new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <span style={{ fontStyle: 'italic', color: '#666', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>Hosted by: {tour.guideName}</span>
                 </div>
                 <div className="tour-footer">
-                  <div className="tour-going">
-                    <div className="mini-avatars">
-                      <div className="m-avatar"></div>
-                      <div className="m-avatar" style={{ marginLeft: '-6px' }}></div>
-                    </div>
-                    <span style={{ marginLeft: '4px' }}>+{Math.floor(Math.random() * 10) + 1} going</span>
+                  <div className="tour-going" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#666', fontSize: '0.85rem' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>3/10 going</span>
                   </div>
-                  <button className="mint-btn" onClick={() => { setSelectedTour(tour); setIsBookingModalOpen(true); }}>Request</button>
+                  <button className="mint-btn" onClick={() => { setSelectedTour(tour); setIsBookingModalOpen(true); }}>Join</button>
                 </div>
               </div>
             </article>

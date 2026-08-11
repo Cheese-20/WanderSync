@@ -38,5 +38,8 @@ namespace backend.Models
 
         [Column("imageURL")]
         public string? ImageURL { get; set; }
+
+        [Column("location")]
+        public string? Location { get; set; }
     }
 }

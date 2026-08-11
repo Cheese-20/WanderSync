@@ -178,6 +178,7 @@ using (var scope = app.Services.CreateScope())
 
         string[] profileColumnSqls = new[]
         {
+            "ALTER TABLE `Tours` ADD COLUMN `location` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `interests` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
