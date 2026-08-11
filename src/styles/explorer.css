@@ -892,3 +892,13 @@ button:disabled {
   font-weight: 700;
   color: #1a1a1a;
 }
+/* Clickable username links */
+.clickable-username {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clickable-username:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}

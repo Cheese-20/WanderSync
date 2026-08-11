@@ -310,6 +310,19 @@ export default function ExplorerHome() {
                     <span className="experience-badge" style={{ marginLeft: '8px' }}>{post.experienceType}</span>
                   </span>
                   <span className="c-post-time" style={{ color: '#888', fontSize: '0.85rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
+        <div className="posts-container">
+          {posts.map(post => (
+            <div key={post.postID || Math.random()} className="post">
+              <div className="post-header">
+                <div className="post-user-info">
+                  <div className="post-avatar"></div>
+                  <span 
+                    className="post-username clickable-username" 
+                    onClick={() => navigate(`/user/${post.userID}`)}
+                    title="View profile"
+                  >
+                    {post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}
+                  </span>
                 </div>
               </div>
 
@@ -361,6 +374,41 @@ export default function ExplorerHome() {
                     </span>
                   </>
                 )}
+              <div className="post-body">
+                <div className="post-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <span className="action-icon" title="Like">❤️</span>
+                  <span className="action-icon" title="Comment">💬</span>
+                  <span className="action-icon" title="Share">↗️</span>
+                  {loggedInUserId === post.userID && (
+                    <>
+                      <span 
+                        className="action-icon edit-icon" 
+                        title="Edit Post" 
+                        onClick={() => handleEditClick(post)} 
+                        style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '1.2rem' }}
+                      >
+                        ✏️
+                      </span>
+                      <span 
+                        className="action-icon delete-icon" 
+                        title="Delete Post" 
+                        onClick={() => handleDeleteClick(post)} 
+                        style={{ cursor: 'pointer', fontSize: '1.2rem' }}
+                      >
+                        🗑️
+                      </span>
+                    </>
+                  )}
+                </div>
+                <p className="post-content">
+                  <strong 
+                    className="clickable-username" 
+                    onClick={() => navigate(`/user/${post.userID}`)}
+                  >
+                    {post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}
+                  </strong> {post.content}
+                </p>
+                <span className="post-date">{new Date(post.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           ))}
