@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 
@@ -57,7 +57,6 @@ function AuthForm() {
   // NOTE: Use a relative `/api` path; on success store token and user and navigate to home
   const submitLogin = async event => {
     event.preventDefault();
-    setIsLoading(true);
 
     try {
       const response = await axios.post('/api/auth/login', {
@@ -75,15 +74,13 @@ function AuthForm() {
     } catch (error) {
       let errorMsg = 'Login failed. Please check your credentials.';
       if (error.response?.data) {
-          if (typeof error.response.data === 'string') {
-              errorMsg = error.response.data;
-          } else if (error.response.data.message) {
-              errorMsg = error.response.data.message;
-          }
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
+        }
       }
       setLoginError(errorMsg);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -139,8 +136,6 @@ function AuthForm() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       // Send data to C# AuthController
       const response = await axios.post('/api/auth/register', {
@@ -165,8 +160,6 @@ function AuthForm() {
         message: error.response?.data || 'An error occurred during registration.',
         type: 'error'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -281,10 +274,12 @@ function AuthForm() {
                     checked={loginValues.role === 'guide'}
                     onChange={handleLoginChange}
                   />
-                  Local Guide
+                  Guide
                 </label>
               </div>
 
+              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
+              <button type="submit" className="btn solid">Sign In</button>
               <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>Forgot password?</a>
               <button type="submit" className="btn solid">Sign In</button>
               <a href="#forgot" className="forgot-link">Forgot password?</a>
@@ -367,9 +362,7 @@ function AuthForm() {
                 required
               />
 
-              <button type="submit" className="btn" disabled={isLoading}>
-                {isLoading ? 'Signing Up...' : 'Sign Up'}
-              </button>
+              <button type="submit" className="btn">Sign Up</button>
               {signupStatus.message && (
                 <p className={`signup-status ${signupStatus.type}`}>
                   {signupStatus.message}
@@ -401,8 +394,8 @@ function AuthForm() {
 
       {loginError && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
-          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999, 
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999,
           display: 'flex', justifyContent: 'center', alignItems: 'center'
         }}>
           <div style={{
@@ -410,7 +403,7 @@ function AuthForm() {
             maxWidth: '400px', width: '90%', textAlign: 'center',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}>
-            <img src={logo} alt="WanderSync logo" style={{ width: '80px', margin: '0 auto 20px', display: 'block' }} />
+            <h3 style={{ marginBottom: '15px', color: '#333' }}>Login Failed</h3>
             <p style={{ marginBottom: '25px', color: '#666', lineHeight: '1.5' }}>{loginError}</p>
             <button className="btn solid" onClick={() => setLoginError('')} style={{ margin: '0 auto', display: 'block' }}>
               Close
@@ -420,7 +413,6 @@ function AuthForm() {
       )}
 
     </div>
-    </>
   );
 }
 

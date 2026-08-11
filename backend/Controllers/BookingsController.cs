@@ -236,14 +236,14 @@ namespace backend.Controllers
 
                 if (existingMatch == null)
                 {
-                    var newMatch = new UserMatch
+                    existingMatch = new UserMatch
                     {
                         RequesterID = booking.userID,
                         ReceiverID = tour.GuideId,
                         Status = "accepted",
                         DateMatched = DateTime.UtcNow
                     };
-                    _context.Matches.Add(newMatch);
+                    _context.Matches.Add(existingMatch);
                 }
                 else if (existingMatch.Status != "accepted")
                 {
@@ -253,6 +253,20 @@ namespace backend.Controllers
                     existingMatch.DateMatched = DateTime.UtcNow; // Refresh match date
                     _context.Entry(existingMatch).State = EntityState.Modified;
                 }
+
+                // Save to generate MatchID if it's a new match
+                await _context.SaveChangesAsync();
+
+                // Automated confirmation message (A200) from Guide to Explorer
+                var automatedMessage = new Message
+                {
+                    MatchID = existingMatch.MatchID,
+                    SenderID = tour.GuideId,
+                    ReceiverID = booking.userID,
+                    TextMessage = $"Hi! I've confirmed your booking for {tour.Title}. Looking forward to it!",
+                    SentAt = DateTime.UtcNow
+                };
+                _context.Messages.Add(automatedMessage);
             }
 
             await _context.SaveChangesAsync();

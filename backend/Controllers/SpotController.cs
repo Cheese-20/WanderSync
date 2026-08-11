@@ -44,6 +44,29 @@ namespace backend.Controllers
             return Ok(spots);
         }
 
+        // GET: api/spots/verified
+        [HttpGet("verified")]
+        public async Task<IActionResult> GetVerifiedSpots()
+        {
+            var spots = await _context.CuratedSpots
+                .Where(s => s.IsVerified == "approve" || s.IsVerified == "verified" || s.IsVerified == "approved")
+                .OrderByDescending(s => s.SubmittedAt)
+                .Select(s => new {
+                    spotID = s.SpotID,
+                    activityName = s.ActivityName,
+                    activityType = s.ActivityType,
+                    description = s.Description,
+                    location = s.Location,
+                    pictureURL = s.PictureURL,
+                    submittedAt = s.SubmittedAt,
+                    submitterName = _context.Users.Where(u => u.UserID == s.SubmittedByUserID).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault(),
+                    submitterAvatar = _context.Profiles.Where(p => p.UserID == s.SubmittedByUserID).Select(p => p.ProfilePictureLink).FirstOrDefault()
+                })
+                .ToListAsync();
+
+            return Ok(spots);
+        }
+
         public class VoteRequest
         {
             public int GuideId { get; set; }

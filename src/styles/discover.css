@@ -56,7 +56,7 @@
   width: 36px;
   height: 36px;
   border: 3px solid #e5e7eb;
-  border-top-color: #1a8f66;
+  border-top-color: #a4ddbc;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   margin: 0 auto 12px;
@@ -165,7 +165,7 @@
 
 .interest-tag {
   background: #e0f0ea;
-  color: #1a8f66;
+  color: #a4ddbc;
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.78rem;
@@ -173,7 +173,7 @@
 }
 
 .guide-card-btn {
-  background: #1a8f66;
+  background: #a4ddbc;
   color: #ffffff;
   border: none;
   padding: 10px 24px;
@@ -185,7 +185,7 @@
 }
 
 .guide-card-btn:hover {
-  background: #157a57;
+  background: #a4ddbc;
 }
 
 /* Guide Detail Page */
@@ -198,7 +198,7 @@
 .btn-back {
   background: none;
   border: none;
-  color: #1a8f66;
+  color: #a4ddbc;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -249,7 +249,7 @@
 }
 
 .guide-detail-job {
-  color: #1a8f66;
+  color: #a4ddbc;
   font-weight: 600;
   margin: 0 0 6px;
   font-size: 1rem;
@@ -272,7 +272,7 @@
 }
 
 .btn-contact {
-  background: #1a8f66;
+  background: #a4ddbc;
   color: #ffffff;
   border: none;
   padding: 12px 28px;
@@ -284,7 +284,7 @@
 }
 
 .btn-contact:hover {
-  background: #157a57;
+  background: #a4ddbc;
 }
 
 .guide-detail-section {
@@ -348,7 +348,7 @@
 
 .tour-type-badge {
   background: #e0f0ea;
-  color: #1a8f66;
+  color: #a4ddbc;
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 0.75rem;

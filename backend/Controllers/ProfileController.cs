@@ -248,6 +248,16 @@ namespace backend.Controllers
                             CreatedAt = DateTime.UtcNow
                         };
                         _context.Notifications.Add(notification);
+
+                        // Add automated chat message
+                        var welcomeMessage = new backend.Models.Message {
+                            MatchID = existingMatch.MatchID,
+                            SenderID = request.ReceiverID,
+                            ReceiverID = existingMatch.RequesterID,
+                            TextMessage = "It's a match! Say hi!",
+                            SentAt = DateTime.UtcNow
+                        };
+                        _context.Messages.Add(welcomeMessage);
                     }
                     else if (request.Status == "rejected")
                     {
