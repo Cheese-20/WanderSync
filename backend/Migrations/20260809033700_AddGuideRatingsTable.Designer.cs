@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -10,9 +11,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(WanderSyncDbContext))]
-    partial class WanderSyncDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809033700_AddGuideRatingsTable")]
+    partial class AddGuideRatingsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,14 +60,7 @@ namespace backend.Migrations
                     b.Property<int>("curatedSpotID")
                         .HasColumnType("int");
 
-                    b.Property<int>("numberOfGuests")
-                        .HasColumnType("int");
-
                     b.Property<string>("status")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("timeOfBooking")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -84,15 +80,16 @@ namespace backend.Migrations
                     b.Property<int>("RatingId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("reviewID");
+                        .HasColumnName("ratingID");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
                         .HasColumnName("comment");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
-                        .HasColumnName("sentAt");
+                        .HasColumnName("createdAt");
 
                     b.Property<int>("GuideId")
                         .HasColumnType("int")
@@ -100,15 +97,17 @@ namespace backend.Migrations
 
                     b.Property<int>("Score")
                         .HasColumnType("int")
-                        .HasColumnName("rating");
+                        .HasColumnName("score");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int")
-                        .HasColumnName("reviewerID");
+                        .HasColumnName("userID");
 
                     b.HasKey("RatingId");
 
-                    b.ToTable("Reviews");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("GuideRatings");
                 });
 
             modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
@@ -145,49 +144,6 @@ namespace backend.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("GuideApplication");
-            modelBuilder.Entity("backend.Models.CuratedSpot", b =>
-                {
-                    b.Property<int>("SpotID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("spotID");
-
-                    b.Property<string>("ActivityName")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("activityName");
-
-                    b.Property<string>("ActivityType")
-                        .HasColumnType("longtext")
-                        .HasColumnName("activityType");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext")
-                        .HasColumnName("description");
-
-                    b.Property<string>("IsVerified")
-                        .HasColumnType("longtext")
-                        .HasColumnName("isVerified");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("longtext")
-                        .HasColumnName("location");
-
-                    b.Property<string>("PictureURL")
-                        .HasColumnType("longtext")
-                        .HasColumnName("pictureURL");
-
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("submittedAt");
-
-                    b.Property<int?>("SubmittedByUserID")
-                        .HasColumnType("int")
-                        .HasColumnName("submittedByUserID");
-
-                    b.HasKey("SpotID");
-
-                    b.ToTable("curatedSpots");
                 });
 
             modelBuilder.Entity("backend.Models.Message", b =>
@@ -347,35 +303,6 @@ namespace backend.Migrations
                     b.ToTable("Profile");
                 });
 
-            modelBuilder.Entity("backend.Models.SpotVote", b =>
-                {
-                    b.Property<int>("VoteID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("voteID");
-
-                    b.Property<int>("GuideID")
-                        .HasColumnType("int")
-                        .HasColumnName("guideID");
-
-                    b.Property<int>("SpotID")
-                        .HasColumnType("int")
-                        .HasColumnName("spotID");
-
-                    b.Property<string>("VoteType")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("voteType");
-
-                    b.Property<DateTime>("VotedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("votedAt");
-
-                    b.HasKey("VoteID");
-
-                    b.ToTable("SpotVotes");
-                });
-
             modelBuilder.Entity("backend.Models.Tour", b =>
                 {
                     b.Property<int>("TourId")
@@ -399,10 +326,6 @@ namespace backend.Migrations
                     b.Property<int>("MaxPeople")
                         .HasColumnType("int")
                         .HasColumnName("maxPeople");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)")
-                        .HasColumnName("price");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -507,6 +430,17 @@ namespace backend.Migrations
                     b.HasIndex("RequesterID");
 
                     b.ToTable("Matches");
+                });
+
+            modelBuilder.Entity("backend.Models.GuideRating", b =>
+                {
+                    b.HasOne("backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
