@@ -6,8 +6,7 @@
    - User login and session management (JWT/Local Storage).
 2. **Dashboard / Home**
    - Distinct views for Guides (`GuideHome.jsx`) and Explorers (`ExplorerHome.jsx`).
-3. **Discover**
-   - Explore various travel spots, guides, and locations.
+
 4. **Matching System**
    - `Match.jsx` handles matching explorers with suitable guides based on preferences.
    - Features a Tinder-style swiping card interface for intuitive accept/reject actions.

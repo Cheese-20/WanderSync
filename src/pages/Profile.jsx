@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import NavBar from '../components/NavBar';
+
 import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
@@ -143,6 +143,12 @@ export default function Profile() {
     alert('Delete profile functionality is disabled for now.');
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
 
@@ -199,7 +205,7 @@ export default function Profile() {
 
   return (
     <div className="profile-page">
-      <NavBar />
+
       <main className="page profile-container">
         <h2>User Profile</h2>
         
@@ -215,6 +221,13 @@ export default function Profile() {
             onClick={() => setActiveTab('bookings')}
           >
             Bookings
+          </button>
+          <button 
+            className="delete button" 
+            onClick={handleLogout} 
+            style={{ marginLeft: 'auto' }}
+          >
+            Logout
           </button>
         </div>
 
@@ -288,6 +301,16 @@ export default function Profile() {
                 <button type="submit" className="save button">Save Profile</button>
               </div>
             </form>
+
+            <div className="apply-guide-section">
+              <button
+                type="button"
+                className="apply-guide-button"
+                onClick={() => navigate('/apply-guide')}
+              >
+                Apply to be a Local Guide
+              </button>
+            </div>
           </div>
         )}
 

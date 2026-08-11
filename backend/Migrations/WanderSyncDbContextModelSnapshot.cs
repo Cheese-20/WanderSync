@@ -19,6 +19,225 @@ namespace backend.Migrations
                 .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("backend.Models.Admin", b =>
+                {
+                    b.Property<int>("AdminID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("adminID");
+
+                    b.Property<string>("HashedPassword")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("hashedPassword");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("username");
+
+                    b.HasKey("AdminID");
+
+                    b.ToTable("Admin");
+                });
+
+            modelBuilder.Entity("backend.Models.Booking", b =>
+                {
+                    b.Property<int>("bookingID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("bookingDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("bookingType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("curatedSpotID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("numberOfGuests")
+                        .HasColumnType("int");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("timeOfBooking")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("tourID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("userID")
+                        .HasColumnType("int");
+
+                    b.HasKey("bookingID");
+
+                    b.ToTable("Bookings");
+                });
+
+            modelBuilder.Entity("backend.Models.CuratedSpot", b =>
+                {
+                    b.Property<int>("SpotID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("spotID");
+
+                    b.Property<string>("ActivityName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("activityName");
+
+                    b.Property<string>("ActivityType")
+                        .HasColumnType("longtext")
+                        .HasColumnName("activityType");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<string>("IsVerified")
+                        .HasColumnType("longtext")
+                        .HasColumnName("isVerified");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("longtext")
+                        .HasColumnName("location");
+
+                    b.Property<string>("PictureURL")
+                        .HasColumnType("longtext")
+                        .HasColumnName("pictureURL");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("submittedAt");
+
+                    b.Property<int?>("SubmittedByUserID")
+                        .HasColumnType("int")
+                        .HasColumnName("submittedByUserID");
+
+                    b.HasKey("SpotID");
+
+                    b.ToTable("curatedSpots");
+                });
+
+            modelBuilder.Entity("backend.Models.Message", b =>
+                {
+                    b.Property<int>("MID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("mID");
+
+                    b.Property<int>("MatchID")
+                        .HasColumnType("int")
+                        .HasColumnName("matchID");
+
+                    b.Property<int>("ReceiverID")
+                        .HasColumnType("int")
+                        .HasColumnName("receiverID");
+
+                    b.Property<int>("SenderID")
+                        .HasColumnType("int")
+                        .HasColumnName("senderID");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sentAt");
+
+                    b.Property<string>("TextMessage")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("textMessage");
+
+                    b.HasKey("MID");
+
+                    b.ToTable("Message");
+                });
+
+            modelBuilder.Entity("backend.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("notificationID");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("createdAt");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("isRead");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("message");
+
+                    b.Property<int?>("RelatedEntityID")
+                        .HasColumnType("int")
+                        .HasColumnName("relatedEntityID");
+
+                    b.Property<DateTime?>("ScheduledFor")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("scheduledFor");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("type");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int")
+                        .HasColumnName("userID");
+
+                    b.HasKey("NotificationID");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("backend.Models.Post", b =>
+                {
+                    b.Property<int>("PostID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("postID");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("createdAt");
+
+                    b.Property<string>("ExperienceType")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("experienceType");
+
+                    b.Property<string>("PictureURL")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pictureURL");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updatedAt");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int")
+                        .HasColumnName("userID");
+
+                    b.HasKey("PostID");
+
+                    b.ToTable("Posts");
+                });
+
             modelBuilder.Entity("backend.Models.Profile", b =>
                 {
                     b.Property<int>("PID")
@@ -60,6 +279,80 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("Profile");
+                });
+
+            modelBuilder.Entity("backend.Models.SpotVote", b =>
+                {
+                    b.Property<int>("VoteID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("voteID");
+
+                    b.Property<int>("GuideID")
+                        .HasColumnType("int")
+                        .HasColumnName("guideID");
+
+                    b.Property<int>("SpotID")
+                        .HasColumnType("int")
+                        .HasColumnName("spotID");
+
+                    b.Property<string>("VoteType")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("voteType");
+
+                    b.Property<DateTime>("VotedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("votedAt");
+
+                    b.HasKey("VoteID");
+
+                    b.ToTable("SpotVotes");
+                });
+
+            modelBuilder.Entity("backend.Models.Tour", b =>
+                {
+                    b.Property<int>("TourId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("tourID");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<int>("GuideId")
+                        .HasColumnType("int")
+                        .HasColumnName("guideID");
+
+                    b.Property<int>("MaxPeople")
+                        .HasColumnType("int")
+                        .HasColumnName("maxPeople");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("price");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("type");
+
+                    b.HasKey("TourId");
+
+                    b.ToTable("Tours");
                 });
 
             modelBuilder.Entity("backend.Models.User", b =>
@@ -113,6 +406,43 @@ namespace backend.Migrations
                     b.ToTable("User");
                 });
 
+            modelBuilder.Entity("backend.Models.UserMatch", b =>
+                {
+                    b.Property<int>("MatchID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("matchID");
+
+                    b.Property<string>("CommonInterests")
+                        .HasColumnType("longtext")
+                        .HasColumnName("commonInterests");
+
+                    b.Property<DateTime>("DateMatched")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("dateMatched");
+
+                    b.Property<int>("ReceiverID")
+                        .HasColumnType("int")
+                        .HasColumnName("receiverID");
+
+                    b.Property<int>("RequesterID")
+                        .HasColumnType("int")
+                        .HasColumnName("requesterID");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("status");
+
+                    b.HasKey("MatchID");
+
+                    b.HasIndex("ReceiverID");
+
+                    b.HasIndex("RequesterID");
+
+                    b.ToTable("Matches");
+                });
+
             modelBuilder.Entity("backend.Models.Profile", b =>
                 {
                     b.HasOne("backend.Models.User", "User")
@@ -122,6 +452,25 @@ namespace backend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("backend.Models.UserMatch", b =>
+                {
+                    b.HasOne("backend.Models.User", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Models.User", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Requester");
                 });
 #pragma warning restore 612, 618
         }

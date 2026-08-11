@@ -137,30 +137,55 @@ namespace backend.Controllers
         {
             try
             {
-                // Filter out profiles the user has already interacted with (any match record exists)
-                var interactedUserIds = await _context.Matches
-                    .Where(m => m.RequesterID == currentUserId || m.ReceiverID == currentUserId)
-                    .Select(m => m.RequesterID == currentUserId ? m.ReceiverID : m.RequesterID)
-                    .Distinct()
-                    .ToListAsync();
+                var matches = new System.Collections.Generic.List<object>();
+                using var command = _context.Database.GetDbConnection().CreateCommand();
+                command.CommandText = @"
+                    SELECT 
+                        p.pID, 
+                        p.userID, 
+                        u.firstName, 
+                        u.lastName, 
+                        u.age, 
+                        IFNULL(p.profilePictureLink, 'https://via.placeholder.com/150'), 
+                        p.interests, 
+                        p.description, 
+                        p.location, 
+                        p.job
+                    FROM Profile p
+                    JOIN User u ON p.userID = u.userID
+                    WHERE p.userID != @userId
+                      AND NOT EXISTS (
+                          SELECT 1 FROM Matches m 
+                          WHERE m.requesterID = @userId AND m.receiverID = p.userID
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM Matches m 
+                          WHERE m.receiverID = @userId AND m.requesterID = p.userID
+                      )
+                ";
 
-                var matches = await _context.Profiles
-                    .Include(p => p.User)
-                    .Where(p => p.UserID != currentUserId && !interactedUserIds.Contains(p.UserID))
-                    .Select(p => new
-                    {
-                        pID = p.PID,
-                        userID = p.UserID,
-                        firstName = p.User.FirstName,
-                        lastName = p.User.LastName,
-                        age = p.User.Age,
-                        profilePictureLink = p.ProfilePictureLink,
-                        interests = p.Interests,
-                        description = p.Description,
-                        location = p.Location,
-                        job = p.Job
-                    })
-                    .ToListAsync();
+                var param = command.CreateParameter();
+                param.ParameterName = "@userId";
+                param.Value = currentUserId;
+                command.Parameters.Add(param);
+
+                await _context.Database.OpenConnectionAsync();
+                using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    matches.Add(new {
+                        pID = reader.GetInt32(0),
+                        userID = reader.GetInt32(1),
+                        firstName = reader.GetString(2),
+                        lastName = reader.GetString(3),
+                        age = reader.GetInt32(4),
+                        profilePictureLink = reader.GetString(5),
+                        interests = reader.IsDBNull(6) ? null : reader.GetString(6),
+                        description = reader.IsDBNull(7) ? null : reader.GetString(7),
+                        location = reader.IsDBNull(8) ? null : reader.GetString(8),
+                        job = reader.IsDBNull(9) ? null : reader.GetString(9)
+                    });
+                }
 
                 return Ok(matches);
             }
@@ -184,53 +209,51 @@ namespace backend.Controllers
         {
             try
             {
-                var reverseMatch = await _context.Matches
-                    .FirstOrDefaultAsync(m => m.RequesterID == request.ReceiverID && m.ReceiverID == request.RequesterID);
+                var existingMatch = await _context.Matches
+                    .FirstOrDefaultAsync(m => (m.RequesterID == request.RequesterID && m.ReceiverID == request.ReceiverID) ||
+                                              (m.RequesterID == request.ReceiverID && m.ReceiverID == request.RequesterID));
 
-                if (request.Status == "accepted")
-                {
-                    if (reverseMatch != null && reverseMatch.Status == "pending")
-                    {
-                        reverseMatch.Status = "accepted";
-                        _context.Matches.Update(reverseMatch);
-                        
-                        var match = new backend.Models.UserMatch {
-                            RequesterID = request.RequesterID,
-                            ReceiverID = request.ReceiverID,
-                            CommonInterests = request.CommonInterests,
-                            Status = "accepted",
-                            DateMatched = DateTime.UtcNow
-                        };
-                        _context.Matches.Add(match);
-                    }
-                    else
-                    {
-                        var match = new backend.Models.UserMatch {
-                            RequesterID = request.RequesterID,
-                            ReceiverID = request.ReceiverID,
-                            CommonInterests = request.CommonInterests,
-                            Status = "pending",
-                            DateMatched = DateTime.UtcNow
-                        };
-                        _context.Matches.Add(match);
-                    }
-                }
-                else
+                if (existingMatch == null)
                 {
                     var match = new backend.Models.UserMatch {
                         RequesterID = request.RequesterID,
                         ReceiverID = request.ReceiverID,
                         CommonInterests = request.CommonInterests,
-                        Status = "rejected",
+                        Status = request.Status == "accepted" ? "pending" : "rejected",
                         DateMatched = DateTime.UtcNow
                     };
                     _context.Matches.Add(match);
                     
-                    if (reverseMatch != null && reverseMatch.Status == "pending")
+                    if (request.Status == "accepted")
                     {
-                         reverseMatch.Status = "rejected";
-                         _context.Matches.Update(reverseMatch);
+                        var notification = new backend.Models.Notification {
+                            UserID = request.ReceiverID,
+                            Type = "MatchRequest",
+                            Message = "You have a new match request!",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.Notifications.Add(notification);
                     }
+                }
+                else
+                {
+                    if (request.Status == "accepted" && existingMatch.Status == "pending")
+                    {
+                        existingMatch.Status = "accepted";
+
+                        var notification = new backend.Models.Notification {
+                            UserID = existingMatch.RequesterID,
+                            Type = "MatchAccepted",
+                            Message = "Your match request was accepted!",
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.Notifications.Add(notification);
+                    }
+                    else if (request.Status == "rejected")
+                    {
+                        existingMatch.Status = "rejected";
+                    }
+                    _context.Matches.Update(existingMatch);
                 }
 
                 await _context.SaveChangesAsync();
