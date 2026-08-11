@@ -254,6 +254,26 @@ using (var scope = app.Services.CreateScope())
                 Console.WriteLine("FAIL (Expected if exists): " + sql + " ERROR: " + ex.Message);
             }
         }
+
+        // Add 3 dummy verified spots for Local Favourites
+        try {
+            var checkSql = "SELECT COUNT(*) FROM `curatedSpots` WHERE `isVerified` = 'approved';";
+            var count = context.Database.SqlQueryRaw<int>(checkSql).FirstOrDefault();
+            if (count < 3)
+            {
+                var insertDummySpotsSql = @"
+                    INSERT INTO `curatedSpots` (`activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`) 
+                    VALUES 
+                    ('Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974', NOW()),
+                    ('Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city.', 'approved', 'https://images.unsplash.com/photo-1525610553991-2bede1a236e2', NOW()),
+                    ('Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1574768395574-8b6a38612ff0', NOW());
+                ";
+                context.Database.ExecuteSqlRaw(insertDummySpotsSql);
+                Console.WriteLine("SUCCESS: Inserted 3 dummy spots");
+            }
+        } catch (Exception e) {
+            Console.WriteLine("FAIL: Could not insert dummy spots. ERROR: " + e.Message);
+        }
     }
     catch (Exception ex)
     {

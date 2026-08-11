@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import CreatePostModal from '../components/CreatePostModal';
+import logo from '../assets/images/logo.png';
 import '../styles/explorer.css';
 
 export default function ExplorerHome() {
@@ -12,17 +13,26 @@ export default function ExplorerHome() {
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [tours, setTours] = useState([]);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [requestedTourIds, setRequestedTourIds] = useState([]);
   const [selectedTour, setSelectedTour] = useState(null);
   const [bookingStatus, setBookingStatus] = useState('idle');
   const [guestCount, setGuestCount] = useState(1);
   const [spots, setSpots] = useState([]);
+  const [selectedLocalSpot, setSelectedLocalSpot] = useState(null);
+  const [isLocalSpotModalOpen, setIsLocalSpotModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [visibleToursCount, setVisibleToursCount] = useState(4);
+  const [visibleSpotsCount, setVisibleSpotsCount] = useState(4);
   const [visiblePostsCount, setVisiblePostsCount] = useState(3);
   const scrollRef = useRef(null);
+  const spotsScrollRef = useRef(null);
   
   const handleLoadMoreTours = () => {
     setVisibleToursCount(prev => Math.min(prev + 4, 12, tours.length));
+  };
+
+  const handleLoadMoreSpots = () => {
+    setVisibleSpotsCount(prev => Math.min(prev + 4, 12, spots.length));
   };
 
   const handleLoadMorePosts = () => {
@@ -69,12 +79,12 @@ export default function ExplorerHome() {
         const user = JSON.parse(userStr);
         setLoggedInUserId(user.id || user.userID);
         setUserRole(user.role || user.Role);
-        if ((user.role || user.Role) === 'Guide') {
-          axios.get(`/api/spots/pending/${user.id || user.userID}`)
-            .then(res => setSpots(res.data))
-            .catch(err => console.error(err));
-        }
       }
+      
+      // Fetch verified spots for everyone
+      axios.get('http://localhost:5200/api/spots/verified')
+        .then(res => setSpots(res.data))
+        .catch(err => console.error(err));
     } catch (e) {
       console.warn('Failed to parse user from local storage', e);
     }
@@ -173,7 +183,14 @@ export default function ExplorerHome() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     <span>{tour.confirmedBookingsCount || 0}/{tour.maxPeople} going</span>
                   </div>
-                  <button className="mint-btn" onClick={() => { setSelectedTour(tour); setIsBookingModalOpen(true); }}>Join</button>
+                  <button 
+                    className="mint-btn" 
+                    disabled={requestedTourIds.includes(tour.tourId || tour.tourID)}
+                    style={{ opacity: requestedTourIds.includes(tour.tourId || tour.tourID) ? 0.6 : 1, cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' }}
+                    onClick={() => { setSelectedTour(tour); setIsBookingModalOpen(true); }}
+                  >
+                    {requestedTourIds.includes(tour.tourId || tour.tourID) ? 'Requested' : 'Join'}
+                  </button>
                 </div>
               </div>
             </article>
@@ -214,23 +231,63 @@ export default function ExplorerHome() {
         <div className="section-header">
           <h2>Local Favourites</h2>
         </div>
-        <div className="spots-grid">
-          {spots.map(spot => (
-            <div key={spot.spotID || spot.spotId} className="spot-card-ui">
-              <div className="spot-img-container">
-                <img src={spot.pictureURL || 'https://via.placeholder.com/240x160'} alt="Spot" className="spot-img" />
-                <span className="spot-verified-badge" style={{ backgroundColor: 'rgba(255,255,255,0.8)', color: '#4caf50' }}>✓ Verified</span>
+        <div className="tours-grid" ref={spotsScrollRef} style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
+          {spots.slice(0, visibleSpotsCount).map(spot => (
+            <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
+              <div className="tour-image-placeholder">
+                <img src={spot.pictureURL || 'https://via.placeholder.com/260x140'} alt="Spot" />
+                <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255,255,255,0.9)', color: '#1a8f66', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Verified</span>
               </div>
-              <div className="spot-details">
-                <div>
-                  <h3 className="spot-ui-title">{spot.name}</h3>
-                  <p className="spot-ui-cat" style={{ color: '#888', fontSize: '0.85rem' }}>{spot.category || 'Cafe'}</p>
+              <div className="tour-card-body">
+                <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
+                <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
+                <div className="tour-meta">
+                  <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    {spot.location || 'Unknown Location'}
+                  </span>
                 </div>
-                <span className="spot-ui-rating">⭐ 4.9</span>
+                <div className="tour-footer">
+                  <div style={{ flex: 1 }}></div>
+                  <button 
+                    className="mint-btn" 
+                    onClick={() => { setSelectedLocalSpot(spot); setIsLocalSpotModalOpen(true); }}
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
-            </div>
+            </article>
           ))}
-          {spots.length === 0 && <p>No spots to checkout now.</p>}
+          
+          {spots.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
+              <button 
+                onClick={() => {
+                  handleLoadMoreSpots();
+                  if (spotsScrollRef.current) {
+                    setTimeout(() => {
+                      spotsScrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+                    }, 100);
+                  }
+                }} 
+                style={{
+                  width: '50px', height: '50px', borderRadius: '50%', 
+                  backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length) ? '#ccc' : '#007bff', 
+                  color: '#fff', border: 'none', fontSize: '1.5rem', 
+                  cursor: (visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length) ? 'default' : 'pointer', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+                disabled={visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length}
+                title="Load more spots"
+              >
+                &#8594;
+              </button>
+            </div>
+          )}
+
+          {spots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites yet.</p>}
         </div>
       </section>
 
@@ -337,28 +394,26 @@ export default function ExplorerHome() {
           <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', position: 'relative' }}>
             <button className="close-btn" onClick={() => setIsBookingModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
-              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 10px auto', display: 'block' }} />
-              <h2 style={{ margin: '0 0 5px 0', fontSize: '1.5rem', color: '#1a1a1a' }}>Request to Join</h2>
-              <p style={{ margin: 0, color: '#666' }}>{selectedTour.title}</p>
+              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
+              <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
             </div>
 
             {bookingStatus === 'idle' ? (
               <>
-                <div className="form-group" style={{ textAlign: 'left', marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Number of Guests</label>
+                <div className="form-group" style={{ marginBottom: '20px' }}>
                   <input
                     type="number"
                     min="1"
-                    max={selectedTour.maxPeople - (selectedTour.currentGuests || 0)}
+                    max={selectedTour.maxPeople - (selectedTour.confirmedBookingsCount || 0)}
                     value={guestCount}
                     onChange={(e) => setGuestCount(Number(e.target.value))}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '12px', fontSize: '1rem' }}
+                    style={{ width: '100%', padding: '14px', border: '2px solid #e0e0e0', borderRadius: '16px', fontSize: '1.1rem', textAlign: 'center', backgroundColor: '#fff', color: '#000', outline: 'none' }}
                   />
                 </div>
 
-                <div className="modal-actions" style={{ display: 'flex', gap: '10px' }}>
-                  <button className="btn-secondary" onClick={() => setIsBookingModalOpen(false)} style={{ flex: 1 }}>Cancel</button>
-                  <button className="btn-primary" style={{ flex: 1 }} onClick={async () => {
+                <div className="modal-actions" style={{ display: 'flex', gap: '12px' }}>
+                  <button className="btn-secondary" onClick={() => setIsBookingModalOpen(false)} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>Cancel</button>
+                  <button className="btn-primary" style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }} onClick={async () => {
                     try {
                       await axios.post('http://localhost:5200/api/bookings', {
                         userID: loggedInUserId,
@@ -368,6 +423,7 @@ export default function ExplorerHome() {
                         numberOfGuests: guestCount,
                         bookingType: "Standard"
                       });
+                      setRequestedTourIds([...requestedTourIds, selectedTour.tourId || selectedTour.tourID]);
                       setBookingStatus('success');
                     } catch (e) {
                       console.error(e);
@@ -386,6 +442,39 @@ export default function ExplorerHome() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {isLocalSpotModalOpen && selectedLocalSpot && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', position: 'relative' }}>
+            <button className="close-btn" onClick={() => setIsLocalSpotModalOpen(false)}>&times;</button>
+            <div style={{ marginBottom: '20px' }}>
+              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
+              <h2 style={{ margin: '0 0 15px 0', fontSize: '1.4rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
+              
+              <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
+                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h3>
+                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} • {selectedLocalSpot.location}</p>
+                
+                {selectedLocalSpot.pictureURL && (
+                  <img src={selectedLocalSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
+                )}
+                
+                <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem' }}>Description:</h4>
+                <p style={{ margin: '0 0 15px 0', fontSize: '0.95rem', lineHeight: '1.4' }}>{selectedLocalSpot.description}</p>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #e0e0e0', paddingTop: '10px' }}>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#d4c28c', backgroundImage: `url(${selectedLocalSpot.submitterAvatar || ''})`, backgroundSize: 'cover' }}></div>
+                  <span style={{ fontSize: '0.85rem', color: '#555' }}>Submitted by {selectedLocalSpot.submitterName || 'Explorer'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
+              <button className="btn-primary" onClick={() => setIsLocalSpotModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>Awesome!</button>
+            </div>
           </div>
         </div>
       )}
