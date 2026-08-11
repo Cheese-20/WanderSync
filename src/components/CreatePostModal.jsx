@@ -6,6 +6,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
   const [experienceType, setExperienceType] = useState('');
   const [content, setContent] = useState('');
   const [pictures, setPictures] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const userStr = localStorage.getItem('user');
       let userId = 1; // fallback
@@ -90,6 +92,8 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
     } catch (err) {
       console.error(err);
       alert('Network error. Is the backend running?');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -131,8 +135,15 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+    <>
+      {isSubmitting && (
+        <div className="global-loading-overlay">
+          <div className="global-spinner"></div>
+          <div className="global-loading-text">{editPost ? 'Updating post...' : 'Sharing post...'}</div>
+        </div>
+      )}
+      <div className="modal-overlay">
+        <div className="modal-content">
         <button className="close-btn" onClick={handleClose}>&times;</button>
         {step === 1 ? (
           <div className="step-1">
@@ -208,11 +219,16 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
                   }
                 }} className="btn-secondary btn-discard">Discard</button>
                 <button type="submit" className="btn-primary">{editPost ? 'Update' : 'Post'}</button>
+                }} className="btn-secondary" style={{ backgroundColor: '#fee2e2', color: '#b91c1c', borderColor: '#fca5a5' }}>Discard</button>
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {editPost ? (isSubmitting ? 'Updating...' : 'Update') : (isSubmitting ? 'Posting...' : 'Post')}
+                </button>
               </div>
             </form>
           </div>
         )}
       </div>
     </div>
+    </>
   );
 }

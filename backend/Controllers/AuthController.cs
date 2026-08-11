@@ -138,6 +138,12 @@ namespace backend.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
+            if (string.Equals(model.Role, "guide", StringComparison.OrdinalIgnoreCase) && 
+                !string.Equals(user.Role, "guide", StringComparison.OrdinalIgnoreCase))
+            {
+                return Unauthorized(new { message = "There is no record of you being a local guide please try again later or login as an explorer" });
+            }
+
             var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Email}:{Guid.NewGuid()}") );
 
             return Ok(new
@@ -154,5 +160,68 @@ namespace backend.Controllers
                 }
             });
         }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                return BadRequest("Email and new password are required.");
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+        {
+            _logger.LogInformation($"Password reset attempt for {model.Email}");
+
+            if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                return BadRequest(new { message = "Email and new password are required." });
+            }
+
+            if (model.NewPassword.Length < 6)
+            {
+                return BadRequest(new { message = "Password must be at least 6 characters." });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null)
+            {
+                return BadRequest("User not found.");
+            }
+
+            string newHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            user.HashedPword = newHash;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Password successfully reset." });
+        }
     }
+
+    public class ResetPasswordRequest
+    {
+        public string Email { get; set; }
+        public string NewPassword { get; set; }
+                return NotFound(new { message = "No account found with that email." });
+            }
+
+            user.HashedPword = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+
+            try
+            {
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"Password reset successful for {model.Email}");
+                return Ok(new { message = "Password reset successfully! You can now sign in." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password.");
+                return StatusCode(500, new { message = "Failed to reset password. Please try again." });
+            }
+        }
     }
+
+    public class ResetPasswordModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+    }
+}

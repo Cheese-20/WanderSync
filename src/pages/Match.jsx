@@ -180,6 +180,7 @@ export default function Match() {
             <div className="pending-list">
               {pendingRequests.map(req => (
                 <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)}>
+                <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)} style={{ cursor: 'pointer' }}>
                   <img src={req.image} alt={req.name} className="pending-img" />
                   <span className="pending-name">{req.name}</span>
                   <button className="pending-btn accept" onClick={(e) => handleAcceptPending(e, req)}>✓</button>
@@ -222,6 +223,13 @@ export default function Match() {
                         })}
                       </div>
                     </div>
+
+                    <button 
+                      className="btn-view-profile" 
+                      onClick={() => navigate(`/user/${currentMatch.userID}`)}
+                    >
+                      View Full Profile
+                    </button>
                   </div>
                 </div>
               ) : (

@@ -300,6 +300,16 @@ export default function Profile() {
                 <button type="submit" className="save button">Save Profile</button>
               </div>
             </form>
+
+            <div className="apply-guide-section">
+              <button
+                type="button"
+                className="apply-guide-button"
+                onClick={() => navigate('/apply-guide')}
+              >
+                Apply to be a Local Guide
+              </button>
+            </div>
           </div>
         )}
 

@@ -21,6 +21,33 @@ namespace backend.Controllers
             _context = context;
         }
 
+        // GET: api/Tours
+        // Returns all tours with guide information
+        [HttpGet]
+        public async Task<IActionResult> GetAllTours()
+        {
+            var tours = await _context.Tours
+                .Join(
+                    _context.Users,
+                    tour => tour.GuideId,
+                    user => user.UserID,
+                    (tour, user) => new
+                    {
+                        tourId = tour.TourId,
+                        guideId = tour.GuideId,
+                        title = tour.Title,
+                        type = tour.Type,
+                        description = tour.Description,
+                        date = tour.Date,
+                        maxPeople = tour.MaxPeople,
+                        guideName = user.FirstName + " " + user.LastName
+                    }
+                )
+                .ToListAsync();
+
+            return Ok(tours);
+        }
+
         // GET: api/Tours/guide/5
         [HttpGet("guide/{guideId}")]
         public async Task<ActionResult<IEnumerable<Tour>>> GetToursByGuide(int guideId)
@@ -40,6 +67,37 @@ namespace backend.Controllers
             }
 
             return tour;
+        }
+
+        // GET: api/tours
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<object>>> GetAllTours()
+        {
+            var toursWithGuides = await _context.Tours
+                .Join(_context.Users, 
+                      t => t.GuideId, 
+                      u => u.UserID, 
+                      (t, u) => new { t, u })
+                .GroupJoin(_context.Bookings,
+                           tu => tu.t.TourId,
+                           b => b.tourID,
+                           (tu, bookings) => new {
+                               tourId = tu.t.TourId, 
+                               title = tu.t.Title, 
+                               description = tu.t.Description, 
+                               date = tu.t.Date, 
+                               price = tu.t.Price, 
+                               maxPeople = tu.t.MaxPeople, 
+                               type = tu.t.Type, 
+                               imageURL = tu.t.ImageURL, 
+                               pictureURL = tu.t.PictureURL, 
+                               location = tu.t.Location,
+                               guideID = tu.t.GuideId,
+                               guideName = tu.u.FirstName + " " + tu.u.LastName,
+                               confirmedBookingsCount = bookings.Where(b => b.status.ToLower() == "accepted").Sum(b => (int?)b.numberOfGuests) ?? 0
+                           })
+                .ToListAsync();
+            return Ok(toursWithGuides);
         }
 
         // PUT: api/Tours/5

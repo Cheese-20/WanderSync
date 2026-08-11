@@ -21,12 +21,16 @@ namespace backend.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Profile> Profiles { get; set; }
         public DbSet<UserMatch> Matches { get; set; }
+        public DbSet<LocalGuideApplication> LocalGuideApplications { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Tour> Tours { get; set; }
         public DbSet<Admin> Admins { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Post> Posts { get; set; }
+        public DbSet<GuideRating> GuideRatings { get; set; }
+        public DbSet<UserSubmittedLocation> UserSubmittedLocations { get; set; }
         public DbSet<CuratedSpot> CuratedSpots { get; set; }
+        public DbSet<SpotVote> SpotVotes { get; set; }
     }
 }

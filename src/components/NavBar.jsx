@@ -8,16 +8,18 @@ export default function NavBar() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [userRole, setUserRole] = useState('');
   const dropdownRef = useRef(null);
 
   const fetchNotifications = async () => {
     const userJson = localStorage.getItem('user');
     if (userJson) {
       const user = JSON.parse(userJson);
+      setUserRole((user.role || '').toLowerCase());
       const userId = user.id || user.userID;
       if (userId) {
         try {
-          const res = await axios.get(`/api/notification/${userId}`);
+          const res = await axios.get(`/api/notifications/${userId}`);
           setNotifications(res.data);
         } catch (e) {
           console.error("Error fetching notifications", e);
@@ -45,7 +47,7 @@ export default function NavBar() {
   const handleNotificationClick = async (notif) => {
     if (!notif.isRead) {
       try {
-        await axios.put(`/api/notification/read/${notif.notificationID}`);
+        await axios.put(`/api/notifications/${notif.notificationID}/read`);
         setNotifications(prev => prev.map(n => n.notificationID === notif.notificationID ? { ...n, isRead: true } : n));
       } catch (e) {
         console.error("Error marking read", e);
@@ -55,8 +57,14 @@ export default function NavBar() {
     
     if (notif.type === "NewMessage") {
       navigate('/messages');
-    } else if (notif.type === "MatchRequest" || notif.type === "MatchAccepted") {
-      navigate('/match');
+    } else if (notif.type === "MatchAccepted" || notif.type === "BookingAccepted") {
+      navigate('/messages'); 
+    } else if (notif.type === "MatchRequest") {
+      navigate('/match'); // Go to match page to accept the pending request in the sidebar
+    } else if (notif.type === "BookingReminder" || notif.type === "BookingDeclined") {
+      navigate('/profile'); 
+    } else if (notif.type === "NewBooking") {
+      navigate('/dashboard');
     }
   };
 
@@ -74,6 +82,9 @@ export default function NavBar() {
         <li><NavLink to="/explore" className={navLinkClass}>Explore</NavLink></li>
         <li><NavLink to="/match" className={navLinkClass}>Match</NavLink></li>
         <li><NavLink to="/messages" className={navLinkClass}>Messages</NavLink></li>
+        {userRole.includes('guide') && (
+          <li><NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink></li>
+        )}
         <li><NavLink to="/profile" className={navLinkClass}>Profile</NavLink></li>
         
         <li className="notification-container" ref={dropdownRef}>

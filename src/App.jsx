@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthForm from './pages/AuthForm.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
 import ExplorerHome from './pages/ExplorerHome.jsx';
 import GuideHome from './pages/GuideHome.jsx';
 import AdminHome from './pages/AdminHome.jsx';
@@ -7,8 +8,14 @@ import Match from './pages/Match.jsx';
 import ExplorePage from './pages/ExplorePage.jsx';
 import Messages from './pages/Messages.jsx';
 import Profile from './pages/Profile.jsx';
+import LocalGuideApplication from './pages/LocalGuideApplication.jsx';
 import Activities from './pages/Activities.jsx';
 import EditActivity from './pages/EditActivity.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import GuideDetail from './pages/GuideDetail.jsx';
+import Discover from './pages/Discover.jsx';
+import MyActivities from './pages/MyActivities.jsx';
+import UserProfile from './pages/UserProfile.jsx';
 import Layout from './components/Layout.jsx';
 
 function HomeRouter() {
@@ -27,18 +34,23 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<AuthForm />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
-
         <Route element={<Layout />}>
           <Route path="/home" element={<HomeRouter />} />
+          <Route path="/discover" element={<Discover />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/match" element={<Match />} />
           <Route path="/messages" element={<Messages />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/edit-activity/:id" element={<EditActivity />} />
+          <Route path="/apply-guide" element={<LocalGuideApplication />} />
+          <Route path="/guide/:guideId" element={<GuideDetail />} />
+          <Route path="/my-activities" element={<MyActivities />} />
+          <Route path="/user/:userId" element={<UserProfile />} />
         </Route>
-
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

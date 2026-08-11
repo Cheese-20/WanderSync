@@ -15,6 +15,7 @@ export default function EditActivity() {
   });
   const [message, setMessage] = useState('');
   const [originalTour, setOriginalTour] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetch(`http://localhost:5200/api/tours/${id}`)
@@ -49,6 +50,7 @@ export default function EditActivity() {
       maxPeople: parseInt(formData.maxPeople, 10) || 0
     };
 
+    setIsSaving(true);
     fetch(`http://localhost:5200/api/tours/${id}`, {
       method: 'PUT',
       headers: {
@@ -67,11 +69,21 @@ export default function EditActivity() {
       .catch(err => {
         console.error(err);
         setMessage('Error updating activity.');
+      })
+      .finally(() => {
+        setIsSaving(false);
       });
   };
 
   return (
-    <div className="guide-page">
+    <>
+      {isSaving && (
+        <div className="global-loading-overlay">
+          <div className="global-spinner"></div>
+          <div className="global-loading-text">Saving Changes...</div>
+        </div>
+      )}
+      <div className="guide-page">
 
       <header className="guide-hero">
         <h1>Edit Activity</h1>
@@ -100,11 +112,12 @@ export default function EditActivity() {
             <label>Max People</label><br />
             <input type="number" name="maxPeople" value={formData.maxPeople} onChange={handleChange} required className="form-input" />
           </div>
-          <button type="submit" className="btn-submit">
-            Save Changes
+          <button type="submit" className="btn-submit" disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
       </section>
     </div>
+    </>
   );
 }

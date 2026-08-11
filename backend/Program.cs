@@ -3,10 +3,18 @@
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using backend.Data;
+using backend.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
-Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+try
+{
+    Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+}
+catch (Exception)
+{
+    // .env parsing failed — fall through to appsettings.json
+}
 
 
 //  Grab the connection string from environment or configuration (appsettings.json or environment)
@@ -31,11 +39,14 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddDbContext<WanderSyncDbContext>(options =>
-    // Use Pomelo MySQL provider and auto-detect server version
-    options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString))
+    // Use Pomelo MySQL provider with explicit server version
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)))
 );
 
 builder.Services.AddControllers();
+
+// Register background service for booking reminders
+builder.Services.AddHostedService<BookingReminderService>();
 
 var app = builder.Build();
 
@@ -151,6 +162,7 @@ using (var scope = app.Services.CreateScope())
 
         string[] profileColumnSqls = new[]
         {
+            "ALTER TABLE `Tours` ADD COLUMN `location` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `interests` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
@@ -189,6 +201,25 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
+        string[] curatedSpotsColumnSqls = new[]
+        {
+            "ALTER TABLE `curatedSpots` ADD COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedByUserID` int NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedAt` datetime(6) NULL;",
+            "ALTER TABLE `curatedSpots` MODIFY COLUMN `isVerified` varchar(50) DEFAULT 'pending';"
+        };
+
+        foreach (var sql in curatedSpotsColumnSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
+            }
+        }
+
         string[] indexSqls = new[]
         {
             "CREATE INDEX `IX_Matches_Status` ON `Matches` (`status`);",
@@ -207,6 +238,52 @@ using (var scope = app.Services.CreateScope())
                 Console.WriteLine("FAIL (Expected if exists): " + sql + " ERROR: " + ex.Message);
             }
         }
+
+        // Add 3 dummy verified spots for Local Favourites
+        try {
+            var checkSql = "SELECT COUNT(*) FROM `curatedSpots` WHERE `isVerified` = 'approved';";
+            var count = context.Database.SqlQueryRaw<int>(checkSql).FirstOrDefault();
+            if (count < 3)
+            {
+                var insertDummySpotsSql = @"
+                    INSERT INTO `curatedSpots` (`activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`) 
+                    VALUES 
+                    ('Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974', NOW()),
+                    ('Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city.', 'approved', 'https://images.unsplash.com/photo-1525610553991-2bede1a236e2', NOW()),
+                    ('Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1574768395574-8b6a38612ff0', NOW());
+                ";
+                context.Database.ExecuteSqlRaw(insertDummySpotsSql);
+                Console.WriteLine("SUCCESS: Inserted 3 dummy spots");
+            }
+        } catch (Exception e) {
+            Console.WriteLine("FAIL: Could not insert dummy spots. ERROR: " + e.Message);
+        }
+        // Ensure Reviews table exists for guide ratings
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Reviews` (
+                `reviewID` int NOT NULL AUTO_INCREMENT,
+                `reviewerID` int NOT NULL,
+                `guideID` int NOT NULL,
+                `rating` int NOT NULL,
+                `comment` text NULL,
+                `sentAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`reviewID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        // Ensure Bookings table exists
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Bookings` (
+                `bookingID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `tourID` int NOT NULL,
+                `curatedSpotID` int NOT NULL DEFAULT 0,
+                `bookingType` longtext NOT NULL,
+                `status` longtext NOT NULL,
+                `bookingDate` datetime(6) NOT NULL,
+                PRIMARY KEY (`bookingID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
     }
     catch (Exception ex)
     {
@@ -216,6 +293,20 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var message = error?.Error?.Message ?? "An unexpected error occurred.";
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(error?.Error, "Unhandled exception");
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new { message }));
+    });
+});
+
 app.MapControllers();
 
 app.Run();

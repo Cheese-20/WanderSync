@@ -34,14 +34,12 @@
 - There are active Guide profiles in the database with matching criteria.
 
 **Main Flow (How it is accomplished):**
-1. The Explorer navigates to the 'Match' page (`/match`).
-2. The frontend sends a GET request to the backend API (`/api/profile/matches/{currentUserId}`) to fetch a list of available Profiles.
-3. The backend queries the database, excluding the current user, and returns the list of profiles.
-4. The Explorer views the first profile on a Tinder-style swipe card, detailing their image, bio, and shared interests.
-5. The Explorer evaluates the profile and either clicks "X" to reject (swipes left) or the "Heart" to accept (swipes right).
-6. If accepted, the system creates a pending request.
-7. Pending requests are visible in the sidebar section. Once both users accept, a new chat session is established in the database.
-8. The Explorer can navigate to the 'Messages' page to communicate with matched guides.
+1. The Explorer is on the 'Find Your Buddy' page.
+2. The system displays another user's profile based on common interests (fetched via `GET /api/profile/matches`).
+3. The Explorer clicks on the "X" icon to decline or the "Heart" icon to match.
+4. If "Heart" is clicked, the system (via `POST /api/profile/swipe`) creates a pending match and dispatches a `MatchRequest` notification to that user.
+5. If the other user had already liked the Explorer, the system updates the match to "accepted" and dispatches a `MatchAccepted` notification.
+6. The system displays the next profile.
 
 **Postconditions:**
 - A connection or chat channel is successfully established between the Explorer and the Guide.
@@ -230,3 +228,104 @@
 5. The system removes associated likes and comments linked to that post.
 6. The system removes the post image from the server's image folder.
 7. The system refreshes the actors feed and displays a Post Successfully Deleted message.
+
+---
+
+## Use Case 11: View Recommended Location/Spot
+**Actor:** Explorer
+
+**Trigger:** The Explorer clicks on the "Recommended Spots" or "Verified Spots" section on their home feed or map view.
+
+**Preconditions:**
+- The user is authenticated and logged in as an Explorer.
+- The system has active verified/curated spots (spots that have been approved by at least 5 Local Guides) stored in the database.
+
+**Main Flow (How it is accomplished):**
+1. The Explorer navigates to the map interface or the dedicated recommended spots feed.
+2. The frontend sends a GET request to the backend API to retrieve a list of fully verified curated spots (`/api/spot/verified`).
+3. The backend queries the `CuratedSpot` table, filtering for spots where `isVerified` is explicitly marked as 'Approved' (having received 5 guide approvals).
+4. The backend returns a JSON payload containing the verified spots, including their coordinates, title, description, uploaded images, and the submitter's details.
+5. The frontend plots these locations dynamically on the map interface using custom markers, or renders them in a scrolling feed.
+6. The Explorer clicks on a specific spot marker or card.
+7. The system opens a detailed modal or page displaying the high-resolution image, the description, location data, and the submitter's credit.
+
+**Postconditions:**
+- The Explorer successfully views detailed, reliable information about a verified location.
+- The map or feed remains actively open for further exploration.
+
+---
+
+## Use Case 12.1: Accept Booking Request
+**Actor:** Local Guide
+
+**Trigger:** The Local Guide clicks on a new pending booking request on their bookings page.
+
+**Preconditions:**
+- The Local Guide must be logged into the system (which implies they have a verified Local Guide status).
+- A pending booking request must exist in the database.
+
+**Main Flow (How it is accomplished):**
+1. The Local Guide navigates to their profile/dashboard and then to their bookings section where they can view all their pending bookings.
+2. The system displays all the booking details (date, time, number of guests) and the Explorer details (name and avatar).
+3. The Local Guide clicks on the "Accept" button on a specific booking request.
+4. The frontend prompts for confirmation, and the Local Guide confirms.
+5. The system (via `PUT /api/bookings/{id}/accept`) updates the booking status to "Accepted" in the database.
+6. The system automatically creates or updates a User Match (`UserMatch`) to "accepted" between the Guide and the Explorer, enabling direct messaging.
+7. The system dispatches a `BookingAccepted` notification to the Explorer.
+8. The system schedules a `BookingReminder` notification for 24 hours before the tour (handled by the background service).
+9. The system automatically sends a confirmation chat message (A200) from the Guide to the Explorer's Messages inbox.
+10. The frontend displays a confirmation to the Local Guide, updates the booking card's background color (green gradient), and displays the "Accepted" status.
+
+**Postconditions:**
+- The booking status is permanently updated to "Accepted".
+- The Explorer receives an immediate notification about the acceptance.
+- A messaging channel is successfully established or authorized between the Guide and Explorer.
+
+---
+
+## Use Case 12.2: Reject Booking Request
+**Actor:** Local Guide
+
+**Trigger:** The Local Guide clicks on a new pending booking request on their bookings page and selects to decline it.
+
+**Preconditions:**
+- The Local Guide must be logged into the system (which implies they have a verified Local Guide status).
+- A pending booking request must exist in the database.
+
+**Main Flow (How it is accomplished):**
+1. The Local Guide navigates to their profile page and then to their bookings section where they can view all their pending bookings.
+2. The system displays all the booking details and the Explorer details.
+3. The Local Guide clicks on the "Decline" (or "Reject") button on a specific booking request.
+4. The system prompts for confirmation, and the Local Guide confirms.
+5. The system updates the booking status to "Declined" in the database.
+6. The system automatically dispatches a notification to the Explorer confirming that the request is rejected.
+7. The system displays a confirmation to the Local Guide, changes the background color of the booking card to red, and displays a "Declined" status.
+
+**Postconditions:**
+- The booking status is permanently updated to "Declined".
+- The Explorer receives an immediate notification about the rejection.
+
+---
+
+## Use Case A800: Set up User profile
+
+**Actors:**
+- Explorer
+- Local guide
+
+**Pre-Conditions:**
+- Actor must have succeeded in registering an account and logged in the system.
+
+**Triggers:**
+- The actor must click on the continue button after inputting their details and interests.
+
+**Main Flow (How it is accomplished):**
+1. After the Actor has registered, a pop-up will appear prompting the Actor to enter profile details and input their interests and other details.
+2. After inputting details, the Actor will click on the "Continue" button.
+3. The system validates the inputted data and checks that at least one interest is provided.
+4. The system then updates the user profile record in the database.
+5. The system elevates the user's access permissions to full system access.
+6. The system then navigates to the main home page of the system.
+
+**Post-Conditions:**
+- The user's profile data updates in the database and the system allows them access to the system.

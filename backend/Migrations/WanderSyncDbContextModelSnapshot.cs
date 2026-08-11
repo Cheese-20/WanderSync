@@ -55,9 +55,14 @@ namespace backend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<int>("curatedSpotID")
+                    b.Property<int>("numberOfGuests")
                         .HasColumnType("int");
 
                     b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("timeOfBooking")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -70,6 +75,153 @@ namespace backend.Migrations
                     b.HasKey("bookingID");
 
                     b.ToTable("Bookings");
+                });
+
+            modelBuilder.Entity("backend.Models.GuideRating", b =>
+                {
+                    b.Property<int>("RatingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("reviewID");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sentAt");
+
+                    b.Property<int>("GuideId")
+                        .HasColumnType("int")
+                        .HasColumnName("guideID");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int")
+                        .HasColumnName("rating");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("reviewerID");
+
+                    b.HasKey("RatingId");
+
+                    b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
+                {
+                    b.Property<int>("ApplicationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("applicationID");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("bio");
+
+                    b.Property<long>("IDno")
+                        .HasColumnType("bigint")
+                        .HasColumnName("IDno");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("loaction");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("longtext")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int")
+                        .HasColumnName("userID");
+
+                    b.HasKey("ApplicationID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("GuideApplication");
+            modelBuilder.Entity("backend.Models.CuratedSpot", b =>
+                {
+                    b.Property<int>("SpotID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("spotID");
+
+                    b.Property<string>("ActivityName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("activityName");
+
+                    b.Property<string>("ActivityType")
+                        .HasColumnType("longtext")
+                        .HasColumnName("activityType");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<string>("IsVerified")
+                        .HasColumnType("longtext")
+                        .HasColumnName("isVerified");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("longtext")
+                        .HasColumnName("location");
+
+                    b.Property<string>("PictureURL")
+                        .HasColumnType("longtext")
+                        .HasColumnName("pictureURL");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("submittedAt");
+
+                    b.Property<int?>("SubmittedByUserID")
+                        .HasColumnType("int")
+                        .HasColumnName("submittedByUserID");
+
+                    b.HasKey("SpotID");
+
+                    b.ToTable("curatedSpots");
+                });
+
+            modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
+                {
+                    b.Property<int>("ApplicationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("applicationID");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("bio");
+
+                    b.Property<long>("IDno")
+                        .HasColumnType("bigint")
+                        .HasColumnName("IDno");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("loaction");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("longtext")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int")
+                        .HasColumnName("userID");
+
+                    b.HasKey("ApplicationID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("GuideApplication");
                 });
 
             modelBuilder.Entity("backend.Models.Message", b =>
@@ -251,9 +403,17 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("guideID");
 
+                    b.Property<string>("ImageURL")
+                        .HasColumnType("longtext")
+                        .HasColumnName("imageURL");
+
                     b.Property<int>("MaxPeople")
                         .HasColumnType("int")
                         .HasColumnName("maxPeople");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("price");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -358,6 +518,17 @@ namespace backend.Migrations
                     b.HasIndex("RequesterID");
 
                     b.ToTable("Matches");
+                });
+
+            modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
+                {
+                    b.HasOne("backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.Profile", b =>
