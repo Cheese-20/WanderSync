@@ -136,6 +136,18 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Curated_spots` (
+                `curatedSpotID` int NOT NULL AUTO_INCREMENT,
+                `activityName` varchar(200) NOT NULL,
+                `activityType` varchar(50) NOT NULL,
+                `description` longtext NOT NULL,
+                `location` longtext NOT NULL,
+                `isVerified` tinyint(1) NOT NULL DEFAULT 0,
+                PRIMARY KEY (`curatedSpotID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
 
         string[] profileColumnSqls = new[]
         {

@@ -1,6 +1,17 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-11]
+- **Feature (Recommend New Location)**: Implemented Use Case D500 (Recommend new location / Submit New Spot).
+  - **Backend**: Created the `Spot.cs` model and added it to the `WanderSyncDbContext`.
+  - **Backend**: Created `SpotsController.cs` with a `POST /api/Spots` endpoint to accept new spot submissions and default their status to 'Pending'.
+  - **Backend**: Updated `Program.cs` to execute a raw SQL query creating the `Curated_spots` table on startup, matching the requested database schema.
+  - **Backend**: Switched `Spot` model to `CuratedSpot` with fields `ActivityName`, `ActivityType`, `Description`, `Location`, and `IsVerified`.
+  - **Frontend**: Updated `ExplorePage.jsx` form and API calls to match the new `Curated_spots` schema and `/api/CuratedSpots` endpoint.
+  - **Frontend (Fix)**: Reverted `ActivityType` field to a text input (instead of checkboxes) to allow arbitrary genres like Jazz, Adventure, Festival.
+  - **Why**: This implements the core functionality for Local Guides to recommend new locations for approval, bringing in essential crowdsourcing data to WanderSync while enforcing quality control via the `isVerified` flag.
+
+
 ## [2026-08-07]
 - **Refactor (UI Styling)**: Removed all inline `style={{...}}` properties across the frontend and replaced them with CSS classes.
   - Created `admin.css` to hold styling for `AdminHome.jsx`.
