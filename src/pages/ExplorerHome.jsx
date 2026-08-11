@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -375,25 +376,23 @@ export default function ExplorerHome() {
                   </>
                 )}
               <div className="post-body">
-                <div className="post-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className="post-actions-container">
                   <span className="action-icon" title="Like">❤️</span>
                   <span className="action-icon" title="Comment">💬</span>
                   <span className="action-icon" title="Share">↗️</span>
                   {loggedInUserId === post.userID && (
                     <>
                       <span 
-                        className="action-icon edit-icon" 
+                        className="action-icon edit-icon post-action-right" 
                         title="Edit Post" 
                         onClick={() => handleEditClick(post)} 
-                        style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '1.2rem' }}
                       >
                         ✏️
                       </span>
                       <span 
-                        className="action-icon delete-icon" 
+                        className="action-icon delete-icon post-action-btn" 
                         title="Delete Post" 
                         onClick={() => handleDeleteClick(post)} 
-                        style={{ cursor: 'pointer', fontSize: '1.2rem' }}
                       >
                         🗑️
                       </span>

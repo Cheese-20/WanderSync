@@ -4,36 +4,28 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models
 {
-    [Table("curatedSpots")]
+    [Table("Curated_spots")]
     public class CuratedSpot
     {
         [Key]
-        [Column("spotID")]
-        public int SpotID { get; set; }
+        [Column("curatedSpotID")]
+        public int CuratedSpotId { get; set; }
 
         [Column("activityName")]
+        [MaxLength(200)]
         public string ActivityName { get; set; } = string.Empty;
-        
+
         [Column("activityType")]
-        public string? ActivityType { get; set; }
-        
+        [MaxLength(50)]
+        public string ActivityType { get; set; } = string.Empty;
+
         [Column("description")]
-        public string? Description { get; set; }
-        
+        public string Description { get; set; } = string.Empty;
+
         [Column("location")]
-        public string? Location { get; set; }
+        public string Location { get; set; } = string.Empty;
 
-        [Column("pictureURL")]
-        public string? PictureURL { get; set; }
-        
-        [Column("submittedByUserID")]
-        public int? SubmittedByUserID { get; set; }
-
-        [Column("submittedAt")]
-        public DateTime? SubmittedAt { get; set; }
-
-        // pending, approved, rejected
         [Column("isVerified")]
-        public string? IsVerified { get; set; } = "pending";
+        public bool IsVerified { get; set; } = false;
     }
 }

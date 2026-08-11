@@ -179,6 +179,7 @@ export default function Match() {
             <h3>Pending Requests</h3>
             <div className="pending-list">
               {pendingRequests.map(req => (
+                <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)}>
                 <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)} style={{ cursor: 'pointer' }}>
                   <img src={req.image} alt={req.name} className="pending-img" />
                   <span className="pending-name">{req.name}</span>
@@ -195,7 +196,8 @@ export default function Match() {
             <div className="card-container">
               {currentMatch ? (
                 <div className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}>
-                  <div className="card-image-section" style={{ backgroundImage: `url(${currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'})` }}>
+                  <div className="card-image-section">
+                    <img className="card-image-bg" src={currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'} alt="Match Background" />
                     <div className="shared-interests-badge">
                       {sharedInterestsCount} Shared interests
                     </div>

@@ -148,33 +148,17 @@ using (var scope = app.Services.CreateScope())
         ");
 
         context.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS `SpotVotes` (
-                `voteID` int NOT NULL AUTO_INCREMENT,
-                `spotID` int NOT NULL,
-                `guideID` int NOT NULL,
-                `voteType` varchar(50) NOT NULL,
-                `votedAt` datetime(6) NOT NULL,
-                PRIMARY KEY (`voteID`),
-                CONSTRAINT `FK_SpotVotes_Spot` FOREIGN KEY (`spotID`) REFERENCES `curatedSpots` (`spotID`) ON DELETE CASCADE,
-                CONSTRAINT `FK_SpotVotes_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
-                UNIQUE KEY `IX_SpotVotes_UniqueVote` (`spotID`, `guideID`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        ");
-        context.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS `GuideApplication` (
-                `applicationID` int NOT NULL AUTO_INCREMENT,
-                `IDno` bigint NOT NULL,
-                `reason` longtext NULL,
-                `loaction` varchar(100) NULL,
-                `bio` varchar(250) NULL,
-                `userID` int NOT NULL,
-                PRIMARY KEY (`applicationID`),
-                CONSTRAINT `FK_GuideApplication_User` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            CREATE TABLE IF NOT EXISTS `Curated_spots` (
+                `curatedSpotID` int NOT NULL AUTO_INCREMENT,
+                `activityName` varchar(200) NOT NULL,
+                `activityType` varchar(50) NOT NULL,
+                `description` longtext NOT NULL,
+                `location` longtext NOT NULL,
+                `isVerified` tinyint(1) NOT NULL DEFAULT 0,
+                PRIMARY KEY (`curatedSpotID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
-        try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` ADD COLUMN `loaction` varchar(100) NULL;"); } catch { }
-        try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` MODIFY COLUMN `IDno` bigint NOT NULL;"); } catch { }
 
         string[] profileColumnSqls = new[]
         {

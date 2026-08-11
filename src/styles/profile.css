@@ -373,27 +373,6 @@
     cursor: pointer;
 }
 
-/* Apply to be a Local Guide button */
-.apply-guide-section {
-    padding: 24px 36px 36px;
-    text-align: center;
-    border-top: 1px solid #e5e7eb;
-}
-
-.apply-guide-button {
-    background: linear-gradient(135deg, #a4ddbc 0%, #a4ddbc 100%);
-    color: #ffffff;
-    border: none;
-    padding: 14px 32px;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    letter-spacing: 0.02em;
-}
-
-.apply-guide-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(164, 221, 188, 0.3);
+.logout-btn {
+    margin-left: auto;
 }
