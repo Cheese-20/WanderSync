@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -10,9 +11,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(WanderSyncDbContext))]
-    partial class WanderSyncDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260808172908_UpdateBookingsAndTours")]
+    partial class UpdateBookingsAndTours
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,72 +82,6 @@ namespace backend.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("backend.Models.GuideRating", b =>
-                {
-                    b.Property<int>("RatingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("reviewID");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("text")
-                        .HasColumnName("comment");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("sentAt");
-
-                    b.Property<int>("GuideId")
-                        .HasColumnType("int")
-                        .HasColumnName("guideID");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("int")
-                        .HasColumnName("rating");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
-                        .HasColumnName("reviewerID");
-
-                    b.HasKey("RatingId");
-
-                    b.ToTable("Reviews");
-                });
-
-            modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
-                {
-                    b.Property<int>("ApplicationID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("applicationID");
-
-                    b.Property<string>("Bio")
-                        .HasMaxLength(250)
-                        .HasColumnType("varchar(250)")
-                        .HasColumnName("bio");
-
-                    b.Property<long>("IDno")
-                        .HasColumnType("bigint")
-                        .HasColumnName("IDno");
-
-                    b.Property<string>("Location")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("loaction");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("longtext")
-                        .HasColumnName("reason");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int")
-                        .HasColumnName("userID");
-
-                    b.HasKey("ApplicationID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("GuideApplication");
             modelBuilder.Entity("backend.Models.CuratedSpot", b =>
                 {
                     b.Property<int>("SpotID")
@@ -507,17 +444,6 @@ namespace backend.Migrations
                     b.HasIndex("RequesterID");
 
                     b.ToTable("Matches");
-                });
-
-            modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
-                {
-                    b.HasOne("backend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.Profile", b =>

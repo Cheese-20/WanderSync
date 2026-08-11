@@ -69,6 +69,13 @@ namespace backend.Controllers
             return tour;
         }
 
+        // GET: api/tours
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Tour>>> GetAllTours()
+        {
+            return await _context.Tours.ToListAsync();
+        }
+
         // PUT: api/Tours/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTour(int id, Tour tour)

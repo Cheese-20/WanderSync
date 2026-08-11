@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import CreatePostModal from '../components/CreatePostModal';
@@ -9,10 +10,34 @@ export default function ExplorerHome() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
+  const [tours, setTours] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('http://localhost:5200/api/posts');
+        if (response.ok) {
+          const data = await response.json();
+          setPosts(data);
+        }
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+      }
+    };
+
+    const fetchTours = async () => {
+      try {
+        const response = await axios.get('/api/tours');
+        setTours(response.data);
+      } catch (error) {
+        console.error("Error fetching tours:", error);
+      }
+    };
+
     fetchPosts();
+    fetchTours();
+
     try {
       const userStr = localStorage.getItem('user');
       if (userStr) {
@@ -23,18 +48,6 @@ export default function ExplorerHome() {
       console.warn('Failed to parse user from local storage', e);
     }
   }, []);
-
-  const fetchPosts = async () => {
-    try {
-      const response = await fetch('http://localhost:5200/api/posts');
-      if (response.ok) {
-        const data = await response.json();
-        setPosts(data);
-      }
-    } catch (err) {
-      console.error('Error fetching posts:', err);
-    }
-  };
 
   const handlePostCreated = (newOrUpdatedPost, isEdit) => {
     // Normalize casing for postID/userID from backend POST/PUT requests
@@ -106,9 +119,45 @@ export default function ExplorerHome() {
       </header>
 
       <section className="explorer-grid">
-        <article className="card">Sunset Hike</article>
-        <article className="card">Coffee Tour</article>
-        <article className="card">Paddleboard Yoga</article>
+        {tours.slice(0, 3).map(tour => (
+          <article key={tour.tourId || tour.tourID} className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <h3 style={{ margin: 0 }}>{tour.title}</h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>{tour.type} • {tour.maxPeople} guests max</p>
+            <p style={{ margin: 0, fontSize: '0.85rem' }}>
+              {new Date(tour.date).toLocaleDateString()} at {new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            <button 
+              className="btn-primary" 
+              style={{ marginTop: 'auto', alignSelf: 'flex-start' }}
+              onClick={async () => {
+                const userJson = localStorage.getItem('user');
+                if (!userJson) {
+                   navigate('/login');
+                   return;
+                }
+                const user = JSON.parse(userJson);
+                const userId = user.id || user.userID;
+                try {
+                  await axios.post('/api/bookings', {
+                    userID: userId,
+                    tourID: tour.tourId || tour.tourID,
+                    bookingDate: tour.date,
+                    timeOfBooking: new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    numberOfGuests: 1,
+                    bookingType: "Standard"
+                  });
+                  alert('Booking requested successfully!');
+                } catch (e) {
+                  console.error(e);
+                  alert('Error creating booking');
+                }
+              }}
+            >
+              Book Now
+            </button>
+          </article>
+        ))}
+        {tours.length === 0 && <p>No tours available today.</p>}
       </section>
 
       <section className="community-feed">

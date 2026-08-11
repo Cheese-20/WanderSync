@@ -3,6 +3,7 @@
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using backend.Data;
+using backend.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,6 +44,9 @@ builder.Services.AddDbContext<WanderSyncDbContext>(options =>
 );
 
 builder.Services.AddControllers();
+
+// Register background service for booking reminders
+builder.Services.AddHostedService<BookingReminderService>();
 
 var app = builder.Build();
 
@@ -144,6 +148,18 @@ using (var scope = app.Services.CreateScope())
         ");
 
         context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `SpotVotes` (
+                `voteID` int NOT NULL AUTO_INCREMENT,
+                `spotID` int NOT NULL,
+                `guideID` int NOT NULL,
+                `voteType` varchar(50) NOT NULL,
+                `votedAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`voteID`),
+                CONSTRAINT `FK_SpotVotes_Spot` FOREIGN KEY (`spotID`) REFERENCES `curatedSpots` (`spotID`) ON DELETE CASCADE,
+                CONSTRAINT `FK_SpotVotes_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
+                UNIQUE KEY `IX_SpotVotes_UniqueVote` (`spotID`, `guideID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
             CREATE TABLE IF NOT EXISTS `GuideApplication` (
                 `applicationID` int NOT NULL AUTO_INCREMENT,
                 `IDno` bigint NOT NULL,
@@ -189,6 +205,25 @@ using (var scope = app.Services.CreateScope())
         };
 
         foreach (var sql in notificationColumnSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
+            }
+        }
+
+        string[] curatedSpotsColumnSqls = new[]
+        {
+            "ALTER TABLE `curatedSpots` ADD COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedByUserID` int NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedAt` datetime(6) NULL;",
+            "ALTER TABLE `curatedSpots` MODIFY COLUMN `isVerified` varchar(50) DEFAULT 'pending';"
+        };
+
+        foreach (var sql in curatedSpotsColumnSqls)
         {
             try { 
                 context.Database.ExecuteSqlRaw(sql); 

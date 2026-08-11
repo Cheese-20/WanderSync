@@ -6,6 +6,8 @@ import logo from '../assets/images/logo.png';
 function AuthForm() {
   const [isSignUpActive, setIsSignUpActive] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [loginValues, setLoginValues] = useState({
     email: '',
     password: '',
@@ -55,6 +57,7 @@ function AuthForm() {
   // NOTE: Use a relative `/api` path; on success store token and user and navigate to home
   const submitLogin = async event => {
     event.preventDefault();
+    setIsLoading(true);
 
     try {
       const response = await axios.post('/api/auth/login', {
@@ -70,7 +73,17 @@ function AuthForm() {
       // Navigate to app home (role-based routing in App.jsx)
       navigate('/home');
     } catch (error) {
-      alert(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      let errorMsg = 'Login failed. Please check your credentials.';
+      if (error.response?.data) {
+          if (typeof error.response.data === 'string') {
+              errorMsg = error.response.data;
+          } else if (error.response.data.message) {
+              errorMsg = error.response.data.message;
+          }
+      }
+      setLoginError(errorMsg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -126,6 +139,8 @@ function AuthForm() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       // Send data to C# AuthController
       const response = await axios.post('/api/auth/register', {
@@ -150,6 +165,8 @@ function AuthForm() {
         message: error.response?.data || 'An error occurred during registration.',
         type: 'error'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -203,6 +220,14 @@ function AuthForm() {
           </div>
         </div>
       )}
+    <>
+      {isLoading && (
+        <div className="global-loading-overlay">
+          <div className="global-spinner"></div>
+          <div className="global-loading-text">Processing...</div>
+        </div>
+      )}
+      <div className="signin-signup-page">
       <div className="logo-top">
         <img src={logo} alt="WanderSync logo" className="brand-logo" />
         <button type="button" className="logo-text-button" onClick={() => navigate('/home')}>
@@ -262,6 +287,10 @@ function AuthForm() {
 
               <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>Forgot password?</a>
               <button type="submit" className="btn solid">Sign In</button>
+              <a href="#forgot" className="forgot-link">Forgot password?</a>
+              <button type="submit" className="btn solid" disabled={isLoading}>
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </button>
             </form>
           </div>
 
@@ -338,7 +367,9 @@ function AuthForm() {
                 required
               />
 
-              <button type="submit" className="btn">Sign Up</button>
+              <button type="submit" className="btn" disabled={isLoading}>
+                {isLoading ? 'Signing Up...' : 'Sign Up'}
+              </button>
               {signupStatus.message && (
                 <p className={`signup-status ${signupStatus.type}`}>
                   {signupStatus.message}
@@ -367,7 +398,29 @@ function AuthForm() {
           </div>
         </div>
       </div>
+
+      {loginError && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999, 
+          display: 'flex', justifyContent: 'center', alignItems: 'center'
+        }}>
+          <div style={{
+            backgroundColor: 'white', padding: '30px', borderRadius: '10px',
+            maxWidth: '400px', width: '90%', textAlign: 'center',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}>
+            <img src={logo} alt="WanderSync logo" style={{ width: '80px', margin: '0 auto 20px', display: 'block' }} />
+            <p style={{ marginBottom: '25px', color: '#666', lineHeight: '1.5' }}>{loginError}</p>
+            <button className="btn solid" onClick={() => setLoginError('')} style={{ margin: '0 auto', display: 'block' }}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
+    </>
   );
 }
 

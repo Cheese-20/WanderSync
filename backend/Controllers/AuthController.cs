@@ -138,6 +138,12 @@ namespace backend.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
+            if (string.Equals(model.Role, "guide", StringComparison.OrdinalIgnoreCase) && 
+                !string.Equals(user.Role, "guide", StringComparison.OrdinalIgnoreCase))
+            {
+                return Unauthorized(new { message = "There is no record of you being a local guide please try again later or login as an explorer" });
+            }
+
             var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Email}:{Guid.NewGuid()}") );
 
             return Ok(new

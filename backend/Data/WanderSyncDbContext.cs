@@ -30,5 +30,7 @@ namespace backend.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<GuideRating> GuideRatings { get; set; }
         public DbSet<UserSubmittedLocation> UserSubmittedLocations { get; set; }
+        public DbSet<CuratedSpot> CuratedSpots { get; set; }
+        public DbSet<SpotVote> SpotVotes { get; set; }
     }
 }

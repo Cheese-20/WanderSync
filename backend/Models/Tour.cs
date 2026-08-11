@@ -30,5 +30,8 @@ namespace backend.Models
         
         [Column("maxPeople")]
         public int MaxPeople { get; set; }
+
+        [Column("price")]
+        public decimal Price { get; set; }
     }
 }
