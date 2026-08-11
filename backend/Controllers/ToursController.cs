@@ -50,19 +50,25 @@ namespace backend.Controllers
                 .Join(_context.Users, 
                       t => t.GuideId, 
                       u => u.UserID, 
-                      (t, u) => new { 
-                          tourId = t.TourId, 
-                          title = t.Title, 
-                          description = t.Description, 
-                          date = t.Date, 
-                          price = t.Price, 
-                          maxPeople = t.MaxPeople, 
-                          type = t.Type, 
-                          imageURL = t.ImageURL, 
-                          pictureURL = t.PictureURL, 
-                          guideID = t.GuideId,
-                          guideName = u.FirstName + " " + u.LastName 
-                      })
+                      (t, u) => new { t, u })
+                .GroupJoin(_context.Bookings,
+                           tu => tu.t.TourId,
+                           b => b.tourID,
+                           (tu, bookings) => new {
+                               tourId = tu.t.TourId, 
+                               title = tu.t.Title, 
+                               description = tu.t.Description, 
+                               date = tu.t.Date, 
+                               price = tu.t.Price, 
+                               maxPeople = tu.t.MaxPeople, 
+                               type = tu.t.Type, 
+                               imageURL = tu.t.ImageURL, 
+                               pictureURL = tu.t.PictureURL, 
+                               location = tu.t.Location,
+                               guideID = tu.t.GuideId,
+                               guideName = tu.u.FirstName + " " + tu.u.LastName,
+                               confirmedBookingsCount = bookings.Where(b => b.status.ToLower() == "accepted").Sum(b => (int?)b.numberOfGuests) ?? 0
+                           })
                 .ToListAsync();
             return Ok(toursWithGuides);
         }
