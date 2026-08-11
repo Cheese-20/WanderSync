@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
@@ -11,7 +11,29 @@ export default function ExplorerHome() {
   const [editingPost, setEditingPost] = useState(null);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [tours, setTours] = useState([]);
-  const navigate = useNavigate();
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [bookingStatus, setBookingStatus] = useState('idle');
+  const [guestCount, setGuestCount] = useState(1);
+  const [spots, setSpots] = useState([]);
+  const [userRole, setUserRole] = useState(null);
+  const [visibleToursCount, setVisibleToursCount] = useState(4);
+  const [visiblePostsCount, setVisiblePostsCount] = useState(3);
+  const scrollRef = useRef(null);
+  
+  const handleLoadMoreTours = () => {
+    setVisibleToursCount(prev => Math.min(prev + 4, 12, tours.length));
+  };
+
+  const handleLoadMorePosts = () => {
+    setVisiblePostsCount(prev => Math.min(prev + 3, posts.length));
+  };
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -29,7 +51,10 @@ export default function ExplorerHome() {
     const fetchTours = async () => {
       try {
         const response = await axios.get('/api/tours');
-        setTours(response.data);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const upcomingTours = response.data.filter(tour => new Date(tour.date) >= now);
+        setTours(upcomingTours);
       } catch (error) {
         console.error("Error fetching tours:", error);
       }
@@ -43,6 +68,12 @@ export default function ExplorerHome() {
       if (userStr) {
         const user = JSON.parse(userStr);
         setLoggedInUserId(user.id || user.userID);
+        setUserRole(user.role || user.Role);
+        if ((user.role || user.Role) === 'Guide') {
+          axios.get(`/api/spots/pending/${user.id || user.userID}`)
+            .then(res => setSpots(res.data))
+            .catch(err => console.error(err));
+        }
       }
     } catch (e) {
       console.warn('Failed to parse user from local storage', e);
@@ -112,70 +143,116 @@ export default function ExplorerHome() {
   };
 
   return (
-    <div className="explorer-page">
-      <header className="explorer-hero">
-        <h1>Happening Today</h1>
-        <p>Discover activities around you</p>
-      </header>
+    <div className="explorer-page" style={{ paddingTop: '20px' }}>
+      <section className="happening-lately-section">
+        <div className="section-header">
+          <h2>Tours happening lately</h2>
+        </div>
+        <div className="tours-grid" ref={scrollRef} style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
+          {tours.slice(0, visibleToursCount).map(tour => (
+            <article key={tour.tourId || tour.tourID} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
+              <div className="tour-image-placeholder">
+                <img src={tour.pictureURL || tour.imageURL || 'https://via.placeholder.com/260x140'} alt="Tour" />
+              </div>
+              <div className="tour-card-body">
+                <h3 className="tour-title">{tour.title}</h3>
+                <div className="tour-meta">
+                  <span style={{ fontSize: '0.85rem' }}>📍 {tour.type} • {tour.maxPeople} guests max</span>
+                  <span style={{ fontSize: '0.85rem' }}>🕒 {new Date(tour.date).toLocaleDateString()} at {new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span style={{ fontStyle: 'italic', color: '#666', fontSize: '0.8rem', marginTop: '2px', display: 'block' }}>Hosted by: {tour.guideName}</span>
+                </div>
+                <div className="tour-footer">
+                  <div className="tour-going">
+                    <div className="mini-avatars">
+                      <div className="m-avatar"></div>
+                      <div className="m-avatar" style={{ marginLeft: '-6px' }}></div>
+                    </div>
+                    <span style={{ marginLeft: '4px' }}>+{Math.floor(Math.random() * 10) + 1} going</span>
+                  </div>
+                  <button className="mint-btn" onClick={() => { setSelectedTour(tour); setIsBookingModalOpen(true); }}>Request</button>
+                </div>
+              </div>
+            </article>
+          ))}
+          
+          {tours.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
+              <button 
+                onClick={() => {
+                  handleLoadMoreTours();
+                  if (scrollRef.current) {
+                    setTimeout(() => {
+                      scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+                    }, 100);
+                  }
+                }} 
+                style={{
+                  width: '50px', height: '50px', borderRadius: '50%', 
+                  backgroundColor: (visibleToursCount >= 12 || visibleToursCount >= tours.length) ? '#ccc' : '#007bff', 
+                  color: '#fff', border: 'none', fontSize: '1.5rem', 
+                  cursor: (visibleToursCount >= 12 || visibleToursCount >= tours.length) ? 'default' : 'pointer', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+                disabled={visibleToursCount >= 12 || visibleToursCount >= tours.length}
+                title="Load more tours"
+              >
+                &#8594;
+              </button>
+            </div>
+          )}
 
-      <section className="explorer-grid">
-        {tours.slice(0, 3).map(tour => (
-          <article key={tour.tourId || tour.tourID} className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <h3 style={{ margin: 0 }}>{tour.title}</h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>{tour.type} • {tour.maxPeople} guests max</p>
-            <p style={{ margin: 0, fontSize: '0.85rem' }}>
-              {new Date(tour.date).toLocaleDateString()} at {new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </p>
-            <button
-              className="btn-primary"
-              style={{ marginTop: 'auto', alignSelf: 'flex-start' }}
-              onClick={async () => {
-                const userJson = localStorage.getItem('user');
-                if (!userJson) {
-                  navigate('/login');
-                  return;
-                }
-                const user = JSON.parse(userJson);
-                const userId = user.id || user.userID;
-                try {
-                  await axios.post('/api/bookings', {
-                    userID: userId,
-                    tourID: tour.tourId || tour.tourID,
-                    bookingDate: tour.date,
-                    timeOfBooking: new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    numberOfGuests: 1,
-                    bookingType: "Standard"
-                  });
-                  alert('Booking requested successfully!');
-                } catch (e) {
-                  console.error(e);
-                  alert('Error creating booking');
-                }
-              }}
-            >
-              Book Now
-            </button>
-          </article>
-        ))}
-        {tours.length === 0 && <p>No tours available today.</p>}
+          {tours.length === 0 && <p>No tours available today.</p>}
+        </div>
       </section>
 
-      <section className="community-feed">
-        <div className="feed-header">
-          <h2>Live from the Community</h2>
-          <button className="btn-primary" onClick={handleOpenNewPostModal}>Post Experience</button>
+      <section className="local-favs-section">
+        <div className="section-header">
+          <h2>Local Favourites</h2>
+        </div>
+        <div className="spots-grid">
+          {spots.map(spot => (
+            <div key={spot.spotID || spot.spotId} className="spot-card-ui">
+              <div className="spot-img-container">
+                <img src={spot.pictureURL || 'https://via.placeholder.com/240x160'} alt="Spot" className="spot-img" />
+                <span className="spot-verified-badge" style={{ backgroundColor: 'rgba(255,255,255,0.8)', color: '#4caf50' }}>✓ Verified</span>
+              </div>
+              <div className="spot-details">
+                <div>
+                  <h3 className="spot-ui-title">{spot.name}</h3>
+                  <p className="spot-ui-cat" style={{ color: '#888', fontSize: '0.85rem' }}>{spot.category || 'Cafe'}</p>
+                </div>
+                <span className="spot-ui-rating">⭐ 4.9</span>
+              </div>
+            </div>
+          ))}
+          {spots.length === 0 && <p>No spots to checkout now.</p>}
+        </div>
+      </section>
+
+      <section className="community-feed-section">
+        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2>Live from Community</h2>
+          <button className="mint-btn" style={{ padding: '6px 20px', borderRadius: '20px', backgroundColor: '#a6d8b6', color: '#fff', border: 'none', fontSize: '0.9rem' }} onClick={handleOpenNewPostModal}>
+            Create a post
+          </button>
         </div>
 
-        <div className="posts-container">
-          {posts.map(post => (
-            <div key={post.postID || Math.random()} className="post">
-              <div className="post-header">
-                <div className="post-user-info">
-                  <div className="post-avatar"></div>
-                  <span className="post-username">{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</span>
+        <div className="community-feed-list">
+          {posts.slice(0, visiblePostsCount).map(post => (
+            <div key={post.postID || Math.random()} className="community-post-card">
+              <div className="c-post-header">
+                <div className="c-post-avatar" style={{ backgroundColor: '#d4c28c', backgroundImage: `url(${post.userAvatar || ''})`, backgroundSize: 'cover', width: '40px', height: '40px', borderRadius: '50%' }}></div>
+                <div className="c-post-info">
+                  <span className="c-post-name" style={{ fontWeight: 'bold' }}>
+                    {post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}
+                    <span className="experience-badge" style={{ marginLeft: '8px' }}>{post.experienceType}</span>
+                  </span>
+                  <span className="c-post-time" style={{ color: '#888', fontSize: '0.85rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
                 </div>
-                <span className="experience-badge">{post.experienceType}</span>
               </div>
+
+              <p className="c-post-text" style={{ marginTop: '10px' }}>{post.content}</p>
 
               {(() => {
                 if (!post.pictureURL) return null;
@@ -189,8 +266,8 @@ export default function ExplorerHome() {
 
                 if (images.length === 1) {
                   return (
-                    <div className="post-image-container">
-                      <img src={images[0]} alt="Experience" className="post-image" />
+                    <div className="c-post-img-wrapper">
+                      <img src={images[0]} alt="Experience" className="c-post-img" />
                     </div>
                   );
                 }
@@ -204,41 +281,50 @@ export default function ExplorerHome() {
                 );
               })()}
 
-              <div className="post-body">
-                <div className="post-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span className="action-icon" title="Like">❤️</span>
-                  <span className="action-icon" title="Comment">💬</span>
-                  <span className="action-icon" title="Share">↗️</span>
-                  {loggedInUserId === post.userID && (
-                    <>
-                      <span
-                        className="action-icon edit-icon"
-                        title="Edit Post"
-                        onClick={() => handleEditClick(post)}
-                        style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '1.2rem' }}
-                      >
-                        ✏️
-                      </span>
-                      <span
-                        className="action-icon delete-icon"
-                        title="Delete Post"
-                        onClick={() => handleDeleteClick(post)}
-                        style={{ cursor: 'pointer', fontSize: '1.2rem' }}
-                      >
-                        🗑️
-                      </span>
-                    </>
-                  )}
-                </div>
-                <p className="post-content">
-                  <strong>{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</strong> {post.content}
-                </p>
-                <span className="post-date">{new Date(post.createdAt).toLocaleDateString()}</span>
+              <div className="post-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                {loggedInUserId === post.userID && (
+                  <>
+                    <span
+                      className="action-icon edit-icon"
+                      onClick={() => handleEditClick(post)}
+                      style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '0.9rem', color: '#007bff' }}
+                    >
+                      Edit
+                    </span>
+                    <span
+                      className="action-icon delete-icon"
+                      onClick={() => handleDeleteClick(post)}
+                      style={{ cursor: 'pointer', fontSize: '0.9rem', color: '#dc3545' }}
+                    >
+                      Delete
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           ))}
           {posts.length === 0 && <p>No posts yet. Be the first to share an experience!</p>}
         </div>
+        
+        {posts.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', marginBottom: '40px' }}>
+            <button 
+              className="mint-btn" 
+              style={{ 
+                padding: '8px 30px', 
+                borderRadius: '20px', 
+                backgroundColor: visiblePostsCount >= posts.length ? '#ccc' : '#a6d8b6', 
+                color: '#fff', 
+                border: 'none',
+                cursor: visiblePostsCount >= posts.length ? 'default' : 'pointer'
+              }} 
+              onClick={handleLoadMorePosts}
+              disabled={visiblePostsCount >= posts.length}
+            >
+              See more
+            </button>
+          </div>
+        )}
       </section>
 
 

@@ -600,6 +600,7 @@ button:disabled {
   cursor: not-allowed;
   transform: none;
 }
+
 /* --- Explorer Home Overhaul Styles --- */
 
 /* Section Adjustments */
@@ -641,7 +642,10 @@ button:disabled {
   overflow-x: auto;
   padding-bottom: 10px;
 }
-.tours-grid::-webkit-scrollbar { display: none; }
+
+.tours-grid::-webkit-scrollbar {
+  display: none;
+}
 
 .tour-card {
   flex: 0 0 260px;
@@ -707,6 +711,7 @@ button:disabled {
 .mini-avatars {
   display: flex;
 }
+
 .m-avatar {
   width: 16px;
   height: 16px;
@@ -817,7 +822,10 @@ button:disabled {
   overflow-x: auto;
   padding-bottom: 10px;
 }
-.spots-grid::-webkit-scrollbar { display: none; }
+
+.spots-grid::-webkit-scrollbar {
+  display: none;
+}
 
 .spot-card-ui {
   flex: 0 0 240px;

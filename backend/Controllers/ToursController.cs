@@ -44,9 +44,27 @@ namespace backend.Controllers
 
         // GET: api/tours
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Tour>>> GetAllTours()
+        public async Task<ActionResult<IEnumerable<object>>> GetAllTours()
         {
-            return await _context.Tours.ToListAsync();
+            var toursWithGuides = await _context.Tours
+                .Join(_context.Users, 
+                      t => t.GuideId, 
+                      u => u.UserID, 
+                      (t, u) => new { 
+                          tourId = t.TourId, 
+                          title = t.Title, 
+                          description = t.Description, 
+                          date = t.Date, 
+                          price = t.Price, 
+                          maxPeople = t.MaxPeople, 
+                          type = t.Type, 
+                          imageURL = t.ImageURL, 
+                          pictureURL = t.PictureURL, 
+                          guideID = t.GuideId,
+                          guideName = u.FirstName + " " + u.LastName 
+                      })
+                .ToListAsync();
+            return Ok(toursWithGuides);
         }
 
         // PUT: api/Tours/5
