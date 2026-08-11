@@ -66,7 +66,6 @@ namespace backend.Controllers
             {
                 userID = request.UserID,
                 tourID = request.TourID,
-                curatedSpotID = 0,
                 bookingType = "Tour",
                 status = "Confirmed",
                 bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow
@@ -78,6 +77,29 @@ namespace backend.Controllers
                 await _context.SaveChangesAsync();
 
                 // Send notification to the guide
+                var tourForNotification = await _context.Tours.FindAsync(request.TourID);
+                if (tourForNotification != null)
+                {
+                    var notification = new Notification
+                    {
+                        UserID = tourForNotification.GuideId,
+                        Type = "NewBooking",
+                        Message = $"You have a new booking request for {tourForNotification.Title}.",
+                        RelatedEntityID = booking.bookingID,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(notification);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new { message = "Booking successful", bookingId = booking.bookingID });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to create booking. Please try again." });
+            }
+        }
+
         // GET: api/bookings/guide/5
         [HttpGet("guide/{guideId}")]
         public async Task<ActionResult<IEnumerable<object>>> GetGuideBookings(int guideId)
@@ -108,42 +130,7 @@ namespace backend.Controllers
             return Ok(bookings);
         }
 
-        // POST: api/bookings
-        [HttpPost]
-        public async Task<ActionResult<Booking>> CreateBooking(Booking booking)
-        {
-            booking.status = "Pending";
-            _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync();
 
-            // Notify the guide
-            var tour = await _context.Tours.FindAsync(booking.tourID);
-            if (tour != null)
-            {
-                var notification = new Notification
-                {
-                    UserID = tour.GuideId,
-                    Type = "NewBooking",
-                    Message = $"{user.FirstName} {user.LastName} booked your tour: {tour.Title}",
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.Notifications.Add(notification);
-                await _context.SaveChangesAsync();
-
-                return Ok(new
-                {
-                    message = "Booking confirmed successfully!",
-                    bookingId = booking.bookingID,
-                    tourTitle = tour.Title,
-                    date = booking.bookingDate
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Failed to create booking. Please try again." });
-            }
-        }
 
         /// <summary>
         /// GET: api/bookings/user/{userId}/with-details
@@ -187,22 +174,6 @@ namespace backend.Controllers
             {
                 return StatusCode(500, new { message = "Failed to retrieve bookings." });
             }
-        }
-    }
-
-    public class CreateBookingRequest
-    {
-        public int UserID { get; set; }
-        public int TourID { get; set; }
-        public DateTime BookingDate { get; set; }
-                    Message = $"You have a new booking request for {tour.Title}.",
-                    RelatedEntityID = booking.bookingID
-                };
-                _context.Notifications.Add(notification);
-                await _context.SaveChangesAsync();
-            }
-
-            return CreatedAtAction("GetUserBookings", new { userId = booking.userID }, booking);
         }
 
         // PUT: api/bookings/5/accept
@@ -298,5 +269,12 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Booking declined successfully!" });
         }
+    }
+
+    public class CreateBookingRequest
+    {
+        public int UserID { get; set; }
+        public int TourID { get; set; }
+        public DateTime BookingDate { get; set; }
     }
 }

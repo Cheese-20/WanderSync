@@ -10,6 +10,11 @@
   - **Frontend**: Updated `ExplorePage.jsx` form and API calls to match the new `Curated_spots` schema and `/api/CuratedSpots` endpoint.
   - **Frontend (Fix)**: Reverted `ActivityType` field to a text input (instead of checkboxes) to allow arbitrary genres like Jazz, Adventure, Festival.
   - **Why**: This implements the core functionality for Local Guides to recommend new locations for approval, bringing in essential crowdsourcing data to WanderSync while enforcing quality control via the `isVerified` flag.
+- **Bug Fix (Build Failure / Merge Conflict)**: Resolved severe compilation errors caused by a corrupted `git pull` merge from the `Spot-Verification` branch.
+  - **Backend**: Manually removed duplicated and malformed code blocks in `BookingsController.cs` and `AuthController.cs` that were spliced mid-function by git.
+  - **Backend**: Removed a duplicated `GetAllTours` method from `ToursController.cs`.
+  - **Backend**: Updated `CuratedSpot.cs` to include missing fields (`SubmittedAt`, `SubmittedByUserID`, `PictureURL`) required by the teammate's `SpotController.cs` for the pending verification dashboard.
+  - **Backend**: Fixed C# syntax errors (missing brackets and semicolons) in the Entity Framework snapshot `WanderSyncDbContextModelSnapshot.cs`.
 
 
 ## [2026-08-07]

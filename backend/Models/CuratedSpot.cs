@@ -9,7 +9,7 @@ namespace backend.Models
     {
         [Key]
         [Column("curatedSpotID")]
-        public int CuratedSpotId { get; set; }
+        public int SpotID { get; set; }
 
         [Column("activityName")]
         [MaxLength(200)]
@@ -26,6 +26,15 @@ namespace backend.Models
         public string Location { get; set; } = string.Empty;
 
         [Column("isVerified")]
-        public bool IsVerified { get; set; } = false;
+        public string IsVerified { get; set; } = "pending";
+
+        [Column("submittedAt")]
+        public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("submittedByUserID")]
+        public int SubmittedByUserID { get; set; }
+
+        [Column("pictureURL")]
+        public string PictureURL { get; set; } = string.Empty;
     }
 }

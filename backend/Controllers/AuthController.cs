@@ -162,11 +162,6 @@ namespace backend.Controllers
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest model)
-        {
-            if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.NewPassword))
-            {
-                return BadRequest("Email and new password are required.");
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
         {
             _logger.LogInformation($"Password reset attempt for {model.Email}");
@@ -184,21 +179,6 @@ namespace backend.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
             if (user == null)
             {
-                return BadRequest("User not found.");
-            }
-
-            string newHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
-            user.HashedPword = newHash;
-
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Password successfully reset." });
-        }
-    }
-
-    public class ResetPasswordRequest
-    {
-        public string Email { get; set; }
-        public string NewPassword { get; set; }
                 return NotFound(new { message = "No account found with that email." });
             }
 
