@@ -1,6 +1,26 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-11]
+- **Feature (Recommend New Location)**: Implemented Use Case D500 (Recommend new location / Submit New Spot).
+  - **Backend**: Created the `Spot.cs` model and added it to the `WanderSyncDbContext`.
+  - **Backend**: Created `SpotsController.cs` with a `POST /api/Spots` endpoint to accept new spot submissions and default their status to 'Pending'.
+  - **Backend**: Updated `Program.cs` to execute a raw SQL query creating the `Curated_spots` table on startup, matching the requested database schema.
+  - **Backend**: Switched `Spot` model to `CuratedSpot` with fields `ActivityName`, `ActivityType`, `Description`, `Location`, and `IsVerified`.
+  - **Frontend**: Updated `ExplorePage.jsx` form and API calls to match the new `Curated_spots` schema and `/api/CuratedSpots` endpoint.
+  - **Frontend (Fix)**: Reverted `ActivityType` field to a text input (instead of checkboxes) to allow arbitrary genres like Jazz, Adventure, Festival.
+  - **Why**: This implements the core functionality for Local Guides to recommend new locations for approval, bringing in essential crowdsourcing data to WanderSync while enforcing quality control via the `isVerified` flag.
+- **Bug Fix (Build Failure / Merge Conflict)**: Resolved severe compilation errors caused by a corrupted `git pull` merge from the `Spot-Verification` branch.
+  - **Backend**: Manually removed duplicated and malformed code blocks in `BookingsController.cs` and `AuthController.cs` that were spliced mid-function by git.
+  - **Backend**: Removed a duplicated `GetAllTours` method from `ToursController.cs`.
+  - **Backend**: Updated `CuratedSpot.cs` to include missing fields (`SubmittedAt`, `SubmittedByUserID`, `PictureURL`) required by the teammate's `SpotController.cs` for the pending verification dashboard.
+  - **Backend**: Fixed C# syntax errors (missing brackets and semicolons) in the Entity Framework snapshot `WanderSyncDbContextModelSnapshot.cs`.
+  - **Frontend (Fix)**: Resolved a cascade of severe JSX compilation errors in `AuthForm.jsx`, `ExplorePage.jsx`, `Match.jsx`, `ExplorerHome.jsx`, `GuideHome.jsx`, and `CreatePostModal.jsx` caused by git merge conflicts. Reconstructed orphaned loops, deleted duplicate fragments, and closed missing conditional rendering blocks to restore the React build.
+## [2026-08-07]
+- **Refactor (UI Styling)**: Removed all inline `style={{...}}` properties across the frontend and replaced them with CSS classes.
+  - Created `admin.css` to hold styling for `AdminHome.jsx`.
+  - Added new classes to `explorer.css`, `match.css`, `messages.css`, and `profile.css`.
+  - Refactored `CreatePostModal.jsx`, `ExplorerHome.jsx`, `Match.jsx`, `Messages.jsx`, and `Profile.jsx` to use external CSS instead of inline React styles.
 ## [2026-08-10]
 - **Database & Backend**: Updated the `Tour` model to include `Location` and `PictureURL`. Added raw SQL to `Program.cs` to auto-migrate the database on startup. Upgraded `ToursController.cs` to return a `TourDto` containing the dynamically calculated `CurrentGuests` (via `Bookings` table) and the `GuideName` (via `Users` table join). **Updated `CurrentGuests` logic to strictly count only `Accepted` bookings.** Added a database seed script in `Program.cs` to auto-generate 3 new mock future tours if all existing tours are in the past.
 - **Backend (CuratedSpots)**: Added `Rating` column to `CuratedSpot` model and `curatedSpots` database table. Created a new endpoint `GET /api/spots/approved` in `SpotController.cs` to fetch highly rated, verified spots. Added a database seed script in `Program.cs` to auto-generate mock Local Favourites data.

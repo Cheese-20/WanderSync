@@ -195,7 +195,8 @@ export default function Match() {
             <div className="card-container">
               {currentMatch ? (
                 <div className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}>
-                  <div className="card-image-section" style={{ backgroundImage: `url(${currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'})` }}>
+                  <div className="card-image-section">
+                    <img className="card-image-bg" src={currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'} alt="Match Background" />
                     <div className="shared-interests-badge">
                       {sharedInterestsCount} Shared interests
                     </div>

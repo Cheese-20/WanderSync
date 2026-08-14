@@ -1,0 +1,115 @@
+/* Report Form Page */
+.report-page {
+  font-family: system-ui, Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.report-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.btn-back-report {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #1a8f66;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.btn-back-report:hover {
+  background: #f0faf5;
+}
+
+.report-form-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e6e6e6;
+  padding: 32px;
+}
+
+.report-form-card h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.4rem;
+  color: #1a2332;
+}
+
+.report-description {
+  color: #666;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e6e6e6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1a8f66;
+}
+
+.report-error {
+  padding: 12px 16px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.btn-submit-report {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e53935;
+  color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-submit-report:hover {
+  background: #c62828;
+  transform: translateY(-1px);
+}
+
+.btn-submit-report:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

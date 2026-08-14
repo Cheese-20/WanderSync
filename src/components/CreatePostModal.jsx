@@ -205,7 +205,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
                   accept="image/*"
                   multiple
                   ref={fileInputRef}
-                  style={{ display: 'none' }}
+                  className="hidden-file-input"
                   onChange={handleImageUpload}
                   value=""
                 />

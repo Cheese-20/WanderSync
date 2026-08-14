@@ -202,7 +202,7 @@ export default function Messages() {
               </div>
               
               <div className="messages-list">
-                <div style={{ marginTop: 'auto' }}></div>
+                <div className="messages-spacer-auto"></div>
                 {messages.map(msg => {
                   const isSentByMe = msg.senderID === currentUserId;
                   return (

@@ -11,11 +11,52 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAllTours, setShowAllTours] = useState(false);
+  
+  // Submit New Spot Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [newSpot, setNewSpot] = useState({
+    activityName: '',
+    activityType: '',
+    description: '',
+    location: ''
+  });
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
+    const userJson = localStorage.getItem('user');
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      setUserRole(user.role || '');
+    }
   }, []);
+
+  const handleSpotSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      await axios.post('/api/curatedspots', {
+        activityName: newSpot.activityName,
+        activityType: newSpot.activityType,
+        description: newSpot.description,
+        location: newSpot.location,
+        isVerified: false
+      });
+      setSuccessMessage('Spot submitted successfully for review!');
+      setNewSpot({ activityName: '', activityType: '', description: '', location: '' });
+      setTimeout(() => {
+        setShowModal(false);
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      setErrorMessage('An error occurred while saving the record. Please try again.');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -134,7 +175,68 @@ export default function ExplorePage() {
       <header className="explore-hero">
         <h1>Explore with Verified Guides</h1>
         <p>Book authentic experiences led by trusted locals. Every guide is verified and reviewed.</p>
+        {userRole.includes('guide') && (
+          <button 
+            className="submit-spot-btn"
+            style={{ marginTop: '15px' }}
+            onClick={() => setShowModal(true)}
+          >
+            + Submit New Spot
+          </button>
+        )}
       </header>
+
+      {showModal && (
+        <div className="spot-form-modal-overlay">
+          <div className="spot-form-modal">
+            <h2>Recommend New Location</h2>
+            <button className="spot-form-close-btn" onClick={() => setShowModal(false)}>&times;</button>
+            
+            {successMessage && <div className="alert-success" style={{color: 'green', marginBottom: '10px'}}>{successMessage}</div>}
+            {errorMessage && <div className="alert-error" style={{color: 'red', marginBottom: '10px'}}>{errorMessage}</div>}
+            
+            <form onSubmit={handleSpotSubmit}>
+              <div className="form-group">
+                <label>Activity Name</label>
+                <input 
+                  type="text" 
+                  value={newSpot.activityName} 
+                  onChange={(e) => setNewSpot({...newSpot, activityName: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Activity Type (e.g. Jazz, Adventure, Festival)</label>
+                <input 
+                  type="text" 
+                  value={newSpot.activityType} 
+                  onChange={(e) => setNewSpot({...newSpot, activityType: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Location</label>
+                <input 
+                  type="text" 
+                  value={newSpot.location} 
+                  onChange={(e) => setNewSpot({...newSpot, location: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea 
+                  rows="4"
+                  value={newSpot.description} 
+                  onChange={(e) => setNewSpot({...newSpot, description: e.target.value})} 
+                  required 
+                />
+              </div>
+              <button type="submit" className="spot-submit-btn">Submit for Review</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="explore-loading">
