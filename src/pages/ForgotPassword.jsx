@@ -55,7 +55,7 @@ export default function ForgotPassword() {
       });
       setPhase('success');
     } catch (err) {
-      setError(err.response?.data || 'Failed to reset password');
+      setError(err.response?.data?.message || 'Failed to reset password');
     }
   };
 
