@@ -11,6 +11,7 @@ import Activities from './pages/Activities.jsx';
 import EditActivity from './pages/EditActivity.jsx';
 import AdminHome from './pages/AdminHome.jsx';
 import ReportForm from './pages/ReportForm.jsx';
+import LocalGuideApplication from './pages/LocalGuideApplication.jsx';
 
 function HomeRouter() {
   const userJson = localStorage.getItem('user');
@@ -39,6 +40,7 @@ function App() {
         <Route path="/edit-activity/:id" element={<EditActivity />} />
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/report" element={<ReportForm />} />
+        <Route path="/local-guide-application" element={<LocalGuideApplication />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
