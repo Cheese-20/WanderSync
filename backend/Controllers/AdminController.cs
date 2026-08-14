@@ -135,7 +135,7 @@ namespace backend.Controllers
             var notification = new Notification
             {
                 UserID = application.UserID,
-                Title = "Application Successful",
+                Type = "ApplicationApproved",
                 Message = "Congratulations! Your application to become a local guide has been accepted. You are now registered as a local guide.",
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
@@ -164,7 +164,7 @@ namespace backend.Controllers
             var notification = new Notification
             {
                 UserID = application.UserID,
-                Title = "Application Unsuccessful",
+                Type = "ApplicationRejected",
                 Message = "We regret to inform you that your application to become a local guide has been unsuccessful.",
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
@@ -226,7 +226,7 @@ namespace backend.Controllers
             var notification = new Notification
             {
                 UserID = report.ReportedUserID,
-                Title = "Account Suspended",
+                Type = "AccountSuspended",
                 Message = "Your account has been suspended for 2 weeks due to a violation of our community guidelines. You will be able to log in again after " + DateTime.UtcNow.AddDays(14).ToString("dd MMMM yyyy") + ".",
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false

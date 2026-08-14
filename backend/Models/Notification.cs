@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models
 {
-    [Table("Notification")]
+    [Table("Notifications")]
     public class Notification
     {
         [Key]
@@ -13,10 +13,6 @@ namespace backend.Models
 
         [Column("userID")]
         public int UserID { get; set; }
-
-        [Column("title")]
-        [MaxLength(100)]
-        public string Title { get; set; } = string.Empty;
 
         [Column("message")]
         public string Message { get; set; } = string.Empty;
