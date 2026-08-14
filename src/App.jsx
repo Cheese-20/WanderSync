@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthForm from './pages/AuthForm.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
 import ExplorerHome from './pages/ExplorerHome.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 import GuideHome from './pages/GuideHome.jsx';
 import Discover from './pages/Discover.jsx';
 import Match from './pages/Match.jsx';
@@ -28,9 +30,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/login" element={<AuthForm />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/home" element={<HomeRouter />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/discover" element={<Discover />} />
         <Route path="/match" element={<Match />} />
         <Route path="/explore" element={<ExplorePage />} />

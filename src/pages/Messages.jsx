@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from '../components/NavBar';
 import logo from '../assets/images/logo.png';
 
 import '../styles/messages.css';
@@ -122,7 +123,9 @@ export default function Messages() {
   };
 
   return (
-    <div className="messages-page">
+    <>
+      <NavBar />
+      <div className="messages-page">
 
       
       <div className="messages-layout">
@@ -235,5 +238,6 @@ export default function Messages() {
         </div>
       </div>
     </div>
+    </>
   );
 }

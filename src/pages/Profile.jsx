@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
+import NavBar from '../components/NavBar';
 import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
@@ -204,7 +204,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="profile-page">
+    <>
+      <NavBar />
+      <div className="profile-page">
 
       <main className="page profile-container">
         <h2>User Profile</h2>
@@ -224,7 +226,8 @@ export default function Profile() {
           </button>
           <button 
             className="delete button logout-btn" 
-            onClick={handleLogout} 
+            onClick={handleLogout}
+            style={{ marginLeft: 'auto' }}
           >
             Logout
           </button>
@@ -414,5 +417,6 @@ export default function Profile() {
 
       </main>
     </div>
+    </>
   );
 }

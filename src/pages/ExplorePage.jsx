@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from '../components/NavBar';
 import '../styles/explore.css';
 
 export default function ExplorePage() {
@@ -137,7 +138,9 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="explore-page">
+    <>
+      <NavBar />
+      <div className="explore-page">
 
       {/* Search Bar */}
       <section className="explore-search-section">
@@ -377,5 +380,6 @@ export default function ExplorePage() {
         </>
       )}
     </div>
+    </>
   );
 }

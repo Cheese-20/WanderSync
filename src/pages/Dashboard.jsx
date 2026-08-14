@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/dashboard.css';
 import logo from '../assets/images/logo.png';
+import NavBar from '../components/NavBar';
 
 // SVG Icons
 const UsersIcon = () => (
@@ -131,6 +132,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <NavBar />
       {(isVoting || isUpdatingBooking) && (
         <div className="global-loading-overlay">
           <div className="global-loading-popup">
@@ -365,9 +367,7 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <div className="b-message-box">
-                          "Hi! Excited to explore with you. {booking.tourDescription}"
-                        </div>
+
 
                         <div className="b-card-bottom">
                           <div className="b-price">

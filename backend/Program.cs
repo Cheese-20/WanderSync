@@ -1,18 +1,25 @@
 //setup code 
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.InMemory;
 using DotNetEnv;
 using backend.Data;
+using backend.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
-Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+try
+{
+    Env.Load(Path.Combine(builder.Environment.ContentRootPath, ".env"));
+}
+catch (Exception)
+{
+    // .env parsing failed — fall through to appsettings.json
+}
 
 
 //  Grab the connection string from environment or configuration (appsettings.json or environment)
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__WanderSyncDb");
-if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("PLACEHOLDER") || connectionString.Contains("YOUR_MYSQL_PASSWORD_HERE"))
+if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("PLACEHOLDER"))
 {  
      connectionString = builder.Configuration.GetConnectionString("WanderSyncDb");
 }
@@ -31,35 +38,27 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Try MySQL first; fall back to in-memory if connection string is missing/invalid
-if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("PLACEHOLDER"))
-{
-    builder.Services.AddDbContext<WanderSyncDbContext>(options =>
-        options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString))
-    );
-}
-else
-{
-    builder.Services.AddDbContext<WanderSyncDbContext>(options =>
-        options.UseInMemoryDatabase("WanderSyncDb")
-    );
-}
+builder.Services.AddDbContext<WanderSyncDbContext>(options =>
+    // Use Pomelo MySQL provider with explicit server version
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)))
+);
 
 builder.Services.AddControllers();
+
+// Register background service for booking reminders
+builder.Services.AddHostedService<BookingReminderService>();
 
 var app = builder.Build();
 
 app.UseCors("AllowViteApp");
 
-// Ensure database tables exist (only for relational databases)
+// Ensure database tables exist
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var context = scope.ServiceProvider.GetRequiredService<WanderSyncDbContext>();
-        if (!context.Database.IsInMemory())
-        {
-            context.Database.ExecuteSqlRaw(@"
+        context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS `User` (
                 `userID` int NOT NULL AUTO_INCREMENT,
                 `firstName` longtext NOT NULL,
@@ -117,6 +116,23 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Notifications`;");
+
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Notifications` (
+                `notificationID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `type` longtext NOT NULL,
+                `message` longtext NOT NULL,
+                `isRead` tinyint(1) NOT NULL DEFAULT 0,
+                `createdAt` datetime(6) NOT NULL,
+                `scheduledFor` datetime(6) NULL,
+                `relatedEntityID` int NULL,
+                PRIMARY KEY (`notificationID`),
+                CONSTRAINT `FK_Notifications_User` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
         context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS `Posts` (
                 `postID` int NOT NULL AUTO_INCREMENT,
@@ -131,9 +147,38 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `SpotVotes` (
+                `voteID` int NOT NULL AUTO_INCREMENT,
+                `spotID` int NOT NULL,
+                `guideID` int NOT NULL,
+                `voteType` varchar(50) NOT NULL,
+                `votedAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`voteID`),
+                CONSTRAINT `FK_SpotVotes_Spot` FOREIGN KEY (`spotID`) REFERENCES `curatedSpots` (`spotID`) ON DELETE CASCADE,
+                CONSTRAINT `FK_SpotVotes_Guide` FOREIGN KEY (`guideID`) REFERENCES `User` (`userID`) ON DELETE CASCADE,
+                UNIQUE KEY `IX_SpotVotes_UniqueVote` (`spotID`, `guideID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `GuideApplication` (
+                `applicationID` int NOT NULL AUTO_INCREMENT,
+                `IDno` bigint NOT NULL,
+                `reason` longtext NULL,
+                `loaction` varchar(100) NULL,
+                `bio` varchar(250) NULL,
+                `userID` int NOT NULL,
+                PRIMARY KEY (`applicationID`),
+                CONSTRAINT `FK_GuideApplication_User` FOREIGN KEY (`userID`) REFERENCES `User` (`userID`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` ADD COLUMN `loaction` varchar(100) NULL;"); } catch { }
+        try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` MODIFY COLUMN `IDno` bigint NOT NULL;"); } catch { }
 
         string[] profileColumnSqls = new[]
         {
+            "ALTER TABLE `Tours` ADD COLUMN `location` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `interests` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
@@ -142,20 +187,120 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `Profile` ADD COLUMN `job` longtext NULL;",
             "ALTER TABLE `Posts` ADD COLUMN `pictureURL` longtext NULL;",
             "ALTER TABLE `Posts` MODIFY COLUMN `pictureURL` longtext NULL;",
-            "ALTER TABLE `Posts` ADD COLUMN `experienceType` varchar(50) NOT NULL DEFAULT 'Individual';",
-            "ALTER TABLE `User` ADD COLUMN `suspendedUntil` datetime NULL;",
-            "CREATE TABLE IF NOT EXISTS `SpotReports` (`spotReportID` int NOT NULL AUTO_INCREMENT, `spotID` int NOT NULL, `reporterID` int NOT NULL, `reason` text, `sentAt` datetime, PRIMARY KEY (`spotReportID`), CONSTRAINT `FK_SpotReports_Spot` FOREIGN KEY (`spotID`) REFERENCES `Spots` (`spotID`) ON DELETE CASCADE, CONSTRAINT `FK_SpotReports_User` FOREIGN KEY (`reporterID`) REFERENCES `User` (`userID`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+            "ALTER TABLE `Posts` ADD COLUMN `experienceType` varchar(50) NOT NULL DEFAULT 'Individual';"
         };
 
         foreach (var sql in profileColumnSqls)
         {
             try { context.Database.ExecuteSqlRaw(sql); } catch { }
         }
-        } // end of if (!IsInMemory)
-        else
+
+        string[] notificationColumnSqls = new[]
         {
-            context.Database.EnsureCreated();
+            "ALTER TABLE `Notifications` ADD COLUMN `userID` int NOT NULL DEFAULT 0;",
+            "ALTER TABLE `Notifications` ADD COLUMN `type` longtext NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `message` longtext NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `isRead` tinyint(1) NOT NULL DEFAULT 0;",
+            "ALTER TABLE `Notifications` ADD COLUMN `createdAt` datetime(6) NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `scheduledFor` datetime(6) NULL;",
+            "ALTER TABLE `Notifications` ADD COLUMN `relatedEntityID` int NULL;"
+        };
+
+        foreach (var sql in notificationColumnSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
+            }
         }
+
+        string[] curatedSpotsColumnSqls = new[]
+        {
+            "ALTER TABLE `curatedSpots` ADD COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedByUserID` int NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedAt` datetime(6) NULL;",
+            "ALTER TABLE `curatedSpots` MODIFY COLUMN `isVerified` varchar(50) DEFAULT 'pending';"
+        };
+
+        foreach (var sql in curatedSpotsColumnSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
+            }
+        }
+
+        string[] indexSqls = new[]
+        {
+            "CREATE INDEX `IX_Matches_Status` ON `Matches` (`status`);",
+            "CREATE INDEX `IX_Message_MatchID` ON `Message` (`matchID`);",
+            "CREATE INDEX `IX_Message_SentAt` ON `Message` (`sentAt`);"
+        };
+        
+        foreach (var sql in indexSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                // Ignore if index already exists
+                Console.WriteLine("FAIL (Expected if exists): " + sql + " ERROR: " + ex.Message);
+            }
+        }
+
+        // Add 3 dummy verified spots for Local Favourites
+        try {
+            var checkSql = "SELECT COUNT(*) FROM `curatedSpots` WHERE `isVerified` = 'approved';";
+            var count = context.Database.SqlQueryRaw<int>(checkSql).FirstOrDefault();
+            if (count < 3)
+            {
+                var insertDummySpotsSql = @"
+                    INSERT INTO `curatedSpots` (`activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`) 
+                    VALUES 
+                    ('Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974', NOW()),
+                    ('Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city.', 'approved', 'https://images.unsplash.com/photo-1525610553991-2bede1a236e2', NOW()),
+                    ('Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1574768395574-8b6a38612ff0', NOW());
+                ";
+                context.Database.ExecuteSqlRaw(insertDummySpotsSql);
+                Console.WriteLine("SUCCESS: Inserted 3 dummy spots");
+            }
+        } catch (Exception e) {
+            Console.WriteLine("FAIL: Could not insert dummy spots. ERROR: " + e.Message);
+        }
+
+        // Ensure Reviews table exists for guide ratings
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Reviews` (
+                `reviewID` int NOT NULL AUTO_INCREMENT,
+                `reviewerID` int NOT NULL,
+                `guideID` int NOT NULL,
+                `rating` int NOT NULL,
+                `comment` text NULL,
+                `sentAt` datetime(6) NOT NULL,
+                PRIMARY KEY (`reviewID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        // Ensure Bookings table exists
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `Bookings` (
+                `bookingID` int NOT NULL AUTO_INCREMENT,
+                `userID` int NOT NULL,
+                `tourID` int NOT NULL,
+                `curatedSpotID` int NOT NULL DEFAULT 0,
+                `bookingType` longtext NOT NULL,
+                `status` longtext NOT NULL,
+                `bookingDate` datetime(6) NOT NULL,
+                PRIMARY KEY (`bookingID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
     }
     catch (Exception ex)
     {
@@ -165,6 +310,20 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var message = error?.Error?.Message ?? "An unexpected error occurred.";
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(error?.Error, "Unhandled exception");
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new { message }));
+    });
+});
+
 app.MapControllers();
 
 app.Run();

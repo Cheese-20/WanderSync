@@ -183,3 +183,20 @@
 - **Git / Merge**: Merged remote `viewBookings` branch into `Match` and resolved `WanderSyncDbContext` conflicts to integrate new bookings models.
 - **Bug Fix**: Fixed matching queue logic in `ProfileController.cs` to properly filter out profiles that the current user has already interacted with (pending, accepted, or rejected).
 - **Bug Fix**: Rewrote LINQ queries in `ProfileController.cs` (pending requests) and `MessageController.cs` (messaging contacts) to use safe `LEFT JOIN`s on `UserID` instead of traversing navigation properties, fixing an issue where requests and contacts wouldn't load if users had incomplete profiles.
+
+## 2026-08-14: Resolved LocalGuide Merge Conflicts
+
+### What has been changed?
+Merged Mendy's `origin/LocalGuide` branch into `test-localguide-integration` and resolved all 9 merge conflicts. 
+
+### Why it has changed?
+The user wanted to integrate Mendy's Local Guide code to test if it works with their local code, but had specific preferences (e.g. retaining local versions of AuthForm and Match page). Merging allowed bringing in the new Guide/Review features and database structure.
+
+### How the change works
+- **Program.cs**: Both sets of database seeding and configuration logic were combined so Mendy's `Reviews`/`Bookings` tables build properly and the 3 dummy curated spots are still seeded.
+- **AuthController.cs**: Adopted the user's `ResetPasswordRequest` class naming but incorporated Mendy's password length validation and robust HTTP response JSON messages.
+- **ExplorerHome.jsx & explore.css**: Kept the user's `community-feed-list` structure and custom color styling intact while seamlessly integrating Mendy's new `.clickable-username` and `Trust Section` features into the UI.
+- **Match page & AuthForm**: Completely retained local changes, discarding Mendy's.
+
+The code is successfully committed locally. 
+- **14 Aug 2026**: Merged `manage-itenarary` branch (Anathi's Admin and Reporting logic) into current branch. Resolved massive backend EF Core model conflicts and frontend UI component differences. Protected custom styling and clean backend code.

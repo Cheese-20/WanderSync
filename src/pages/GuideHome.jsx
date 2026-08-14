@@ -153,7 +153,9 @@ export default function GuideHome() {
   };
 
   return (
-    <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
+    <>
+      <NavBar />
+      <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
       <section className="happening-lately-section">
         <div className="section-header">
           <h2>Spots to be verified</h2>
@@ -471,5 +473,6 @@ export default function GuideHome() {
         editPost={editingPost}
       />
     </div>
+    </>
   );
 }
