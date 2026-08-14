@@ -179,7 +179,7 @@ export default function Match() {
             <h3>Pending Requests</h3>
             <div className="pending-list">
               {pendingRequests.map(req => (
-                <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)} style={{cursor: 'pointer'}}>
+                <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)} style={{ cursor: 'pointer' }}>
                   <img src={req.image} alt={req.name} className="pending-img" />
                   <span className="pending-name">{req.name}</span>
                   <button className="pending-btn accept" onClick={(e) => handleAcceptPending(e, req)}>✓</button>
@@ -195,7 +195,8 @@ export default function Match() {
             <div className="card-container">
               {currentMatch ? (
                 <div className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}>
-                  <div className="card-image-section" style={{ backgroundImage: `url(${currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'})` }}>
+                  <div className="card-image-section">
+                    <img className="card-image-bg" src={currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'} alt="Match Background" />
                     <div className="shared-interests-badge">
                       {sharedInterestsCount} Shared interests
                     </div>
@@ -221,6 +222,13 @@ export default function Match() {
                         })}
                       </div>
                     </div>
+
+                    <button 
+                      className="btn-view-profile" 
+                      onClick={() => navigate(`/user/${currentMatch.userID}`)}
+                    >
+                      View Full Profile
+                    </button>
                   </div>
                 </div>
               ) : (

@@ -131,5 +131,48 @@ namespace backend.Controllers
                 }
             });
         }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+        {
+            _logger.LogInformation($"Password reset attempt for {model.Email}");
+
+            if (string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                return BadRequest(new { message = "Email and new password are required." });
+            }
+
+            if (model.NewPassword.Length < 6)
+            {
+                return BadRequest(new { message = "Password must be at least 6 characters." });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null)
+            {
+                return NotFound(new { message = "No account found with that email." });
+            }
+
+            user.HashedPword = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+
+            try
+            {
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"Password reset successful for {model.Email}");
+                return Ok(new { message = "Password reset successfully! You can now sign in." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password.");
+                return StatusCode(500, new { message = "Failed to reset password. Please try again." });
+            }
+        }
     }
+
+    public class ResetPasswordModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
+}

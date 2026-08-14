@@ -142,7 +142,7 @@
 }
 
 .save.button {
-    background: #10b981;
+    background: #a4ddbc;
     color: #fff;
     border: none;
     padding: 14px 24px;
@@ -159,7 +159,7 @@
 }
 
 .save.button:hover {
-    background: #059669
+    background: #a4ddbc
 }
 
 .delete.button:hover {
@@ -201,7 +201,7 @@
 }
 
 .status-modal p.modal-success {
-    color: #059669
+    color: #a4ddbc
 }
 
 .status-modal p.modal-error {
@@ -209,7 +209,7 @@
 }
 
 .status-modal button {
-    background: #1a8f66;
+    background: #a4ddbc;
     color: #fff;
     padding: 12px 22px;
     border: none;
@@ -373,27 +373,6 @@
     cursor: pointer;
 }
 
-/* Apply to be a Local Guide button */
-.apply-guide-section {
-    padding: 24px 36px 36px;
-    text-align: center;
-    border-top: 1px solid #e5e7eb;
-}
-
-.apply-guide-button {
-    background: linear-gradient(135deg, #1a8f66 0%, #157a57 100%);
-    color: #ffffff;
-    border: none;
-    padding: 14px 32px;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    letter-spacing: 0.02em;
-}
-
-.apply-guide-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(26, 143, 102, 0.3);
+.logout-btn {
+    margin-left: auto;
 }

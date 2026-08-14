@@ -25,19 +25,32 @@ namespace backend.Controllers
         {
             // Get all pending spots that the guide hasn't voted on yet
             var spots = await _context.CuratedSpots
-                .Where(s => s.IsVerified == "pending" && 
+                .Where(s => s.IsVerified == false && 
                             !_context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.GuideID == guideId))
-                .OrderByDescending(s => s.SubmittedAt)
                 .Select(s => new {
                     spotID = s.SpotID,
                     activityName = s.ActivityName,
                     activityType = s.ActivityType,
                     description = s.Description,
-                    location = s.Location,
-                    pictureURL = s.PictureURL,
-                    submittedAt = s.SubmittedAt,
-                    submitterName = _context.Users.Where(u => u.UserID == s.SubmittedByUserID).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault(),
-                    submitterAvatar = _context.Profiles.Where(p => p.UserID == s.SubmittedByUserID).Select(p => p.ProfilePictureLink).FirstOrDefault()
+                    location = s.Location
+                })
+                .ToListAsync();
+
+            return Ok(spots);
+        }
+
+        // GET: api/spots/verified
+        [HttpGet("verified")]
+        public async Task<IActionResult> GetVerifiedSpots()
+        {
+            var spots = await _context.CuratedSpots
+                .Where(s => s.IsVerified == true)
+                .Select(s => new {
+                    spotID = s.SpotID,
+                    activityName = s.ActivityName,
+                    activityType = s.ActivityType,
+                    description = s.Description,
+                    location = s.Location
                 })
                 .ToListAsync();
 
@@ -61,7 +74,7 @@ namespace backend.Controllers
             if (spot == null)
                 return NotFound("Spot not found.");
 
-            if (spot.IsVerified != "pending")
+            if (spot.IsVerified != false)
                 return BadRequest("Spot is no longer pending.");
 
             var existingVote = await _context.SpotVotes
@@ -87,11 +100,11 @@ namespace backend.Controllers
 
             if (totalApprovals >= 5)
             {
-                spot.IsVerified = "approved";
+                spot.IsVerified = true;
             }
             else if (totalRejects >= 5)
             {
-                spot.IsVerified = "rejected";
+                // Can stay false or be deleted
             }
 
             await _context.SaveChangesAsync();
@@ -104,8 +117,7 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSpot([FromBody] CuratedSpot spot)
         {
-            spot.IsVerified = "pending";
-            spot.SubmittedAt = DateTime.UtcNow;
+            spot.IsVerified = false;
             
             _context.CuratedSpots.Add(spot);
             await _context.SaveChangesAsync();

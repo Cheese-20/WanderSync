@@ -219,3 +219,7 @@
 .chat-send-btn:hover {
   background-color: #85d6c2; /* slightly darker/vibrant mint */
 }
+
+.messages-spacer-auto {
+  margin-top: auto;
+}

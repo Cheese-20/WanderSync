@@ -21,6 +21,8 @@ namespace backend.Controllers
             _context = context;
         }
 
+
+
         // GET: api/Tours/guide/5
         [HttpGet("guide/{guideId}")]
         public async Task<ActionResult<IEnumerable<Tour>>> GetToursByGuide(int guideId)
@@ -44,9 +46,33 @@ namespace backend.Controllers
 
         // GET: api/tours
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Tour>>> GetAllTours()
+        public async Task<ActionResult<IEnumerable<object>>> GetAllTours()
         {
-            return await _context.Tours.ToListAsync();
+            var toursWithGuides = await _context.Tours
+                .Join(_context.Users, 
+                      t => t.GuideId, 
+                      u => u.UserID, 
+                      (t, u) => new { t, u })
+                .GroupJoin(_context.Bookings,
+                           tu => tu.t.TourId,
+                           b => b.tourID,
+                           (tu, bookings) => new {
+                               tourId = tu.t.TourId, 
+                               title = tu.t.Title, 
+                               description = tu.t.Description, 
+                               date = tu.t.Date, 
+                               price = tu.t.Price, 
+                               maxPeople = tu.t.MaxPeople, 
+                               type = tu.t.Type, 
+                               imageURL = tu.t.ImageURL, 
+                               pictureURL = tu.t.PictureURL, 
+                               location = tu.t.Location,
+                               guideID = tu.t.GuideId,
+                               guideName = tu.u.FirstName + " " + tu.u.LastName,
+                               confirmedBookingsCount = bookings.Where(b => b.status.ToLower() == "accepted").Sum(b => (int?)b.numberOfGuests) ?? 0
+                           })
+                .ToListAsync();
+            return Ok(toursWithGuides);
         }
 
         // PUT: api/Tours/5

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 
 function AuthForm() {
   const [isSignUpActive, setIsSignUpActive] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginValues, setLoginValues] = useState({
@@ -28,6 +29,17 @@ function AuthForm() {
     type: '',
   });
 
+  const [resetValues, setResetValues] = useState({
+    email: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [resetStatus, setResetStatus] = useState({
+    message: '',
+    type: '',
+  });
+
   const navigate = useNavigate();
 
   const handleLoginChange = event => {
@@ -45,7 +57,6 @@ function AuthForm() {
   // NOTE: Use a relative `/api` path; on success store token and user and navigate to home
   const submitLogin = async event => {
     event.preventDefault();
-    setIsLoading(true);
 
     try {
       const response = await axios.post('/api/auth/login', {
@@ -63,21 +74,60 @@ function AuthForm() {
     } catch (error) {
       let errorMsg = 'Login failed. Please check your credentials.';
       if (error.response?.data) {
-          if (typeof error.response.data === 'string') {
-              errorMsg = error.response.data;
-          } else if (error.response.data.message) {
-              errorMsg = error.response.data.message;
-          }
+        if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
+        }
       }
       setLoginError(errorMsg);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   // ADDED: Make function async and send signup payload to backend
   // NOTE: We use a relative `/api` path so the Vite dev server proxy
   // forwards this request to the ASP.NET backend during development.
+
+  const handleResetChange = event => {
+    const { name, value } = event.target;
+    setResetValues(prev => ({ ...prev, [name]: value }));
+    setResetStatus({ message: '', type: '' });
+  };
+
+  const submitReset = async event => {
+    event.preventDefault();
+
+    if (resetValues.newPassword !== resetValues.confirmPassword) {
+      setResetStatus({ message: 'Passwords do not match.', type: 'error' });
+      return;
+    }
+
+    if (resetValues.newPassword.length < 6) {
+      setResetStatus({ message: 'Password must be at least 6 characters.', type: 'error' });
+      return;
+    }
+
+    try {
+      const response = await axios.post('/api/auth/reset-password', {
+        email: resetValues.email,
+        newPassword: resetValues.newPassword,
+      });
+
+      setResetStatus({ message: response.data.message || 'Password reset successfully!', type: 'success' });
+
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setResetValues({ email: '', newPassword: '', confirmPassword: '' });
+        setResetStatus({ message: '', type: '' });
+      }, 2000);
+    } catch (error) {
+      setResetStatus({
+        message: error.response?.data?.message || 'Failed to reset password. Please try again.',
+        type: 'error',
+      });
+    }
+  };
+
   const submitSignup = async event => {
     event.preventDefault();
 
@@ -85,8 +135,6 @@ function AuthForm() {
       setSignupStatus({ message: 'Passwords do not match.', type: 'error' });
       return;
     }
-
-    setIsLoading(true);
 
     try {
       // Send data to C# AuthController
@@ -112,13 +160,59 @@ function AuthForm() {
         message: error.response?.data || 'An error occurred during registration.',
         type: 'error'
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <>
+      {/* Forgot Password Overlay */}
+      {showForgotPassword && (
+        <div className="forgot-overlay">
+          <div className="forgot-card">
+            <h2 className="form-title">Reset Password</h2>
+            <p className="form-subtitle">Enter your email and new password</p>
+            <form onSubmit={submitReset} className="form">
+              <input
+                name="email"
+                type="email"
+                value={resetValues.email}
+                onChange={handleResetChange}
+                placeholder="Your registered email"
+                required
+              />
+              <input
+                name="newPassword"
+                type="password"
+                value={resetValues.newPassword}
+                onChange={handleResetChange}
+                placeholder="New password"
+                required
+              />
+              <input
+                name="confirmPassword"
+                type="password"
+                value={resetValues.confirmPassword}
+                onChange={handleResetChange}
+                placeholder="Confirm new password"
+                required
+              />
+              <button type="submit" className="btn solid">Reset Password</button>
+              <button
+                type="button"
+                className="btn transparent"
+                onClick={() => { setShowForgotPassword(false); setResetStatus({ message: '', type: '' }); }}
+              >
+                Back to Sign In
+              </button>
+              {resetStatus.message && (
+                <p className={`signup-status ${resetStatus.type}`}>
+                  {resetStatus.message}
+                </p>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
       {isLoading && (
         <div className="global-loading-overlay">
           <div className="global-spinner"></div>
@@ -179,11 +273,11 @@ function AuthForm() {
                     checked={loginValues.role === 'guide'}
                     onChange={handleLoginChange}
                   />
-                  Local Guide
+                  Guide
                 </label>
               </div>
 
-              <a href="#forgot" className="forgot-link">Forgot password?</a>
+              <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>Forgot password?</a>
               <button type="submit" className="btn solid" disabled={isLoading}>
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
@@ -263,9 +357,7 @@ function AuthForm() {
                 required
               />
 
-              <button type="submit" className="btn" disabled={isLoading}>
-                {isLoading ? 'Signing Up...' : 'Sign Up'}
-              </button>
+              <button type="submit" className="btn">Sign Up</button>
               {signupStatus.message && (
                 <p className={`signup-status ${signupStatus.type}`}>
                   {signupStatus.message}
@@ -297,8 +389,8 @@ function AuthForm() {
 
       {loginError && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
-          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999, 
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999,
           display: 'flex', justifyContent: 'center', alignItems: 'center'
         }}>
           <div style={{
@@ -306,7 +398,7 @@ function AuthForm() {
             maxWidth: '400px', width: '90%', textAlign: 'center',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}>
-            <img src={logo} alt="WanderSync logo" style={{ width: '80px', margin: '0 auto 20px', display: 'block' }} />
+            <h3 style={{ marginBottom: '15px', color: '#333' }}>Login Failed</h3>
             <p style={{ marginBottom: '25px', color: '#666', lineHeight: '1.5' }}>{loginError}</p>
             <button className="btn solid" onClick={() => setLoginError('')} style={{ margin: '0 auto', display: 'block' }}>
               Close
@@ -314,7 +406,6 @@ function AuthForm() {
           </div>
         </div>
       )}
-
     </div>
     </>
   );

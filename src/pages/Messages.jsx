@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 
@@ -12,6 +13,7 @@ export default function Messages() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const userJson = localStorage.getItem('user');
@@ -176,6 +178,19 @@ export default function Messages() {
             <>
               <div className="chat-header">
                 <img src={activeContact.profilePictureLink} alt={activeContact.firstName} className="chat-header-avatar" />
+                <span 
+                  className="chat-header-name clickable-name" 
+                  onClick={() => navigate(`/user/${activeContact.userID}`)}
+                  title="View profile"
+                >
+                  {activeContact.firstName} {activeContact.lastName}
+                </span>
+                <button 
+                  className="btn-view-chat-profile" 
+                  onClick={() => navigate(`/user/${activeContact.userID}`)}
+                >
+                  View Profile
+                </button>
                 <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center' }}>
                   {activeContact.firstName} {activeContact.lastName}
                   {(activeContact.role?.toLowerCase() === 'guide' || activeContact.role?.toLowerCase() === 'local guide') && (
@@ -187,7 +202,7 @@ export default function Messages() {
               </div>
               
               <div className="messages-list">
-                <div style={{ marginTop: 'auto' }}></div>
+                <div className="messages-spacer-auto"></div>
                 {messages.map(msg => {
                   const isSentByMe = msg.senderID === currentUserId;
                   return (

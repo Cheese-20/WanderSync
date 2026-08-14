@@ -57,10 +57,12 @@ export default function NavBar() {
     
     if (notif.type === "NewMessage") {
       navigate('/messages');
-    } else if (notif.type === "MatchRequest" || notif.type === "MatchAccepted" || notif.type === "BookingAccepted") {
-      navigate('/messages'); // Route to messages for match/booking acceptance per user request
+    } else if (notif.type === "MatchAccepted" || notif.type === "BookingAccepted") {
+      navigate('/messages'); 
+    } else if (notif.type === "MatchRequest") {
+      navigate('/match'); // Go to match page to accept the pending request in the sidebar
     } else if (notif.type === "BookingReminder" || notif.type === "BookingDeclined") {
-      navigate('/profile'); // We can't directly append state to ?tab=bookings here unless Profile handles it, but /profile works
+      navigate('/profile'); 
     } else if (notif.type === "NewBooking") {
       navigate('/dashboard');
     }

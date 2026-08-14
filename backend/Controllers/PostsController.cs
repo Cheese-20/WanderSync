@@ -27,17 +27,26 @@ namespace backend.Controllers
                 .Join(_context.Users, 
                       p => p.UserID, 
                       u => u.UserID, 
-                      (p, u) => new {
-                          postID = p.PostID,
-                          userID = p.UserID,
-                          content = p.Content,
-                          pictureURL = p.PictureURL,
-                          createdAt = p.CreatedAt,
-                          updatedAt = p.UpdatedAt,
-                          experienceType = p.ExperienceType,
-                          firstName = u.FirstName,
-                          lastName = u.LastName
-                      })
+                      (p, u) => new { p, u })
+                .GroupJoin(_context.Profiles,
+                           pu => pu.u.UserID,
+                           pr => pr.UserID,
+                           (pu, prs) => new { pu.p, pu.u, prs })
+                .SelectMany(
+                    x => x.prs.DefaultIfEmpty(),
+                    (x, profile) => new {
+                          postID = x.p.PostID,
+                          userID = x.p.UserID,
+                          content = x.p.Content,
+                          pictureURL = x.p.PictureURL,
+                          createdAt = x.p.CreatedAt,
+                          updatedAt = x.p.UpdatedAt,
+                          experienceType = x.p.ExperienceType,
+                          firstName = x.u.FirstName,
+                          lastName = x.u.LastName,
+                          userAvatar = profile != null ? profile.ProfilePictureLink : null
+                    }
+                )
                 .OrderByDescending(p => p.createdAt)
                 .ToListAsync();
             return Ok(posts);
