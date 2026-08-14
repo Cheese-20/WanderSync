@@ -266,7 +266,7 @@ export default function Dashboard() {
                   <p className="bk-time">Tomorrow, 10:00 AM</p>
                   <p className="bk-count">3 booked</p>
                 </div>
-                <span className="badge confirmed">Confirmed</span>
+                <span className="badge accepted" style={{ backgroundColor: '#ecfdf5', color: '#10b981', borderColor: 'transparent', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem' }}>Accepted</span>
               </div>
 
               <div className="booking-item">
@@ -330,9 +330,6 @@ export default function Dashboard() {
                   .map(booking => {
 
                     let statusText = booking.status;
-                    if (statusText === 'Accepted') statusText = 'Confirmed';
-                    if (statusText === 'Declined') statusText = 'Rejected';
-
                     const statusClass = booking.status.toLowerCase();
 
                     return (

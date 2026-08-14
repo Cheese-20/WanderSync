@@ -130,7 +130,7 @@ export default function ExplorePage() {
         tourID: tourId,
         bookingDate: new Date().toISOString()
       });
-      alert(res.data.message || 'Booking confirmed!');
+      alert(res.data.message || 'Booking request submitted successfully!');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to book. Please try again.';
       alert(msg);
