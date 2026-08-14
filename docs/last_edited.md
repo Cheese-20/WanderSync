@@ -199,3 +199,4 @@ The user wanted to integrate Mendy's Local Guide code to test if it works with t
 - **Match page & AuthForm**: Completely retained local changes, discarding Mendy's.
 
 The code is successfully committed locally. 
+- **14 Aug 2026**: Merged `manage-itenarary` branch (Anathi's Admin and Reporting logic) into current branch. Resolved massive backend EF Core model conflicts and frontend UI component differences. Protected custom styling and clean backend code.
