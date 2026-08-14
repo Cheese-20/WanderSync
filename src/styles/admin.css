@@ -3,7 +3,8 @@
   font-family: 'Segoe UI', system-ui, Arial, Helvetica, sans-serif;
   padding: 0;
   min-height: 100vh;
-  background: #f9faf7;
+  background: #f9faf7 !important;
+  color: #333 !important;
 }
 
 .admin-header {
@@ -56,6 +57,7 @@
   padding: 28px;
   max-width: 1200px;
   margin: 0 auto;
+  background: #f9faf7;
 }
 
 /* Loading & Empty States */
@@ -234,14 +236,24 @@
   gap: 16px;
 }
 
+.applications-list > div,
+.reports-list > div {
+  background: #ffffff !important;
+  color: #333 !important;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #d4d4d0;
+}
+
 .application-card,
 .report-card-item {
-  background: #fff;
+  background: #ffffff !important;
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid #e8e8e0;
-  color: #333;
+  color: #333 !important;
 }
 
 .application-header,
@@ -437,13 +449,13 @@
 .reports-list .report-card {
   display: block;
   padding: 20px;
-  background: #fff;
+  background: #ffffff !important;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid #e8e8e0;
   cursor: default;
   transform: none;
-  color: #333;
+  color: #333 !important;
 }
 
 .reports-list .report-card:hover {
