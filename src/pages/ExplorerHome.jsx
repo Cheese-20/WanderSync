@@ -81,7 +81,7 @@ export default function ExplorerHome() {
               
               {post.pictureURL && (
                 <div className="post-image-container">
-                  <img src={post.pictureURL} alt="Experience" className="post-image" />
+                  <img src={(() => { try { const parsed = JSON.parse(post.pictureURL); return Array.isArray(parsed) ? parsed[0] : post.pictureURL; } catch { return post.pictureURL; } })()} alt="Experience" className="post-image" />
                 </div>
               )}
 
