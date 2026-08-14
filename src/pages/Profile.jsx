@@ -226,7 +226,8 @@ export default function Profile() {
           </button>
           <button 
             className="delete button logout-btn" 
-            onClick={handleLogout} 
+            onClick={handleLogout}
+            style={{ marginLeft: 'auto' }}
           >
             Logout
           </button>
