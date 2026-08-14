@@ -365,9 +365,7 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <div className="b-message-box">
-                          "Hi! Excited to explore with you. {booking.tourDescription}"
-                        </div>
+
 
                         <div className="b-card-bottom">
                           <div className="b-price">

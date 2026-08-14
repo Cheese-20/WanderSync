@@ -2,10 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -35,7 +31,7 @@ namespace backend.Controllers
         [HttpGet("guide/{guideId}")]
         public async Task<ActionResult<IEnumerable<object>>> GetGuideBookings(int guideId)
         {
-            var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+                                  var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
 
             var bookings = await (from b in _context.Bookings
                                   join t in _context.Tours on b.tourID equals t.TourId
@@ -61,124 +57,30 @@ namespace backend.Controllers
             return Ok(bookings);
         }
 
-        /// <summary>
-        /// POST: api/bookings
-        /// Creates a new booking for a tour.
-        /// </summary>
+        // POST: api/bookings
         [HttpPost]
-        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingRequest request)
+        public async Task<ActionResult<Booking>> CreateBooking(Booking booking)
         {
-            if (request.UserID <= 0)
-                return BadRequest(new { message = "Valid userID is required." });
+            booking.status = "Pending";
+            _context.Bookings.Add(booking);
+            await _context.SaveChangesAsync();
 
-            if (request.TourID <= 0)
-                return BadRequest(new { message = "Valid tourID is required." });
-
-            // Check user exists
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
-            if (user == null)
-                return NotFound(new { message = "User not found." });
-
-            // Check tour exists
-            var tour = await _context.Tours.FirstOrDefaultAsync(t => t.TourId == request.TourID);
-            if (tour == null)
-                return NotFound(new { message = "Tour not found." });
-
-            // Check if user already booked this tour
-            var existingBooking = await _context.Bookings
-                .FirstOrDefaultAsync(b => b.userID == request.UserID && b.tourID == request.TourID && b.status != "Cancelled");
-            if (existingBooking != null)
-                return Conflict(new { message = "You have already booked this tour." });
-
-            // Check capacity - count active bookings for this tour
-            var currentBookings = await _context.Bookings
-                .CountAsync(b => b.tourID == request.TourID && b.status != "Cancelled");
-            if (currentBookings >= tour.MaxPeople)
-                return BadRequest(new { message = "This tour is fully booked." });
-
-            var booking = new Booking
+            // Notify the guide
+            var tour = await _context.Tours.FindAsync(booking.tourID);
+            if (tour != null)
             {
-                userID = request.UserID,
-                tourID = request.TourID,
-                bookingType = "Tour",
-                status = "Pending", // Set to pending to allow guide to accept/decline
-                bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow
-            };
-
-            try
-            {
-                _context.Bookings.Add(booking);
-                await _context.SaveChangesAsync();
-
-                // Notify the guide
                 var notification = new Notification
                 {
                     UserID = tour.GuideId,
                     Type = "NewBooking",
-                    Message = $"{user.FirstName} {user.LastName} sent a new booking request for {tour.Title}.",
-                    RelatedEntityID = booking.bookingID,
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
+                    Message = $"You have a new booking request for {tour.Title}.",
+                    RelatedEntityID = booking.bookingID
                 };
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
+            }
 
-                return Ok(new
-                {
-                    message = "Booking requested successfully! Waiting for guide to confirm.",
-                    bookingId = booking.bookingID,
-                    tourTitle = tour.Title,
-                    date = booking.bookingDate
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Failed to create booking. Please try again." });
-            }
-        }
-
-        /// <summary>
-        /// GET: api/bookings/user/{userId}/with-details
-        /// Returns user's bookings with tour and guide details (for My Activities page).
-        /// </summary>
-        [HttpGet("user/{userId}/with-details")]
-        public async Task<IActionResult> GetUserBookingsWithDetails(int userId)
-        {
-            try
-            {
-                var bookings = await _context.Bookings
-                    .Where(b => b.userID == userId && b.bookingType == "Tour")
-                    .Join(
-                        _context.Tours,
-                        booking => booking.tourID,
-                        tour => tour.TourId,
-                        (booking, tour) => new { booking, tour }
-                    )
-                    .Join(
-                        _context.Users,
-                        bt => bt.tour.GuideId,
-                        guide => guide.UserID,
-                        (bt, guide) => new
-                        {
-                            bookingId = bt.booking.bookingID,
-                            tourId = bt.tour.TourId,
-                            tourTitle = bt.tour.Title,
-                            tourType = bt.tour.Type,
-                            tourDate = bt.tour.Date,
-                            bookingDate = bt.booking.bookingDate,
-                            status = bt.booking.status,
-                            guideId = guide.UserID,
-                            guideName = guide.FirstName + " " + guide.LastName
-                        }
-                    )
-                    .ToListAsync();
-
-                return Ok(bookings);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Failed to retrieve bookings." });
-            }
+            return CreatedAtAction("GetUserBookings", new { userId = booking.userID }, booking);
         }
 
         // PUT: api/bookings/5/accept
@@ -199,9 +101,7 @@ namespace backend.Controllers
                 UserID = booking.userID,
                 Type = "BookingAccepted",
                 Message = $"Your booking for {tour?.Title ?? "a tour"} has been accepted!",
-                RelatedEntityID = booking.bookingID,
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
+                RelatedEntityID = booking.bookingID
             };
             _context.Notifications.Add(notification);
 
@@ -269,21 +169,12 @@ namespace backend.Controllers
                 UserID = booking.userID,
                 Type = "BookingDeclined",
                 Message = $"Your booking for {tour?.Title ?? "a tour"} was declined.",
-                RelatedEntityID = booking.bookingID,
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
+                RelatedEntityID = booking.bookingID
             };
             _context.Notifications.Add(notification);
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Booking declined successfully!" });
         }
-    }
-
-    public class CreateBookingRequest
-    {
-        public int UserID { get; set; }
-        public int TourID { get; set; }
-        public DateTime BookingDate { get; set; }
     }
 }
