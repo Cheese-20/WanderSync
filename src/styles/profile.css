@@ -142,7 +142,7 @@
 }
 
 .save.button {
-    background: #a4ddbc;
+    background: #10b981;
     color: #fff;
     border: none;
     padding: 14px 24px;
@@ -159,7 +159,7 @@
 }
 
 .save.button:hover {
-    background: #a4ddbc
+    background: #059669
 }
 
 .delete.button:hover {
@@ -201,7 +201,7 @@
 }
 
 .status-modal p.modal-success {
-    color: #a4ddbc
+    color: #059669
 }
 
 .status-modal p.modal-error {
@@ -209,7 +209,7 @@
 }
 
 .status-modal button {
-    background: #a4ddbc;
+    background: #1a8f66;
     color: #fff;
     padding: 12px 22px;
     border: none;
@@ -381,7 +381,7 @@
 }
 
 .apply-guide-button {
-    background: linear-gradient(135deg, #a4ddbc 0%, #a4ddbc 100%);
+    background: linear-gradient(135deg, #1a8f66 0%, #157a57 100%);
     color: #ffffff;
     border: none;
     padding: 14px 32px;
@@ -395,5 +395,5 @@
 
 .apply-guide-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(164, 221, 188, 0.3);
+    box-shadow: 0 6px 20px rgba(26, 143, 102, 0.3);
 }

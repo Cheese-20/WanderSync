@@ -9,8 +9,7 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
   min-height: 100%;
 }
 
@@ -78,7 +77,7 @@ button:active {
   width: min(980px, 100%);
   min-height: 680px;
   position: relative;
-  /* background: linear-gradient(135deg, #c9cfa9 0%, #d1c896 100%); */
+  background: linear-gradient(135deg, #c9cfa9 0%, #d1c896 100%);
   border-radius: 36px;
   padding: 24px;
   box-shadow: 0 32px 90px rgba(15, 23, 42, 0.12);
@@ -226,19 +225,6 @@ button:active {
   background: #f8fafc;
 }
 
-.forgot-input {
-  width: 100%;
-  max-width: 450px;
-  padding: 16px 20px;
-  margin: 10px 0;
-  border: 1px solid #e5e7eb;
-  border-radius: 999px;
-  outline: none;
-  background: #f8fafc;
-  font-size: 1rem;
-  color: #333;
-}
-
 .input-grid-two {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -298,8 +284,8 @@ button:active {
 }
 
 .btn.solid {
-  background: #a4ddbc;
-  color: #333333;
+  background: #1f6f3a;
+  color: #ffffff;
 }
 
 .btn.transparent {
@@ -417,88 +403,4 @@ button:active {
 
 .forgot-card .btn.transparent:hover {
   color: #1a8f66;
-}
-
-/* Global Loading States */
-button:disabled,
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.global-loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(3px);
-}
-
-.global-loading-popup {
-  background: white;
-  padding: 2.5rem 3.5rem;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  animation: popup-scale 0.3s ease-out;
-}
-
-@keyframes popup-scale {
-  from {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.global-loading-logo {
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-  animation: pulse-logo 1.5s infinite;
-}
-
-.global-loading-logo span {
-  color: #10b981;
-  /* bold green */
-}
-
-@keyframes pulse-logo {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.7;
-    transform: scale(0.95);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.global-loading-text {
-  font-size: 1.1rem;
-  color: #4b5563;
-  font-weight: 500;
-  margin: 0;
 }

@@ -276,6 +276,46 @@ namespace backend.Controllers
             }
         }
 
+        [HttpGet("public/{userId}")]
+        public async Task<IActionResult> GetPublicProfile(int userId)
+        {
+            if (userId <= 0)
+            {
+                return BadRequest("Valid userID is required.");
+            }
+
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserID == userId);
+
+                return Ok(new
+                {
+                    userID = user.UserID,
+                    firstName = user.FirstName,
+                    lastName = user.LastName,
+                    email = user.Email,
+                    age = user.Age,
+                    profilePictureLink = profile?.ProfilePictureLink,
+                    interests = profile?.Interests,
+                    description = profile?.Description,
+                    location = profile?.Location,
+                    job = profile?.Job,
+                    createdAt = profile?.CreatedAt.ToString("yyyy-MM-dd")
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching public profile for userID {userId}", userId);
+                return StatusCode(500, "Internal server error while fetching public profile.");
+            }
+        }
+
         [HttpGet("pending/{userId}")]
         public async Task<IActionResult> GetPendingRequests(int userId)
         {

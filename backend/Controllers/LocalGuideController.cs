@@ -216,6 +216,14 @@ namespace backend.Controllers
                     })
                     .ToListAsync();
 
+                // Get average rating for this guide
+                var ratings = await _context.GuideRatings
+                    .Where(r => r.GuideId == guideId)
+                    .ToListAsync();
+
+                var averageRating = ratings.Any() ? Math.Round(ratings.Average(r => r.Score), 1) : 0;
+                var totalRatings = ratings.Count;
+
                 var guideDetails = new
                 {
                     guideId = user.UserID,
@@ -227,7 +235,9 @@ namespace backend.Controllers
                     description = profile?.Description,
                     job = profile?.Job,
                     interests = profile?.Interests,
-                    tours = tours
+                    tours = tours,
+                    averageRating = averageRating,
+                    totalRatings = totalRatings
                 };
 
                 return Ok(guideDetails);
@@ -238,9 +248,213 @@ namespace backend.Controllers
                 return StatusCode(500, new { message = "Failed to retrieve guide details." });
             }
         }
+
+        /// <summary>
+        /// POST /api/local-guide/{guideId}/rate
+        /// Submits a rating for a local guide. User must have booked a tour with the guide.
+        /// </summary>
+        [HttpPost("{guideId:int}/rate")]
+        public async Task<IActionResult> RateGuide(int guideId, [FromBody] RateGuideRequest request)
+        {
+            if (request.UserID <= 0)
+                return BadRequest(new { message = "Valid userID is required." });
+
+            if (request.Score < 1 || request.Score > 5)
+                return BadRequest(new { message = "Score must be between 1 and 5." });
+
+            // Verify guide exists
+            var guide = await _context.Users.FirstOrDefaultAsync(u => u.UserID == guideId && u.Role == "Guide");
+            if (guide == null)
+                return NotFound(new { message = "Guide not found." });
+
+            // Verify user has booked a tour with this guide
+            var hasBooking = await _context.Bookings
+                .Join(
+                    _context.Tours,
+                    b => b.tourID,
+                    t => t.TourId,
+                    (b, t) => new { b, t }
+                )
+                .AnyAsync(bt => bt.b.userID == request.UserID && bt.t.GuideId == guideId);
+
+            if (!hasBooking)
+                return BadRequest(new { message = "You must have booked a tour with this guide before rating." });
+
+            // Check if user already rated this guide
+            var existingRating = await _context.GuideRatings
+                .FirstOrDefaultAsync(r => r.UserId == request.UserID && r.GuideId == guideId);
+
+            try
+            {
+                if (existingRating != null)
+                {
+                    // Update existing rating
+                    existingRating.Score = request.Score;
+                    existingRating.Comment = request.Comment ?? string.Empty;
+                    existingRating.CreatedAt = DateTime.UtcNow;
+                    _context.GuideRatings.Update(existingRating);
+                }
+                else
+                {
+                    // Create new rating
+                    var rating = new GuideRating
+                    {
+                        UserId = request.UserID,
+                        GuideId = guideId,
+                        Score = request.Score,
+                        Comment = request.Comment ?? string.Empty,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.GuideRatings.Add(rating);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Calculate new average
+                var newAverage = await _context.GuideRatings
+                    .Where(r => r.GuideId == guideId)
+                    .AverageAsync(r => r.Score);
+
+                return Ok(new
+                {
+                    message = "Rating submitted successfully!",
+                    averageRating = Math.Round(newAverage, 1)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving rating for guideId={GuideId}", guideId);
+                return StatusCode(500, new { message = $"Failed to save rating: {ex.InnerException?.Message ?? ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/local-guide/{guideId}/ratings
+        /// Returns all ratings for a specific guide.
+        /// </summary>
+        [HttpGet("{guideId:int}/ratings")]
+        public async Task<IActionResult> GetGuideRatings(int guideId)
+        {
+            try
+            {
+                var ratings = await _context.GuideRatings
+                    .Where(r => r.GuideId == guideId)
+                    .Join(
+                        _context.Users,
+                        rating => rating.UserId,
+                        user => user.UserID,
+                        (rating, user) => new
+                        {
+                            ratingId = rating.RatingId,
+                            userId = rating.UserId,
+                            userName = user.FirstName + " " + user.LastName,
+                            score = rating.Score,
+                            comment = rating.Comment,
+                            createdAt = rating.CreatedAt
+                        }
+                    )
+                    .OrderByDescending(r => r.createdAt)
+                    .ToListAsync();
+
+                var average = ratings.Any() ? Math.Round(ratings.Average(r => (double)r.score), 1) : 0;
+
+                return Ok(new
+                {
+                    averageRating = average,
+                    totalRatings = ratings.Count,
+                    ratings = ratings
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching ratings for guideId={GuideId}", guideId);
+                return StatusCode(500, new { message = "Failed to retrieve ratings." });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/local-guide/by-location?location=...
+        /// Returns guides filtered by location (case-insensitive partial match).
+        /// </summary>
+        [HttpGet("by-location")]
+        public async Task<IActionResult> GetGuidesByLocation([FromQuery] string? location)
+        {
+            try
+            {
+                var guidesQuery = _context.Users
+                    .Where(u => u.Role == "Guide")
+                    .Join(
+                        _context.Profiles,
+                        user => user.UserID,
+                        profile => profile.UserID,
+                        (user, profile) => new { user, profile }
+                    );
+
+                if (!string.IsNullOrWhiteSpace(location))
+                {
+                    var loc = location.Trim().ToLower();
+                    guidesQuery = guidesQuery.Where(g =>
+                        g.profile.Location != null && g.profile.Location.ToLower().Contains(loc));
+                }
+
+                var results = await guidesQuery
+                    .Select(g => new
+                    {
+                        guideId = g.user.UserID,
+                        firstName = g.user.FirstName,
+                        lastName = g.user.LastName,
+                        email = g.user.Email,
+                        profilePictureLink = g.profile.ProfilePictureLink,
+                        location = g.profile.Location,
+                        description = g.profile.Description,
+                        job = g.profile.Job,
+                        interests = g.profile.Interests
+                    })
+                    .ToListAsync();
+
+                // Add average rating for each guide
+                var guideIds = results.Select(g => g.guideId).ToList();
+                var allRatings = await _context.GuideRatings
+                    .Where(r => guideIds.Contains(r.GuideId))
+                    .GroupBy(r => r.GuideId)
+                    .Select(g => new
+                    {
+                        guideId = g.Key,
+                        averageRating = Math.Round(g.Average(r => (double)r.Score), 1),
+                        totalRatings = g.Count()
+                    })
+                    .ToListAsync();
+
+                var guidesWithRatings = results.Select(g =>
+                {
+                    var rating = allRatings.FirstOrDefault(r => r.guideId == g.guideId);
+                    return new
+                    {
+                        g.guideId,
+                        g.firstName,
+                        g.lastName,
+                        g.email,
+                        g.profilePictureLink,
+                        g.location,
+                        g.description,
+                        g.job,
+                        g.interests,
+                        averageRating = rating?.averageRating ?? 0,
+                        totalRatings = rating?.totalRatings ?? 0
+                    };
+                }).ToList();
+
+                return Ok(guidesWithRatings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching guides by location={Location}", location);
+                return StatusCode(500, new { message = "Failed to retrieve guides." });
+            }
+        }
     }
 
-    // ===== Request DTO =====
+    // ===== Request DTOs =====
 
     public class GuideApplicationRequest
     {
@@ -249,5 +463,12 @@ namespace backend.Controllers
         public string? Reason { get; set; }
         public string? Location { get; set; }
         public string? Bio { get; set; }
+    }
+
+    public class RateGuideRequest
+    {
+        public int UserID { get; set; }
+        public int Score { get; set; }
+        public string? Comment { get; set; }
     }
 }

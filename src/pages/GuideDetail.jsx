@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import NavBar from '../components/NavBar';
 import '../styles/discover.css';
 
 export default function GuideDetail() {
   const { guideId } = useParams();
   const navigate = useNavigate();
   const [guide, setGuide] = useState(null);
+  const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [bookingTourId, setBookingTourId] = useState(null);
+  const [bookingMessage, setBookingMessage] = useState('');
+  const [bookingError, setBookingError] = useState('');
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     fetchGuideDetails();
+    fetchGuideRatings();
   }, [guideId]);
 
   const fetchGuideDetails = async () => {
@@ -31,6 +36,45 @@ export default function GuideDetail() {
     }
   };
 
+  const fetchGuideRatings = async () => {
+    try {
+      const res = await axios.get(`/api/local-guide/${guideId}/ratings`);
+      setRatings(res.data.ratings || []);
+    } catch (err) {
+      console.error('Error fetching ratings:', err);
+    }
+  };
+
+  const handleBookTour = async (tourId) => {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) {
+      navigate('/login', { state: { message: 'Please login to book a tour' } });
+      return;
+    }
+
+    const user = JSON.parse(userJson);
+    const userId = user.id || user.userID;
+
+    setIsBooking(true);
+    setBookingTourId(tourId);
+    setBookingMessage('');
+    setBookingError('');
+
+    try {
+      const res = await axios.post('/api/bookings', {
+        userID: userId,
+        tourID: tourId,
+        bookingDate: new Date().toISOString()
+      });
+      setBookingMessage(res.data.message || 'Booking confirmed!');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to book tour. Please try again.';
+      setBookingError(msg);
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
   const handleContact = () => {
     navigate('/messages');
   };
@@ -39,10 +83,15 @@ export default function GuideDetail() {
     navigate('/discover');
   };
 
+  const renderStars = (score) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={`star ${i < score ? 'filled' : ''}`}>&#9733;</span>
+    ));
+  };
+
   if (loading) {
     return (
       <div className="discover-page">
-        <NavBar />
         <div className="discover-loading">
           <div className="loading-spinner"></div>
           <p>Loading guide profile...</p>
@@ -54,7 +103,6 @@ export default function GuideDetail() {
   if (error) {
     return (
       <div className="discover-page">
-        <NavBar />
         <div className="discover-content">
           <div className="discover-error">
             <p>{error}</p>
@@ -67,7 +115,6 @@ export default function GuideDetail() {
 
   return (
     <div className="discover-page">
-      <NavBar />
 
       <section className="guide-detail-container">
         <button className="btn-back" onClick={handleBack}>
@@ -93,6 +140,16 @@ export default function GuideDetail() {
               </p>
             )}
             {guide.email && <p className="guide-detail-email">{guide.email}</p>}
+            {guide.averageRating > 0 && (
+              <div className="guide-rating-summary">
+                <div className="rating-stars">
+                  {renderStars(Math.round(guide.averageRating))}
+                </div>
+                <span className="rating-text">
+                  {guide.averageRating} / 5 ({guide.totalRatings} {guide.totalRatings === 1 ? 'review' : 'reviews'})
+                </span>
+              </div>
+            )}
           </div>
           <div className="guide-detail-actions">
             <button className="btn-contact" onClick={handleContact}>
@@ -138,6 +195,21 @@ export default function GuideDetail() {
                       Max {tour.maxPeople} people
                     </span>
                   </div>
+                  <div className="tour-card-actions">
+                    <button
+                      className="btn-book-tour"
+                      onClick={() => handleBookTour(tour.tourId)}
+                      disabled={isBooking && bookingTourId === tour.tourId}
+                    >
+                      {isBooking && bookingTourId === tour.tourId ? 'Booking...' : 'Book Tour'}
+                    </button>
+                    {bookingTourId === tour.tourId && bookingMessage && (
+                      <p className="booking-success">{bookingMessage}</p>
+                    )}
+                    {bookingTourId === tour.tourId && bookingError && (
+                      <p className="booking-error">{bookingError}</p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -145,6 +217,28 @@ export default function GuideDetail() {
             <p className="no-tours">This guide has no tours listed yet.</p>
           )}
         </div>
+
+        {ratings.length > 0 && (
+          <div className="guide-detail-section">
+            <h2>Reviews</h2>
+            <div className="ratings-list">
+              {ratings.map((rating) => (
+                <div key={rating.ratingId} className="rating-card">
+                  <div className="rating-card-header">
+                    <span className="rating-user">{rating.userName}</span>
+                    <div className="rating-stars-small">
+                      {renderStars(rating.score)}
+                    </div>
+                  </div>
+                  {rating.comment && <p className="rating-comment">{rating.comment}</p>}
+                  <span className="rating-date">
+                    {new Date(rating.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
