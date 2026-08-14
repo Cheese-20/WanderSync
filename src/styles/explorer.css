@@ -306,6 +306,12 @@
 
 
 /* Post Ellipsis Menu */
+.post-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .post-menu-wrapper {
   position: relative;
 }
@@ -330,7 +336,7 @@
 .post-ellipsis-menu {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
   background: #fff;
   border: 1px solid #e6e6e6;
   border-radius: 8px;

@@ -63,20 +63,22 @@ export default function ExplorerHome() {
           {posts.map(post => (
             <div key={post.postID || Math.random()} className="post">
               <div className="post-header">
-                <div className="post-menu-wrapper">
-                  <button className="post-ellipsis-btn" onClick={() => toggleMenu(post.postID)}>⋯</button>
-                  {openMenuId === post.postID && (
-                    <div className="post-ellipsis-menu">
-                      <button onClick={() => handleReport('account', post)}>Report Account</button>
-                      <button onClick={() => handleReport('content', post)}>Report Content</button>
-                    </div>
-                  )}
-                </div>
                 <div className="post-user-info">
                   <div className="post-avatar"></div>
                   <span className="post-username">{post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}</span>
                 </div>
-                <span className="experience-badge">{post.experienceType}</span>
+                <div className="post-header-right">
+                  <span className="experience-badge">{post.experienceType}</span>
+                  <div className="post-menu-wrapper">
+                    <button className="post-ellipsis-btn" onClick={() => toggleMenu(post.postID)}>⋯</button>
+                    {openMenuId === post.postID && (
+                      <div className="post-ellipsis-menu">
+                        <button onClick={() => handleReport('account', post)}>Report Account</button>
+                        <button onClick={() => handleReport('content', post)}>Report Content</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               {post.pictureURL && (
