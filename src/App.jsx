@@ -41,6 +41,7 @@ function App() {
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/report" element={<ReportForm />} />
         <Route path="/local-guide-application" element={<LocalGuideApplication />} />
+        <Route path="/apply-guide" element={<LocalGuideApplication />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
