@@ -9,7 +9,7 @@ namespace backend.Models
     {
         [Key]
         [Column("curatedSpotID")]
-        public int CuratedSpotId { get; set; }
+        public int SpotID { get; set; }
 
         [Column("activityName")]
         [MaxLength(200)]

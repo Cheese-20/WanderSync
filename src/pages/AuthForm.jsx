@@ -164,7 +164,7 @@ function AuthForm() {
   };
 
   return (
-    <div className="signin-signup-page">
+    <>
       {/* Forgot Password Overlay */}
       {showForgotPassword && (
         <div className="forgot-overlay">
@@ -213,7 +213,6 @@ function AuthForm() {
           </div>
         </div>
       )}
-    <>
       {isLoading && (
         <div className="global-loading-overlay">
           <div className="global-spinner"></div>
@@ -278,11 +277,7 @@ function AuthForm() {
                 </label>
               </div>
 
-              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
-              <button type="submit" className="btn solid">Sign In</button>
               <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>Forgot password?</a>
-              <button type="submit" className="btn solid">Sign In</button>
-              <a href="#forgot" className="forgot-link">Forgot password?</a>
               <button type="submit" className="btn solid" disabled={isLoading}>
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
@@ -411,8 +406,8 @@ function AuthForm() {
           </div>
         </div>
       )}
-
     </div>
+    </>
   );
 }
 

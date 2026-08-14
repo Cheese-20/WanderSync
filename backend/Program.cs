@@ -201,24 +201,7 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        string[] curatedSpotsColumnSqls = new[]
-        {
-            "ALTER TABLE `curatedSpots` ADD COLUMN `pictureURL` longtext NULL;",
-            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedByUserID` int NULL;",
-            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedAt` datetime(6) NULL;",
-            "ALTER TABLE `curatedSpots` MODIFY COLUMN `isVerified` varchar(50) DEFAULT 'pending';"
-        };
 
-        foreach (var sql in curatedSpotsColumnSqls)
-        {
-            try { 
-                context.Database.ExecuteSqlRaw(sql); 
-                Console.WriteLine("SUCCESS: " + sql);
-            } 
-            catch (Exception ex) { 
-                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
-            }
-        }
 
         string[] indexSqls = new[]
         {
@@ -241,16 +224,16 @@ using (var scope = app.Services.CreateScope())
 
         // Add 3 dummy verified spots for Local Favourites
         try {
-            var checkSql = "SELECT COUNT(*) FROM `curatedSpots` WHERE `isVerified` = 'approved';";
+            var checkSql = "SELECT COUNT(*) FROM `Curated_spots` WHERE `isVerified` = 1;";
             var count = context.Database.SqlQueryRaw<int>(checkSql).FirstOrDefault();
             if (count < 3)
             {
                 var insertDummySpotsSql = @"
-                    INSERT INTO `curatedSpots` (`activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`) 
+                    INSERT INTO `Curated_spots` (`activityName`, `activityType`, `location`, `description`, `isVerified`) 
                     VALUES 
-                    ('Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974', NOW()),
-                    ('Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city.', 'approved', 'https://images.unsplash.com/photo-1525610553991-2bede1a236e2', NOW()),
-                    ('Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1574768395574-8b6a38612ff0', NOW());
+                    ('Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain.', 1),
+                    ('Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city.', 1),
+                    ('Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain.', 1);
                 ";
                 context.Database.ExecuteSqlRaw(insertDummySpotsSql);
                 Console.WriteLine("SUCCESS: Inserted 3 dummy spots");

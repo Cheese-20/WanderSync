@@ -1,68 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/explore.css';
-
-export default function ExplorePage() {
-  const [userRole, setUserRole] = useState('');
-  const [userId, setUserId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ activityName: '', activityType: '', description: '', location: '' });
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      try {
-        const user = JSON.parse(userJson);
-        setUserRole((user.role || '').toLowerCase());
-        setUserId(user.id);
-      } catch (e) {
-        console.error("Error parsing user from local storage", e);
-      }
-    }
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
-
-    if (!formData.activityName || !formData.activityType || !formData.description || !formData.location) {
-      setErrorMessage('Please fill in all mandatory fields.');
-      return;
-    }
-
-    try {
-      const payload = {
-        activityName: formData.activityName,
-        activityType: formData.activityType,
-        description: formData.description,
-        location: formData.location
-      };
-
-      const res = await fetch('/api/curatedspots', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to submit location');
-      }
-
-      setSuccessMessage('Submission Received! Your new spot is pending verification.');
-      setFormData({ activityName: '', activityType: '', description: '', location: '' });
-      setTimeout(() => {
-        setShowModal(false);
-        setSuccessMessage('');
-      }, 3000);
-    } catch (err) {
-      setErrorMessage('An error occurred while saving the record. Please try again.');
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/explore.css';
@@ -75,11 +11,52 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAllTours, setShowAllTours] = useState(false);
+  
+  // Submit New Spot Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [newSpot, setNewSpot] = useState({
+    activityName: '',
+    activityType: '',
+    description: '',
+    location: ''
+  });
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
+    const userJson = localStorage.getItem('user');
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      setUserRole(user.role || '');
+    }
   }, []);
+
+  const handleSpotSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      await axios.post('/api/curatedspots', {
+        activityName: newSpot.activityName,
+        activityType: newSpot.activityType,
+        description: newSpot.description,
+        location: newSpot.location,
+        isVerified: false
+      });
+      setSuccessMessage('Spot submitted successfully for review!');
+      setNewSpot({ activityName: '', activityType: '', description: '', location: '' });
+      setTimeout(() => {
+        setShowModal(false);
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      setErrorMessage('An error occurred while saving the record. Please try again.');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -160,89 +137,6 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="explore-page-container">
-      <div className="explore-header">
-        <h1 className="explore-title">Explore Dashboard</h1>
-        {userRole.includes('guide') && (
-          <button 
-            className="submit-spot-btn"
-            onClick={() => setShowModal(true)}
-          >
-            + Submit New Spot
-          </button>
-        )}
-      </div>
-
-      <main className="page">
-        <p>Discover beautiful locations around the world! (Feed implementation coming soon)</p>
-        
-        {/* Spot List will go here in the future */}
-      </main>
-
-      {showModal && (
-        <div className="spot-form-modal-overlay">
-          <div className="spot-form-modal">
-            <h2>Recommend New Location</h2>
-            
-            {successMessage && <div className="success-message">{successMessage}</div>}
-            {errorMessage && <div className="error-message">{errorMessage}</div>}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="activityName">Activity Name *</label>
-                <input 
-                  type="text" 
-                  id="activityName" 
-                  name="activityName" 
-                  value={formData.activityName}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Secret Waterfall"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="activityType">Activity Type *</label>
-                <input 
-                  type="text" 
-                  id="activityType" 
-                  name="activityType" 
-                  value={formData.activityType}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Jazz, Adventure, Festival"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="description">Description *</label>
-                <textarea 
-                  id="description" 
-                  name="description" 
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  placeholder="Describe what makes this spot special..."
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="location">Address / Location *</label>
-                <input 
-                  type="text" 
-                  id="location" 
-                  name="location" 
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 123 Forest Trail, Portland"
-                />
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="submit-btn">Submit for Review</button>
-              </div>
-            </form>
-          </div>
-        </div>
     <div className="explore-page">
 
       {/* Search Bar */}
@@ -281,7 +175,68 @@ export default function ExplorePage() {
       <header className="explore-hero">
         <h1>Explore with Verified Guides</h1>
         <p>Book authentic experiences led by trusted locals. Every guide is verified and reviewed.</p>
+        {userRole.includes('guide') && (
+          <button 
+            className="submit-spot-btn"
+            style={{ marginTop: '15px' }}
+            onClick={() => setShowModal(true)}
+          >
+            + Submit New Spot
+          </button>
+        )}
       </header>
+
+      {showModal && (
+        <div className="spot-form-modal-overlay">
+          <div className="spot-form-modal">
+            <h2>Recommend New Location</h2>
+            <button className="spot-form-close-btn" onClick={() => setShowModal(false)}>&times;</button>
+            
+            {successMessage && <div className="alert-success" style={{color: 'green', marginBottom: '10px'}}>{successMessage}</div>}
+            {errorMessage && <div className="alert-error" style={{color: 'red', marginBottom: '10px'}}>{errorMessage}</div>}
+            
+            <form onSubmit={handleSpotSubmit}>
+              <div className="form-group">
+                <label>Activity Name</label>
+                <input 
+                  type="text" 
+                  value={newSpot.activityName} 
+                  onChange={(e) => setNewSpot({...newSpot, activityName: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Activity Type (e.g. Jazz, Adventure, Festival)</label>
+                <input 
+                  type="text" 
+                  value={newSpot.activityType} 
+                  onChange={(e) => setNewSpot({...newSpot, activityType: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Location</label>
+                <input 
+                  type="text" 
+                  value={newSpot.location} 
+                  onChange={(e) => setNewSpot({...newSpot, location: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea 
+                  rows="4"
+                  value={newSpot.description} 
+                  onChange={(e) => setNewSpot({...newSpot, description: e.target.value})} 
+                  required 
+                />
+              </div>
+              <button type="submit" className="spot-submit-btn">Submit for Review</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="explore-loading">

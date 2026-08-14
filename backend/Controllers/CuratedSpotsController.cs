@@ -30,12 +30,12 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<ActionResult<CuratedSpot>> PostCuratedSpot(CuratedSpot spot)
         {
-            spot.IsVerified = false; // Default to not verified for new submissions
+            spot.IsVerified = false; // Default to pending for new submissions
 
             _context.CuratedSpots.Add(spot);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCuratedSpots), new { id = spot.CuratedSpotId }, spot);
+            return CreatedAtAction(nameof(GetCuratedSpots), new { id = spot.SpotID }, spot);
         }
     }
 }
