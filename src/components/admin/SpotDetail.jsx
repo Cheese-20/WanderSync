@@ -5,6 +5,7 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   useEffect(() => {
     fetchSpotDetail();
@@ -33,7 +34,8 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
         { method: 'PATCH' }
       );
       if (response.ok) {
-        onFlagged(spotId);
+        setSuccessMsg('Spot has been flagged successfully. Users will see a warning.');
+        setTimeout(() => onFlagged(spotId), 2000);
       } else {
         const data = await response.text();
         setError(data || 'Failed to flag the spot.');
@@ -54,7 +56,8 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
         { method: 'DELETE' }
       );
       if (response.ok) {
-        onDeleted(spotId);
+        setSuccessMsg('Spot has been permanently deleted.');
+        setTimeout(() => onDeleted(spotId), 2000);
       } else {
         const data = await response.text();
         setError(data || 'Failed to delete the spot.');
@@ -164,9 +167,11 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
           )}
         </div>
 
+        {successMsg && <div className="detail-success">{successMsg}</div>}
         {error && <div className="detail-error">{error}</div>}
 
-        <div className="detail-card-footer">
+        {!successMsg && (
+          <div className="detail-card-footer">
           <button
             className="btn-flag-large"
             onClick={handleFlag}
@@ -184,6 +189,7 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
             {actionLoading === 'delete' ? 'Deleting...' : `Delete Spot (${spot.reportCount}/6)`}
           </button>
         </div>
+        )}
       </div>
     </div>
   );

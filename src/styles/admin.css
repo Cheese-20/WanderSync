@@ -794,3 +794,41 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Success message */
+.detail-success {
+  margin: 0 28px 16px 28px;
+  padding: 14px 18px;
+  background: #f4f7f0;
+  color: #3d5a3e;
+  border: 1px solid #6b7f4a;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Ban button (large) */
+.btn-ban-large {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #4a0000;
+  color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-ban-large:hover {
+  background: #2d0000;
+  transform: translateY(-1px);
+}
+
+.btn-ban-large:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
