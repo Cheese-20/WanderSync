@@ -204,8 +204,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="profile-page">
+    <>
       <NavBar />
+      <div className="profile-page">
 
       <main className="page profile-container">
         <h2>User Profile</h2>
@@ -415,5 +416,6 @@ export default function Profile() {
 
       </main>
     </div>
+    </>
   );
 }

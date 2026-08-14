@@ -164,8 +164,9 @@ export default function ExplorerHome() {
   };
 
   return (
-    <div className="explorer-page" style={{ paddingTop: '20px' }}>
+    <>
       <NavBar />
+      <div className="explorer-page" style={{ paddingTop: '20px' }}>
       <section className="happening-lately-section">
         <div className="section-header">
           <h2>Tours happening lately</h2>
@@ -509,5 +510,6 @@ export default function ExplorerHome() {
         editPost={editingPost}
       />
     </div>
+    </>
   );
 }

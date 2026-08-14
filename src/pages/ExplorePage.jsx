@@ -138,8 +138,9 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="explore-page">
+    <>
       <NavBar />
+      <div className="explore-page">
 
       {/* Search Bar */}
       <section className="explore-search-section">
@@ -379,5 +380,6 @@ export default function ExplorePage() {
         </>
       )}
     </div>
+    </>
   );
 }

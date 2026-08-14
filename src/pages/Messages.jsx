@@ -123,8 +123,9 @@ export default function Messages() {
   };
 
   return (
-    <div className="messages-page">
+    <>
       <NavBar />
+      <div className="messages-page">
 
       
       <div className="messages-layout">
@@ -237,5 +238,6 @@ export default function Messages() {
         </div>
       </div>
     </div>
+    </>
   );
 }
