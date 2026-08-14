@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models
 {
-    [Table("Curated_spots")]
+    [Table("curatedSpots")]
     public class CuratedSpot
     {
         [Key]
@@ -26,6 +26,6 @@ namespace backend.Models
         public string Location { get; set; } = string.Empty;
 
         [Column("isVerified")]
-        public bool IsVerified { get; set; } = false;
+        public string IsVerified { get; set; } = "pending";
     }
 }

@@ -25,7 +25,7 @@ namespace backend.Controllers
         {
             // Get all pending spots that the guide hasn't voted on yet
             var spots = await _context.CuratedSpots
-                .Where(s => s.IsVerified == false && 
+                .Where(s => s.IsVerified == "pending" && 
                             !_context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.GuideID == guideId))
                 .Select(s => new {
                     spotID = s.SpotID,
@@ -44,7 +44,7 @@ namespace backend.Controllers
         public async Task<IActionResult> GetVerifiedSpots()
         {
             var spots = await _context.CuratedSpots
-                .Where(s => s.IsVerified == true)
+                .Where(s => s.IsVerified == "approved")
                 .Select(s => new {
                     spotID = s.SpotID,
                     activityName = s.ActivityName,
@@ -74,7 +74,7 @@ namespace backend.Controllers
             if (spot == null)
                 return NotFound("Spot not found.");
 
-            if (spot.IsVerified != false)
+            if (spot.IsVerified != "pending")
                 return BadRequest("Spot is no longer pending.");
 
             var existingVote = await _context.SpotVotes
@@ -100,7 +100,7 @@ namespace backend.Controllers
 
             if (totalApprovals >= 5)
             {
-                spot.IsVerified = true;
+                spot.IsVerified = "approved";
             }
             else if (totalRejects >= 5)
             {
@@ -117,7 +117,7 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSpot([FromBody] CuratedSpot spot)
         {
-            spot.IsVerified = false;
+            spot.IsVerified = "pending";
             
             _context.CuratedSpots.Add(spot);
             await _context.SaveChangesAsync();
