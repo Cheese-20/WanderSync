@@ -24,6 +24,15 @@ namespace backend.Models
         [Column("isRead")]
         public bool IsRead { get; set; } = false;
 
+        [Column("type")]
+        public string? Type { get; set; }
+
+        [Column("relatedEntityID")]
+        public int? RelatedEntityID { get; set; }
+
+        [Column("scheduledFor")]
+        public DateTime? ScheduledFor { get; set; }
+
         [Column("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
