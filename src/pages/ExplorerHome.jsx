@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -300,17 +299,7 @@ export default function ExplorerHome() {
           </button>
         </div>
 
-        <div className="community-feed-list">
-          {posts.slice(0, visiblePostsCount).map(post => (
-            <div key={post.postID || Math.random()} className="community-post-card">
-              <div className="c-post-header">
-                <div className="c-post-avatar" style={{ backgroundColor: '#d4c28c', backgroundImage: `url(${post.userAvatar || ''})`, backgroundSize: 'cover', width: '40px', height: '40px', borderRadius: '50%' }}></div>
-                <div className="c-post-info">
-                  <span className="c-post-name" style={{ fontWeight: 'bold' }}>
-                    {post.firstName ? `${post.firstName} ${post.lastName}` : `Explorer ${post.userID}`}
-                    <span className="experience-badge" style={{ marginLeft: '8px' }}>{post.experienceType}</span>
-                  </span>
-                  <span className="c-post-time" style={{ color: '#888', fontSize: '0.85rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
+
         <div className="posts-container">
           {posts.map(post => (
             <div key={post.postID || Math.random()} className="post">
@@ -356,43 +345,27 @@ export default function ExplorerHome() {
                 );
               })()}
 
-              <div className="post-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-                {loggedInUserId === post.userID && (
-                  <>
-                    <span
-                      className="action-icon edit-icon"
-                      onClick={() => handleEditClick(post)}
-                      style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '0.9rem', color: '#007bff' }}
-                    >
-                      Edit
-                    </span>
-                    <span
-                      className="action-icon delete-icon"
-                      onClick={() => handleDeleteClick(post)}
-                      style={{ cursor: 'pointer', fontSize: '0.9rem', color: '#dc3545' }}
-                    >
-                      Delete
-                    </span>
-                  </>
-                )}
+
               <div className="post-body">
-                <div className="post-actions-container">
+                <div className="post-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <span className="action-icon" title="Like">❤️</span>
                   <span className="action-icon" title="Comment">💬</span>
                   <span className="action-icon" title="Share">↗️</span>
                   {loggedInUserId === post.userID && (
                     <>
                       <span 
-                        className="action-icon edit-icon post-action-right" 
+                        className="action-icon edit-icon" 
                         title="Edit Post" 
                         onClick={() => handleEditClick(post)} 
+                        style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '1.2rem' }}
                       >
                         ✏️
                       </span>
                       <span 
-                        className="action-icon delete-icon post-action-btn" 
+                        className="action-icon delete-icon" 
                         title="Delete Post" 
                         onClick={() => handleDeleteClick(post)} 
+                        style={{ cursor: 'pointer', fontSize: '1.2rem' }}
                       >
                         🗑️
                       </span>

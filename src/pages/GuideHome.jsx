@@ -176,7 +176,7 @@ export default function GuideHome() {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     Submitted: {new Date(spot.submittedAt).toLocaleDateString()}
                   </span>
-                  <span style={{ fontStyle: 'italic', color: '#666', fontSize: '0.8rem', marginTop: '4px', display: 'block', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontStyle: 'italic', color: '#666', fontSize: '0.8rem', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#d4c28c', backgroundImage: `url(${spot.submitterAvatar || ''})`, backgroundSize: 'cover' }}></div>
                     By: {spot.submitterName || 'Explorer'}
                   </span>

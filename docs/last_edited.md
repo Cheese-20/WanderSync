@@ -15,8 +15,7 @@
   - **Backend**: Removed a duplicated `GetAllTours` method from `ToursController.cs`.
   - **Backend**: Updated `CuratedSpot.cs` to include missing fields (`SubmittedAt`, `SubmittedByUserID`, `PictureURL`) required by the teammate's `SpotController.cs` for the pending verification dashboard.
   - **Backend**: Fixed C# syntax errors (missing brackets and semicolons) in the Entity Framework snapshot `WanderSyncDbContextModelSnapshot.cs`.
-
-
+  - **Frontend (Fix)**: Resolved a cascade of severe JSX compilation errors in `AuthForm.jsx`, `ExplorePage.jsx`, `Match.jsx`, `ExplorerHome.jsx`, `GuideHome.jsx`, and `CreatePostModal.jsx` caused by git merge conflicts. Reconstructed orphaned loops, deleted duplicate fragments, and closed missing conditional rendering blocks to restore the React build.
 ## [2026-08-07]
 - **Refactor (UI Styling)**: Removed all inline `style={{...}}` properties across the frontend and replaced them with CSS classes.
   - Created `admin.css` to hold styling for `AdminHome.jsx`.

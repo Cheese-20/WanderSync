@@ -417,6 +417,7 @@ button:active {
 
 .forgot-card .btn.transparent:hover {
   color: #1a8f66;
+}
 /* Global Loading States */
 button:disabled,
 .btn:disabled {

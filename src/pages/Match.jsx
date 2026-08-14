@@ -179,7 +179,6 @@ export default function Match() {
             <h3>Pending Requests</h3>
             <div className="pending-list">
               {pendingRequests.map(req => (
-                <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)}>
                 <div key={req.id} className="pending-item" onClick={() => handleViewPending(req.id)} style={{ cursor: 'pointer' }}>
                   <img src={req.image} alt={req.name} className="pending-img" />
                   <span className="pending-name">{req.name}</span>

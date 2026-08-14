@@ -26,15 +26,6 @@ namespace backend.Models
         public string Location { get; set; } = string.Empty;
 
         [Column("isVerified")]
-        public string IsVerified { get; set; } = "pending";
-
-        [Column("submittedAt")]
-        public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("submittedByUserID")]
-        public int SubmittedByUserID { get; set; }
-
-        [Column("pictureURL")]
-        public string PictureURL { get; set; } = string.Empty;
+        public bool IsVerified { get; set; } = false;
     }
 }
