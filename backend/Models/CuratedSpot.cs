@@ -8,7 +8,7 @@ namespace backend.Models
     public class CuratedSpot
     {
         [Key]
-        [Column("curatedSpotID")]
+        [Column("spotID")]
         public int SpotID { get; set; }
 
         [Column("activityName")]
