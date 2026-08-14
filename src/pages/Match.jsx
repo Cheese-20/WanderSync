@@ -221,13 +221,6 @@ export default function Match() {
                         })}
                       </div>
                     </div>
-
-                    <button 
-                      className="btn-view-profile" 
-                      onClick={() => navigate(`/user/${currentMatch.userID}`)}
-                    >
-                      View Full Profile
-                    </button>
                   </div>
                 </div>
               ) : (
