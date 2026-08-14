@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import NavBar from '../components/NavBar';
 
 import '../styles/match.css';
 
@@ -165,6 +166,7 @@ export default function Match() {
 
   return (
     <div className="match-page">
+      <NavBar />
 
 
       <main className="match-page-content">

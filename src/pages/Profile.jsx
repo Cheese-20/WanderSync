@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
+import NavBar from '../components/NavBar';
 import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
@@ -205,6 +205,7 @@ export default function Profile() {
 
   return (
     <div className="profile-page">
+      <NavBar />
 
       <main className="page profile-container">
         <h2>User Profile</h2>
