@@ -24,8 +24,10 @@ export default function ExplorerHome() {
   const [visibleToursCount, setVisibleToursCount] = useState(4);
   const [visibleSpotsCount, setVisibleSpotsCount] = useState(4);
   const [visiblePostsCount, setVisiblePostsCount] = useState(3);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const scrollRef = useRef(null);
   const spotsScrollRef = useRef(null);
+  const navigate = useNavigate();
   
   const handleLoadMoreTours = () => {
     setVisibleToursCount(prev => Math.min(prev + 4, 12, tours.length));
@@ -43,6 +45,15 @@ export default function ExplorerHome() {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
     }
+  };
+
+  const toggleMenu = (postId) => {
+    setOpenMenuId(openMenuId === postId ? null : postId);
+  };
+
+  const handleReport = (type, post) => {
+    setOpenMenuId(null);
+    navigate('/report', { state: { reportType: type, reportedUserID: post.userID, postID: post.postID } });
   };
 
   useEffect(() => {
@@ -310,6 +321,17 @@ export default function ExplorerHome() {
                     <span className="experience-badge" style={{ marginLeft: '8px' }}>{post.experienceType}</span>
                   </span>
                   <span className="c-post-time" style={{ color: '#888', fontSize: '0.85rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="post-header-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="post-menu-wrapper" style={{ position: 'relative' }}>
+                    <button className="post-ellipsis-btn" onClick={() => toggleMenu(post.postID)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: '0 5px' }}>⋯</button>
+                    {openMenuId === post.postID && (
+                      <div className="post-ellipsis-menu" style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #e6e6e6', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: '100', minWidth: '150px' }}>
+                        <button onClick={() => handleReport('account', post)} style={{ display: 'block', width: '100%', padding: '10px 15px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #eee' }}>Report Account</button>
+                        <button onClick={() => handleReport('content', post)} style={{ display: 'block', width: '100%', padding: '10px 15px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>Report Content</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
