@@ -27,5 +27,14 @@ namespace backend.Models
 
         [Column("isVerified")]
         public string IsVerified { get; set; } = "pending";
+
+        [Column("pictureURL")]
+        public string? PictureURL { get; set; }
+
+        [Column("submittedByUserID")]
+        public int? SubmittedByUserID { get; set; }
+
+        [Column("submittedAt")]
+        public DateTime? SubmittedAt { get; set; }
     }
 }

@@ -24,17 +24,24 @@ namespace backend.Controllers
         public async Task<IActionResult> GetPendingSpotsForGuide(int guideId)
         {
             // Get all pending spots that the guide hasn't voted on yet
-            var spots = await _context.CuratedSpots
-                .Where(s => s.IsVerified == "pending" && 
-                            !_context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.GuideID == guideId))
-                .Select(s => new {
-                    spotID = s.SpotID,
-                    activityName = s.ActivityName,
-                    activityType = s.ActivityType,
-                    description = s.Description,
-                    location = s.Location
-                })
-                .ToListAsync();
+            var spots = await (from s in _context.CuratedSpots
+                               where s.IsVerified == "pending" && 
+                                     !_context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.GuideID == guideId)
+                               join u in _context.Users on s.SubmittedByUserID equals u.UserID into userGroup
+                               from u in userGroup.DefaultIfEmpty()
+                               join p in _context.Profiles on s.SubmittedByUserID equals p.UserID into profileGroup
+                               from p in profileGroup.DefaultIfEmpty()
+                               select new {
+                                   spotID = s.SpotID,
+                                   activityName = s.ActivityName,
+                                   activityType = s.ActivityType,
+                                   description = s.Description,
+                                   location = s.Location,
+                                   pictureURL = s.PictureURL,
+                                   submitterName = u != null ? u.FirstName + " " + u.LastName : "Unknown",
+                                   submitterAvatar = p != null ? p.ProfilePictureLink : null,
+                                   submittedAt = s.SubmittedAt
+                               }).ToListAsync();
 
             return Ok(spots);
         }
@@ -43,16 +50,23 @@ namespace backend.Controllers
         [HttpGet("verified")]
         public async Task<IActionResult> GetVerifiedSpots()
         {
-            var spots = await _context.CuratedSpots
-                .Where(s => s.IsVerified == "approved")
-                .Select(s => new {
-                    spotID = s.SpotID,
-                    activityName = s.ActivityName,
-                    activityType = s.ActivityType,
-                    description = s.Description,
-                    location = s.Location
-                })
-                .ToListAsync();
+            var spots = await (from s in _context.CuratedSpots
+                               where s.IsVerified == "approved"
+                               join u in _context.Users on s.SubmittedByUserID equals u.UserID into userGroup
+                               from u in userGroup.DefaultIfEmpty()
+                               join p in _context.Profiles on s.SubmittedByUserID equals p.UserID into profileGroup
+                               from p in profileGroup.DefaultIfEmpty()
+                               select new {
+                                   spotID = s.SpotID,
+                                   activityName = s.ActivityName,
+                                   activityType = s.ActivityType,
+                                   description = s.Description,
+                                   location = s.Location,
+                                   pictureURL = s.PictureURL,
+                                   submitterName = u != null ? u.FirstName + " " + u.LastName : "Unknown",
+                                   submitterAvatar = p != null ? p.ProfilePictureLink : null,
+                                   submittedAt = s.SubmittedAt
+                               }).ToListAsync();
 
             return Ok(spots);
         }
