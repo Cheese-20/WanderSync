@@ -185,16 +185,8 @@ export default function Messages() {
                   className="chat-header-name clickable-name" 
                   onClick={() => navigate(`/user/${activeContact.userID}`)}
                   title="View profile"
+                  style={{ display: 'flex', alignItems: 'center' }}
                 >
-                  {activeContact.firstName} {activeContact.lastName}
-                </span>
-                <button 
-                  className="btn-view-chat-profile" 
-                  onClick={() => navigate(`/user/${activeContact.userID}`)}
-                >
-                  View Profile
-                </button>
-                <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center' }}>
                   {activeContact.firstName} {activeContact.lastName}
                   {(activeContact.role?.toLowerCase() === 'guide' || activeContact.role?.toLowerCase() === 'local guide') && (
                     <svg title="Verified Local Guide" style={{ marginLeft: '6px', color: '#10b981', flexShrink: 0 }} width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

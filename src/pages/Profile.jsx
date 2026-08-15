@@ -331,7 +331,7 @@ export default function Profile() {
                   >
                     <div className="booking-header">
                       <h4 className="booking-title">Booking #{booking.bookingID}</h4>
-                      <span className={`booking-status ${booking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
+                      <span className={`booking-status ${booking.status === 'Accepted' ? 'status-confirmed' : 'status-pending'}`}>
                         {booking.status}
                       </span>
                     </div>
@@ -348,8 +348,8 @@ export default function Profile() {
 
         {/* Modal for detailed booking view */}
         {selectedBooking && (
-          <div className="booking-modal-overlay">
-            <div className="booking-modal-content">
+          <div className="booking-modal-overlay" onClick={() => setSelectedBooking(null)}>
+            <div className="booking-modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="booking-modal-header">
                 <h3 className="booking-modal-title">Booking Details</h3>
                 <button 
@@ -367,7 +367,7 @@ export default function Profile() {
                 </div>
                 <div className="booking-modal-row">
                   <strong className="booking-modal-label">Status:</strong>
-                  <span className={`booking-status ${selectedBooking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
+                  <span className={`booking-status ${selectedBooking.status === 'Accepted' ? 'status-confirmed' : 'status-pending'}`}>
                     {selectedBooking.status}
                   </span>
                 </div>
