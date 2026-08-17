@@ -324,16 +324,14 @@ export default function ExplorerHome() {
                   </span>
                   <span className="c-post-time" style={{ color: '#888', fontSize: '0.85rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div className="post-header-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className="post-menu-wrapper" style={{ position: 'relative' }}>
-                    <button className="post-ellipsis-btn" onClick={() => toggleMenu(post.postID)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', padding: '4px 8px', color: '#333', fontWeight: 'bold' }}>⋯</button>
-                    {openMenuId === post.postID && (
-                      <div className="post-ellipsis-menu" style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #e6e6e6', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: '100', minWidth: '150px' }}>
-                        <button onClick={() => handleReport('account', post)} style={{ display: 'block', width: '100%', padding: '10px 15px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #eee' }}>Report Account</button>
-                        <button onClick={() => handleReport('content', post)} style={{ display: 'block', width: '100%', padding: '10px 15px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>Report Content</button>
-                      </div>
-                    )}
-                  </div>
+                <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                  <button onClick={() => toggleMenu(post.postID)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', padding: '4px 10px', color: '#333', lineHeight: '1' }}>&#8942;</button>
+                  {openMenuId === post.postID && (
+                    <div style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: '999', minWidth: '160px', overflow: 'hidden' }}>
+                      <button onClick={() => handleReport('account', post)} style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #eee', fontSize: '0.9rem' }}>Report Account</button>
+                      <button onClick={() => handleReport('content', post)} style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}>Report Content</button>
+                    </div>
+                  )}
                 </div>
               </div>
 
