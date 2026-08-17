@@ -326,7 +326,7 @@ export default function ExplorerHome() {
                 </div>
                 <div className="post-header-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div className="post-menu-wrapper" style={{ position: 'relative' }}>
-                    <button className="post-ellipsis-btn" onClick={() => toggleMenu(post.postID)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: '0 5px' }}>⋯</button>
+                    <button className="post-ellipsis-btn" onClick={() => toggleMenu(post.postID)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', padding: '4px 8px', color: '#333', fontWeight: 'bold' }}>⋯</button>
                     {openMenuId === post.postID && (
                       <div className="post-ellipsis-menu" style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #e6e6e6', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: '100', minWidth: '150px' }}>
                         <button onClick={() => handleReport('account', post)} style={{ display: 'block', width: '100%', padding: '10px 15px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #eee' }}>Report Account</button>
