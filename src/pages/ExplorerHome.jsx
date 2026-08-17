@@ -325,7 +325,7 @@ export default function ExplorerHome() {
                   <span className="c-post-time" style={{ color: '#888', fontSize: '0.85rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                  <button onClick={() => toggleMenu(post.postID)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', padding: '4px 10px', color: '#333', lineHeight: '1' }}>&#8942;</button>
+                  <button onClick={() => toggleMenu(post.postID)} style={{ background: '#f0f0f0', border: '1px solid #ddd', fontSize: '1rem', cursor: 'pointer', padding: '4px 12px', color: '#333', lineHeight: '1', borderRadius: '4px' }}>•••</button>
                   {openMenuId === post.postID && (
                     <div style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: '999', minWidth: '160px', overflow: 'hidden' }}>
                       <button onClick={() => handleReport('account', post)} style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #eee', fontSize: '0.9rem' }}>Report Account</button>
