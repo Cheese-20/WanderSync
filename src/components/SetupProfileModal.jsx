@@ -4,31 +4,31 @@ import './SetupProfileModal.css';
 
 export default function SetupProfileModal({ userId, onComplete }) {
   const [form, setForm] = useState({
-    profilePictureLink: 'https://via.placeholder.com/150',
+    profilePictureLink: '',
     interests: '',
     job: '',
     description: '',
     location: '',
-    createdAt: ''
+    createdAt: new Date().toISOString().slice(0, 10)
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => {
-    // Automatically set createdAt
-    const date = new Date();
-    setForm(f => ({ ...f, createdAt: date.toISOString().slice(0, 10) }));
-
-    // Automatically set location
+    // Attempt to pre-fill location using reverse geocoding
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async pos => {
           try {
             const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&localityLanguage=en`);
             const data = await response.json();
-            const city = data.city || data.locality || data.principalSubdivision || 'Unknown Location';
-            setForm(f => ({ ...f, location: city }));
+            const city = data.city || data.locality || '';
+            const country = data.countryName || '';
+            const locationStr = [city, country].filter(Boolean).join(', ');
+            if (locationStr) {
+              setForm(f => ({ ...f, location: locationStr }));
+            }
           } catch (err) {
             console.warn('Reverse geocode error', err);
           }
@@ -41,7 +41,7 @@ export default function SetupProfileModal({ userId, onComplete }) {
 
   const handleInput = e => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    setForm(f => ({ ...f, [name]: value }));
   };
 
   const onFileChange = e => {
@@ -49,7 +49,7 @@ export default function SetupProfileModal({ userId, onComplete }) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = (upload) => {
-        setForm({ ...form, profilePictureLink: upload.target.result });
+        setForm(f => ({ ...f, profilePictureLink: upload.target.result }));
       };
       reader.readAsDataURL(file);
     }
@@ -57,8 +57,21 @@ export default function SetupProfileModal({ userId, onComplete }) {
 
   const handleSubmit = async () => {
     setError('');
+    
+    if (!form.profilePictureLink) {
+      setError('Profile Picture is required.');
+      return;
+    }
     if (!form.interests.trim()) {
-      setError('Please provide at least one interest.');
+      setError('Interests are required.');
+      return;
+    }
+    if (!form.description.trim()) {
+      setError('Description is required.');
+      return;
+    }
+    if (!form.location.trim()) {
+      setError('Location is required.');
       return;
     }
 
@@ -73,7 +86,7 @@ export default function SetupProfileModal({ userId, onComplete }) {
         job: form.job,
         createdAt: form.createdAt
       });
-      onComplete(); // Profile saved, close modal
+      onComplete();
     } catch (err) {
       console.error("Error saving profile", err);
       setError('Failed to save profile. Please try again.');
@@ -84,72 +97,109 @@ export default function SetupProfileModal({ userId, onComplete }) {
 
   return (
     <div className="setup-modal-overlay">
-      <div className="setup-modal-content">
-        <h2>Set up your profile</h2>
-        <p className="subtitle">Let's get to know you better! This helps others connect with you.</p>
+      <div className="setup-modal-container">
+        <h2 className="setup-modal-title">Set up your profile</h2>
+        <p className="setup-modal-subtitle">
+          Let's get to know you better! This helps others connect with you.
+        </p>
 
-        <div className="setup-form">
-          <div className="photo-section">
-            <span className="field-label">Profile Photo</span>
-            <div className="photo-circle" onClick={() => fileRef.current?.click()}>
-              {form.profilePictureLink && form.profilePictureLink !== 'https://via.placeholder.com/150' ? (
-                <img src={form.profilePictureLink} alt="Profile" />
+        <div className="setup-modal-form">
+          <div className="setup-photo-section">
+            <span className="setup-photo-label">Profile Photo</span>
+            <div className="setup-photo-circle" onClick={() => fileRef.current?.click()}>
+              {form.profilePictureLink ? (
+                <img src={form.profilePictureLink} alt="Profile" className="setup-photo-img" />
               ) : (
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
+                <div className="setup-photo-placeholder">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
               )}
-              <div className="camera-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="setup-camera-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                   <circle cx="12" cy="13" r="4"></circle>
                 </svg>
               </div>
             </div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden-file-input" onChange={onFileChange} style={{display: 'none'}} />
+            <input 
+              ref={fileRef} 
+              type="file" 
+              accept="image/*" 
+              className="setup-hidden-file-input" 
+              onChange={onFileChange} 
+            />
           </div>
 
-          <div className="input-group">
+          <div className="setup-input-group">
             <label>Interests *</label>
-            <input 
-              name="interests" 
-              value={form.interests} 
-              onChange={handleInput} 
-              placeholder="e.g. hiking, food, surfing" 
-            />
+            <div className="setup-input-wrapper no-icon">
+              <input 
+                name="interests" 
+                value={form.interests} 
+                onChange={handleInput} 
+                placeholder="e.g. hiking, food, surfing" 
+              />
+            </div>
           </div>
 
-          <div className="input-group">
+          <div className="setup-input-group">
+            <label>Description *</label>
+            <div className="setup-input-wrapper no-icon">
+              <textarea 
+                name="description" 
+                value={form.description} 
+                onChange={handleInput} 
+                placeholder="Tell us about yourself..." 
+                rows="3"
+                className="setup-textarea"
+              />
+            </div>
+          </div>
+
+          <div className="setup-input-group">
             <label>Job Title</label>
-            <input 
-              name="job" 
-              value={form.job} 
-              onChange={handleInput} 
-              placeholder="e.g. Digital Nomad" 
-            />
+            <div className="setup-input-wrapper no-icon">
+              <input 
+                name="job" 
+                value={form.job} 
+                onChange={handleInput} 
+                placeholder="e.g. Digital Nomad" 
+              />
+            </div>
           </div>
 
-          <div className="input-group">
-            <label>Description</label>
-            <textarea 
-              name="description" 
-              value={form.description} 
-              onChange={handleInput} 
-              placeholder="Tell us about yourself..." 
-              rows="3"
-            />
+          <div className="setup-input-group">
+            <label>Location *</label>
+            <div className="setup-input-wrapper">
+              <span className="setup-input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </span>
+              <input 
+                name="location" 
+                value={form.location} 
+                onChange={handleInput} 
+                placeholder="City, Country" 
+              />
+            </div>
           </div>
 
-          {error && <p className="error-text">{error}</p>}
+
+
+          {error && <p className="setup-error-text">{error}</p>}
 
           <button 
-            className="continue-btn" 
+            className="setup-continue-btn" 
             onClick={handleSubmit} 
             disabled={loading}
           >
             {loading ? 'Saving...' : 'Continue'}
-            {!loading && <span>&rarr;</span>}
+            {!loading && <span className="setup-arrow">&rarr;</span>}
           </button>
         </div>
       </div>

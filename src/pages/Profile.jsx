@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
+import NavBar from '../components/NavBar';
 import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
@@ -204,7 +204,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="profile-page">
+    <>
+      <NavBar />
+      <div className="profile-page">
 
       <main className="page profile-container">
         <h2>User Profile</h2>
@@ -224,7 +226,8 @@ export default function Profile() {
           </button>
           <button 
             className="delete button logout-btn" 
-            onClick={handleLogout} 
+            onClick={handleLogout}
+            style={{ marginLeft: 'auto' }}
           >
             Logout
           </button>
@@ -328,7 +331,7 @@ export default function Profile() {
                   >
                     <div className="booking-header">
                       <h4 className="booking-title">Booking #{booking.bookingID}</h4>
-                      <span className={`booking-status ${booking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
+                      <span className={`booking-status ${booking.status === 'Accepted' ? 'status-confirmed' : 'status-pending'}`}>
                         {booking.status}
                       </span>
                     </div>
@@ -345,8 +348,8 @@ export default function Profile() {
 
         {/* Modal for detailed booking view */}
         {selectedBooking && (
-          <div className="booking-modal-overlay">
-            <div className="booking-modal-content">
+          <div className="booking-modal-overlay" onClick={() => setSelectedBooking(null)}>
+            <div className="booking-modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="booking-modal-header">
                 <h3 className="booking-modal-title">Booking Details</h3>
                 <button 
@@ -364,7 +367,7 @@ export default function Profile() {
                 </div>
                 <div className="booking-modal-row">
                   <strong className="booking-modal-label">Status:</strong>
-                  <span className={`booking-status ${selectedBooking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
+                  <span className={`booking-status ${selectedBooking.status === 'Accepted' ? 'status-confirmed' : 'status-pending'}`}>
                     {selectedBooking.status}
                   </span>
                 </div>
@@ -414,5 +417,6 @@ export default function Profile() {
 
       </main>
     </div>
+    </>
   );
 }

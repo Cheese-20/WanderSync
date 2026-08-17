@@ -55,13 +55,13 @@ export default function ForgotPassword() {
       });
       setPhase('success');
     } catch (err) {
-      setError(err.response?.data || 'Failed to reset password');
+      setError(err.response?.data?.message || 'Failed to reset password');
     }
   };
 
   return (
     <div className="page-container" style={{ background: '#f5f7fa', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="signin-signup-container" style={{ minHeight: 'auto', maxWidth: '500px', width: '100%', padding: '40px' }}>
+      <div className="signin-signup-container" style={{ minHeight: 'auto', maxWidth: '500px', width: '100%', padding: '40px', backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <button type="button" className="logo-text-button" onClick={() => navigate('/home')}>
@@ -82,9 +82,10 @@ export default function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)} 
               required 
               className="forgot-input"
+              style={{ width: '100%', maxWidth: '450px', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', backgroundColor: '#fff', color: '#333' }}
             />
-            <button type="submit" className="btn solid" style={{ width: '100%', maxWidth: '450px' }}>Recover Password</button>
-            <button type="button" className="btn transparent" style={{ color: '#64748b', width: '100%', maxWidth: '450px' }} onClick={() => navigate('/login')}>
+            <button type="submit" className="btn solid" style={{ width: '100%', maxWidth: '450px', backgroundColor: '#a6d8b6', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Recover Password</button>
+            <button type="button" className="btn transparent" style={{ width: '100%', maxWidth: '450px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => navigate('/login')}>
               Back to Login
             </button>
           </form>
@@ -109,6 +110,7 @@ export default function ForgotPassword() {
               onChange={(e) => setNewPassword(e.target.value)} 
               required 
               className="forgot-input"
+              style={{ width: '100%', maxWidth: '450px', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', backgroundColor: '#fff', color: '#333' }}
             />
             <input 
               type="password" 
@@ -117,8 +119,9 @@ export default function ForgotPassword() {
               onChange={(e) => setConfirmPassword(e.target.value)} 
               required 
               className="forgot-input"
+              style={{ width: '100%', maxWidth: '450px', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', backgroundColor: '#fff', color: '#333' }}
             />
-            <button type="submit" className="btn solid" style={{ width: '100%', maxWidth: '450px' }}>Reset Password</button>
+            <button type="submit" className="btn solid" style={{ width: '100%', maxWidth: '450px', backgroundColor: '#a6d8b6', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Reset Password</button>
           </form>
         )}
 
@@ -129,7 +132,7 @@ export default function ForgotPassword() {
             </div>
             <h3 style={{ color: '#1e293b', marginBottom: '10px' }}>Password Reset Successful!</h3>
             <p style={{ color: '#64748b', marginBottom: '30px' }}>Your password has been securely updated.</p>
-            <button className="btn solid" onClick={() => navigate('/login')} style={{ width: '100%' }}>
+            <button className="btn solid" onClick={() => navigate('/login')} style={{ width: '100%', maxWidth: '450px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', padding: '14px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
               Return to Login
             </button>
           </div>

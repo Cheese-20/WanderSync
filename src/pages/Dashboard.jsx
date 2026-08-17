@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/dashboard.css';
 import logo from '../assets/images/logo.png';
+import NavBar from '../components/NavBar';
 
 // SVG Icons
 const UsersIcon = () => (
@@ -63,7 +64,7 @@ export default function Dashboard() {
   const fetchGuideBookings = async () => {
     setLoadingBookings(true);
     try {
-      const response = await fetch(`http://localhost:5200/api/bookings/guide/${guideId}`);
+      const response = await fetch(`/api/bookings/guide/${guideId}`);
       if (response.ok) {
         const data = await response.json();
         setBookings(data);
@@ -77,7 +78,7 @@ export default function Dashboard() {
   const updateBookingStatus = async (bookingId, action) => {
     setIsUpdatingBooking(true);
     try {
-      const response = await fetch(`http://localhost:5200/api/bookings/${bookingId}/${action}`, {
+      const response = await fetch(`/api/bookings/${bookingId}/${action}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -97,7 +98,7 @@ export default function Dashboard() {
   const fetchPendingSpots = async () => {
     setLoadingSpots(true);
     try {
-      const response = await fetch(`http://localhost:5200/api/spot/pending/${guideId}`);
+      const response = await fetch(`/api/spot/pending/${guideId}`);
       if (response.ok) {
         const data = await response.json();
         setPendingSpots(data);
@@ -111,7 +112,7 @@ export default function Dashboard() {
   const handleVote = async (spotId, voteType) => {
     setIsVoting(true);
     try {
-      const response = await fetch(`http://localhost:5200/api/spot/${spotId}/vote`, {
+      const response = await fetch(`/api/spot/${spotId}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ guideId, voteType })
@@ -131,6 +132,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <NavBar />
       {(isVoting || isUpdatingBooking) && (
         <div className="global-loading-overlay">
           <div className="global-loading-popup">
@@ -264,7 +266,7 @@ export default function Dashboard() {
                   <p className="bk-time">Tomorrow, 10:00 AM</p>
                   <p className="bk-count">3 booked</p>
                 </div>
-                <span className="badge confirmed">Confirmed</span>
+                <span className="badge accepted" style={{ backgroundColor: '#ecfdf5', color: '#10b981', borderColor: 'transparent', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem' }}>Accepted</span>
               </div>
 
               <div className="booking-item">
@@ -328,9 +330,6 @@ export default function Dashboard() {
                   .map(booking => {
 
                     let statusText = booking.status;
-                    if (statusText === 'Accepted') statusText = 'Confirmed';
-                    if (statusText === 'Declined') statusText = 'Rejected';
-
                     const statusClass = booking.status.toLowerCase();
 
                     return (
@@ -365,9 +364,7 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        <div className="b-message-box">
-                          "Hi! Excited to explore with you. {booking.tourDescription}"
-                        </div>
+
 
                         <div className="b-card-bottom">
                           <div className="b-price">
@@ -430,7 +427,7 @@ export default function Dashboard() {
                   const timeText = daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago`;
 
                   return (
-                    <div className="spot-card" key={spot.spotID}>
+                    <div className="spot-card" key={`pending-spot-${spot.spotID}`}>
                       {spot.pictureURL ? (
                         <img src={spot.pictureURL} alt={spot.activityName} className="spot-card-img" />
                       ) : (
@@ -439,7 +436,9 @@ export default function Dashboard() {
 
                       <div className="spot-card-content">
                         <div className="spot-card-header">
-                          <h4 className="spot-card-title">{spot.activityName}</h4>
+                          <h4 className="spot-card-title">
+                            {spot.activityName || 'Untitled Spot'}
+                          </h4>
                           <span className="badge pending" style={{ backgroundColor: '#ecfdf5', color: '#10b981', borderColor: 'transparent', padding: '4px 10px' }}>Pending</span>
                         </div>
                         <p className="spot-card-subtitle">
@@ -460,7 +459,7 @@ export default function Dashboard() {
                         </div>
 
                         <div className="spot-location">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                           </svg>
@@ -470,8 +469,8 @@ export default function Dashboard() {
                         <p className="spot-desc">{spot.description}</p>
 
                         <div className="spot-card-actions">
-                          <button className="btn-small" style={{ backgroundColor: '#ef4444', color: 'white', borderRadius: '20px', padding: '6px 16px', border: 'none' }} onClick={() => handleVote(spot.spotID, 'reject')} disabled={isVoting}>Reject</button>
-                          <button className="btn-small" style={{ backgroundColor: '#a4ddbc', color: '#065f46', borderRadius: '20px', padding: '6px 16px', border: 'none', fontWeight: '500' }} onClick={() => handleVote(spot.spotID, 'approve')} disabled={isVoting}>Approve</button>
+                          <button className="spot-btn-reject" onClick={() => handleVote(spot.spotID, 'reject')} disabled={isVoting}>Reject</button>
+                          <button className="spot-btn-approve" onClick={() => handleVote(spot.spotID, 'approve')} disabled={isVoting}>Approve</button>
                         </div>
                       </div>
                     </div>
