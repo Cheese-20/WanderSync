@@ -378,3 +378,44 @@
 - If a network error occurs during the flag or delete action, the system displays an error message and the spot remains unchanged.
 - If the Admin tries to delete a spot with 5 or fewer reports, the system prevents the action and displays a message (e.g., "A spot must have more than 5 reports to be deleted").
 - If the Admin tries to flag a spot with fewer than 3 reports, the system prevents the action and displays a message (e.g., "A spot must have at least 3 reports to be flagged").
+
+---
+
+## Use Case 11: Banning a User
+**Actor:** Administrator
+
+**Trigger:** The Admin reviews a reported account under the "Reports" tab and determines the user has committed a severe or repeated violation of community guidelines.
+
+**Preconditions:**
+- The Admin is authenticated with an administrator role.
+- The reported user's account exists in the `User` table.
+- The user has been reported and the Admin has reviewed the report.
+
+**Main Flow (How it is accomplished):**
+1. The Admin clicks the "Reports" tab on the Admin Home Page.
+2. The Admin clicks "Reported Accounts" to view the list of reported users.
+3. The Admin clicks the "View" button on a specific reported account to view the full report details.
+4. The Admin reads and investigates the report.
+5. The Admin determines the violation is severe enough to warrant a permanent ban (e.g., repeated harassment, illegal activity, severe community guideline violations).
+6. The Admin clicks the "Ban" button.
+7. The system displays a confirmation dialog: "Are you sure you want to permanently ban this user? This action cannot be undone."
+8. The Admin confirms the ban.
+9. The frontend sends a PATCH request to the backend API (`/api/admin/reported-accounts/{reportID}/ban`).
+10. The backend updates the reported user's `accountStatus` to "Banned" in the `User` table.
+11. The backend updates the report's `status` to "Resolved".
+12. The backend creates a notification for the banned user informing them that their account has been permanently banned.
+13. The frontend displays a success message and removes the report from the pending list.
+14. The banned user will no longer be able to log into the application. The login endpoint checks the user's `accountStatus` and denies access if the account is banned.
+
+**Postconditions:**
+- The user's `accountStatus` is permanently set to "Banned".
+- The user cannot log in to the application. Any attempt to log in displays the message: "Your account has been permanently banned due to a violation of our community guidelines."
+- The user's profile, posts, and content remain in the system but are no longer associated with an active account.
+- The report status is updated to "Resolved".
+- The banned user receives a notification (viewable only if the ban is ever reversed by a system administrator with database access).
+
+**Alternative Flows:**
+- If the Admin clicks "Ban" but then cancels the confirmation dialog, no action is taken and the report remains unchanged.
+- If a network error occurs during the ban action, the system displays an error message and the user's account remains unaffected.
+- If the user is already banned, the system displays a message: "This user is already banned."
+- The difference between a ban and a suspension: a suspension is temporary (2 weeks) and auto-expires, while a ban is permanent and can only be reversed by direct database intervention.
