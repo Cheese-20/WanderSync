@@ -267,7 +267,7 @@
 ## Use Case 9: Reporting a User or Content
 **Actor:** User (Explorer or Guide)
 
-**Trigger:** The user clicks on the ellipsis menu (⋯) in the top-left corner of a post.
+**Trigger:** The user clicks on the ellipsis menu (⋯) in the top-right corner of a post.
 
 **Preconditions:**
 - The user is registered and logged into the application.
@@ -381,41 +381,39 @@
 
 ---
 
-## Use Case 11: Banning a User
-**Actor:** Administrator
+## Use Case 11: Manage Itinerary (D800)
+**Actor:** User (Travel Guide / Organizer)
 
-**Trigger:** The Admin reviews a reported account under the "Reports" tab and determines the user has committed a severe or repeated violation of community guidelines.
+**Trigger:** The actor selects "Manage Itinerary" from the dashboard trip management view.
 
 **Preconditions:**
-- The Admin is authenticated with an administrator role.
-- The reported user's account exists in the `User` table.
-- The user has been reported and the Admin has reviewed the report.
+1. The actor is successfully authenticated and logged into the system.
+2. The actor has active administrative or guide permissions for the selected tourist/group trip.
 
 **Main Flow (How it is accomplished):**
-1. The Admin clicks the "Reports" tab on the Admin Home Page.
-2. The Admin clicks "Reported Accounts" to view the list of reported users.
-3. The Admin clicks the "View" button on a specific reported account to view the full report details.
-4. The Admin reads and investigates the report.
-5. The Admin determines the violation is severe enough to warrant a permanent ban (e.g., repeated harassment, illegal activity, severe community guideline violations).
-6. The Admin clicks the "Ban" button.
-7. The system displays a confirmation dialog: "Are you sure you want to permanently ban this user? This action cannot be undone."
-8. The Admin confirms the ban.
-9. The frontend sends a PATCH request to the backend API (`/api/admin/reported-accounts/{reportID}/ban`).
-10. The backend updates the reported user's `accountStatus` to "Banned" in the `User` table.
-11. The backend updates the report's `status` to "Resolved".
-12. The backend creates a notification for the banned user informing them that their account has been permanently banned.
-13. The frontend displays a success message and removes the report from the pending list.
-14. The banned user will no longer be able to log into the application. The login endpoint checks the user's `accountStatus` and denies access if the account is banned.
+1. The actor navigates to the Dashboard and selects an assigned tourist's active trip.
+2. The system retrieves and displays the trip calendar, timeline, and current schedule items.
+3. The actor selects a specific day/date from the calendar to manage.
+4. The actor chooses an action: Add Activity, Remove Activity, Reorder Timeline, or Block Transit Time.
+5. The system prompts the actor with the relevant input form or drag-and-drop timeline interface.
+6. The actor inputs or modifies the required details (e.g., activity name, start/end time, location, category, and notes).
+7. The actor clicks the "Save" or "Update" button.
+8. The system performs a validation check for schedule overlapping, invalid time bounds, or missing mandatory fields.
+9. The system updates the itinerary records and timestamps in the database.
+10. The system triggers a real-time synchronization update across active client sessions.
+11. The system generates and sends a notification to the assigned tourist regarding the updated schedule.
+12. The system displays a success confirmation message and returns the actor to the updated itinerary view.
 
 **Postconditions:**
-- The user's `accountStatus` is permanently set to "Banned".
-- The user cannot log in to the application. Any attempt to log in displays the message: "Your account has been permanently banned due to a violation of our community guidelines."
-- The user's profile, posts, and content remain in the system but are no longer associated with an active account.
-- The report status is updated to "Resolved".
-- The banned user receives a notification (viewable only if the ban is ever reversed by a system administrator with database access).
+1. The itinerary database records are successfully updated.
+2. Real-time synchronization propagates changes to connected client views.
+3. A notification is dispatched to the assigned tourist(s).
 
 **Alternative Flows:**
-- If the Admin clicks "Ban" but then cancels the confirmation dialog, no action is taken and the report remains unchanged.
-- If a network error occurs during the ban action, the system displays an error message and the user's account remains unaffected.
-- If the user is already banned, the system displays a message: "This user is already banned."
-- The difference between a ban and a suspension: a suspension is temporary (2 weeks) and auto-expires, while a ban is permanent and can only be reversed by direct database intervention.
+- **8a. Validation Failure (Overlapping Times or Missing Fields):**
+  - 8a.1. The system detects a time conflict with an existing scheduled activity or a missing mandatory field.
+  - 8a.2. The system aborts the save operation and displays a descriptive error message highlighting the conflict.
+  - 8a.3. The actor modifies the conflicting time slot or fills in missing data, then returns to step 7.
+- **10a. Network Connectivity Loss During Sync:**
+  - 10a.1. The system fails to connect to the backend database/real-time server.
+  - 10a.2. The system caches the itinerary updates locally and displays a "Pending Sync / Offline Mode" warning banner to the actor.
