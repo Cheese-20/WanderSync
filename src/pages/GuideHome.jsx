@@ -570,8 +570,8 @@ export default function GuideHome() {
                   </div>
 
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn-secondary" onClick={() => setIsReportSpotModalOpen(false)} style={{ flex: 1, borderRadius: '24px', padding: '12px', fontWeight: 'bold' }}>Cancel</button>
-                    <button className="btn-primary" onClick={handleSubmitReport} style={{ flex: 1, borderRadius: '24px', padding: '12px', fontWeight: 'bold', backgroundColor: '#dc3545', border: 'none' }}>Submit Report</button>
+                    <button className="btn-secondary btn-rounded" onClick={() => setIsReportSpotModalOpen(false)} style={{ flex: 1, fontWeight: 'bold' }}>Cancel</button>
+                    <button className="btn-danger btn-rounded" onClick={handleSubmitReport} style={{ flex: 1, fontWeight: 'bold' }}>Submit Report</button>
                   </div>
                 </div>
               ) : (
@@ -582,7 +582,7 @@ export default function GuideHome() {
                   <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '20px' }}>
                     Thank you for keeping WanderSync safe. Our admin team will review this spot shortly.
                   </p>
-                  <button className="btn-primary" onClick={() => setIsReportSpotModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '12px', fontWeight: 'bold' }}>Close</button>
+                  <button className="btn-primary btn-rounded" onClick={() => setIsReportSpotModalOpen(false)} style={{ width: '100%', fontWeight: 'bold' }}>Close</button>
                 </div>
               )}
             </div>
