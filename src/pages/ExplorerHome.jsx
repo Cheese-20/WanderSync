@@ -7,6 +7,7 @@ import logo from '../assets/images/logo.png';
 import '../styles/explorer.css';
 
 export default function ExplorerHome() {
+  const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -57,48 +58,64 @@ export default function ExplorerHome() {
   };
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const loadData = async () => {
+      const promises = [];
+
+      promises.push(
+        fetch('http://localhost:5200/api/posts')
+          .then(res => {
+            if (res.ok) return res.json();
+            throw new Error('Failed to fetch posts');
+          })
+          .then(data => setPosts(data))
+          .catch(err => console.error('Error fetching posts:', err))
+      );
+
+      promises.push(
+        axios.get('/api/tours')
+          .then(response => {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const upcomingTours = response.data.filter(tour => new Date(tour.date) >= now);
+            setTours(upcomingTours);
+          })
+          .catch(err => console.error("Error fetching tours:", err))
+      );
+
+      promises.push(
+        axios.get('http://localhost:5200/api/spots/verified')
+          .then(res => setSpots(res.data))
+          .catch(err => console.error('Error fetching spots:', err))
+      );
+
       try {
-        const response = await fetch('http://localhost:5200/api/posts');
-        if (response.ok) {
-          const data = await response.json();
-          setPosts(data);
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const userId = user.id || user.userID;
+          setLoggedInUserId(userId);
+          setUserRole(user.role || user.Role);
+          
+          // Fetch the user's bookings to persist the "Requested" state for tours
+          promises.push(
+            axios.get(`http://localhost:5200/api/bookings/user/${userId}`)
+              .then(res => {
+                if (Array.isArray(res.data)) {
+                  setRequestedTourIds(res.data.map(b => b.tourID));
+                }
+              })
+              .catch(err => console.error('Failed to fetch user bookings:', err))
+          );
         }
-      } catch (err) {
-        console.error('Error fetching posts:', err);
+      } catch (e) {
+        console.warn('Failed to parse user from local storage', e);
       }
+
+      await Promise.allSettled(promises);
+      setIsLoading(false);
     };
 
-    const fetchTours = async () => {
-      try {
-        const response = await axios.get('/api/tours');
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        const upcomingTours = response.data.filter(tour => new Date(tour.date) >= now);
-        setTours(upcomingTours);
-      } catch (error) {
-        console.error("Error fetching tours:", error);
-      }
-    };
-
-    fetchPosts();
-    fetchTours();
-
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        setLoggedInUserId(user.id || user.userID);
-        setUserRole(user.role || user.Role);
-      }
-      
-      // Fetch verified spots for everyone
-      axios.get('http://localhost:5200/api/spots/verified')
-        .then(res => setSpots(res.data))
-        .catch(err => console.error(err));
-    } catch (e) {
-      console.warn('Failed to parse user from local storage', e);
-    }
+    loadData();
   }, []);
 
   const handlePostCreated = (newOrUpdatedPost, isEdit) => {
@@ -163,6 +180,17 @@ export default function ExplorerHome() {
     setEditingPost(null);
   };
 
+  if (isLoading) {
+    return (
+      <div className="explorer-page">
+        <NavBar />
+        <div className="explorer-loading-container">
+          <div className="explorer-spinner"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <NavBar />
@@ -175,7 +203,7 @@ export default function ExplorerHome() {
           {tours.slice(0, visibleToursCount).map(tour => (
             <article key={tour.tourId || tour.tourID} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
-                <img src={tour.pictureURL || tour.imageURL || 'https://via.placeholder.com/260x140'} alt="Tour" />
+                <img src={tour.pictureURL || 'https://via.placeholder.com/260x140'} alt="Tour" />
               </div>
               <div className="tour-card-body">
                 <h3 className="tour-title" style={{ marginBottom: '4px' }}>{tour.title}</h3>
@@ -199,7 +227,11 @@ export default function ExplorerHome() {
                   <button 
                     className="mint-btn" 
                     disabled={requestedTourIds.includes(tour.tourId || tour.tourID)}
-                    style={{ opacity: requestedTourIds.includes(tour.tourId || tour.tourID) ? 0.6 : 1, cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' }}
+                    style={{ 
+                      backgroundColor: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#d3d3d3' : '',
+                      color: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#888' : '',
+                      cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' 
+                    }}
                     onClick={() => { setSelectedTour(tour); setIsBookingModalOpen(true); }}
                   >
                     {requestedTourIds.includes(tour.tourId || tour.tourID) ? 'Requested' : 'Join'}
@@ -249,7 +281,6 @@ export default function ExplorerHome() {
             <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
                 <img src={spot.pictureURL || 'https://via.placeholder.com/260x140'} alt="Spot" />
-                <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255,255,255,0.9)', color: '#1a8f66', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Verified</span>
               </div>
               <div className="tour-card-body">
                 <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>

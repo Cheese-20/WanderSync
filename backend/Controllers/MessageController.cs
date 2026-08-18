@@ -22,6 +22,21 @@ namespace backend.Controllers
             _context = context;
         }
 
+        [HttpGet("all-matches")]
+        public async Task<IActionResult> GetAllMatches()
+        {
+            var list = new System.Collections.Generic.List<object>();
+            using var command = _context.Database.GetDbConnection().CreateCommand();
+            command.CommandText = "SELECT matchID, requesterID, receiverID, status FROM Matches";
+            await _context.Database.OpenConnectionAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                list.Add(new { matchID = reader.GetInt32(0), requesterID = reader.GetInt32(1), receiverID = reader.GetInt32(2), status = reader.GetString(3) });
+            }
+            return Ok(list);
+        }
+
         [HttpGet("contacts/{userId}")]
         public async Task<IActionResult> GetContacts(int userId)
         {
@@ -29,6 +44,7 @@ namespace backend.Controllers
             {
                 var contacts = new System.Collections.Generic.List<object>();
                 using var command = _context.Database.GetDbConnection().CreateCommand();
+                command.CommandTimeout = 120; // Increase timeout to prevent crashing on large base64 profile pictures
                 command.CommandText = @"
                     SELECT 
                         u.userID, 
@@ -41,7 +57,7 @@ namespace backend.Controllers
                     FROM Matches m
                     JOIN User u ON u.userID = m.receiverID
                     LEFT JOIN Profile p ON p.userID = u.userID
-                    WHERE m.requesterID = @userId AND m.status = 'accepted'
+                    WHERE m.requesterID = @userId AND LOWER(m.status) = 'accepted'
                     
                     UNION ALL
                     
@@ -56,7 +72,7 @@ namespace backend.Controllers
                     FROM Matches m
                     JOIN User u ON u.userID = m.requesterID
                     LEFT JOIN Profile p ON p.userID = u.userID
-                    WHERE m.receiverID = @userId AND m.status = 'accepted'
+                    WHERE m.receiverID = @userId AND LOWER(m.status) = 'accepted'
                 ";
                 
                 var param = command.CreateParameter();

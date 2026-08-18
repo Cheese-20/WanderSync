@@ -236,7 +236,6 @@ export default function GuideHome() {
             <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
                 <img src={spot.pictureURL || 'https://via.placeholder.com/260x140'} alt="Spot" />
-                <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255,255,255,0.9)', color: '#1a8f66', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Verified</span>
               </div>
               <div className="tour-card-body">
                 <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>

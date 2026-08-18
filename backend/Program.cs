@@ -40,7 +40,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<WanderSyncDbContext>(options =>
     // Use Pomelo MySQL provider with explicit server version
-    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)))
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)),
+        mySqlOptions => mySqlOptions.CommandTimeout(120))
 );
 
 builder.Services.AddControllers();
@@ -179,6 +180,8 @@ using (var scope = app.Services.CreateScope())
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Tours` ADD COLUMN `location` longtext NULL;",
+            "ALTER TABLE `Tours` ADD COLUMN `price` decimal(18,2) NOT NULL DEFAULT 0;",
+            "ALTER TABLE `Tours` ADD COLUMN `pictureURL` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `interests` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
@@ -255,25 +258,45 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        // Add 3 dummy verified spots for Local Favourites
+        // Add 5 dummy verified spots for Local Favourites
+        Console.WriteLine("INFO: Attempting to seed dummy local favourites...");
         try {
-            var checkSql = "SELECT COUNT(*) FROM `curatedSpots` WHERE `isVerified` = 'approved';";
-            var count = context.Database.SqlQueryRaw<int>(checkSql).FirstOrDefault();
-            if (count < 3)
-            {
-                var insertDummySpotsSql = @"
-                    INSERT INTO `curatedSpots` (`activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`) 
-                    VALUES 
-                    ('Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974', NOW()),
-                    ('Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city.', 'approved', 'https://images.unsplash.com/photo-1525610553991-2bede1a236e2', NOW()),
-                    ('Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain.', 'approved', 'https://images.unsplash.com/photo-1574768395574-8b6a38612ff0', NOW());
-                ";
-                context.Database.ExecuteSqlRaw(insertDummySpotsSql);
-                Console.WriteLine("SUCCESS: Inserted 3 dummy spots");
-            }
+            var insertDummySpotsSql = @"
+                INSERT IGNORE INTO `curatedSpots` (`spotID`, `activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`) 
+                VALUES 
+                (9001, 'Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain. Suitable for all skill levels.', 'approved', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974?w=600', NOW()),
+                (9002, 'Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city. Try their signature pastries.', 'approved', 'https://images.unsplash.com/photo-1525610553991-2bede1a236e2?w=600', NOW()),
+                (9003, 'Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain. Bike rentals available at the start.', 'approved', 'https://images.unsplash.com/photo-1574768395574-8b6a38612ff0?w=600', NOW()),
+                (9004, 'Kalk Bay Harbor Walk', 'Culture', 'Kalk Bay', 'Explore the vibrant working harbor, see the local seals, and enjoy fresh fish and chips by the sea.', 'approved', 'https://images.unsplash.com/photo-1580509653855-66795f7004f1?w=600', NOW()),
+                (9005, 'Boulders Beach Penguins', 'Nature', 'Simon''s Town', 'Get up close with the famous African penguin colony at Boulders Beach. A must-see for animal lovers.', 'approved', 'https://images.unsplash.com/photo-1586071853637-231cb489e27c?w=600', NOW());
+            ";
+            context.Database.ExecuteSqlRaw(insertDummySpotsSql);
+            Console.WriteLine("SUCCESS: Inserted 5 dummy spots (or skipped if already exist)");
         } catch (Exception e) {
             Console.WriteLine("FAIL: Could not insert dummy spots. ERROR: " + e.Message);
         }
+
+        // Add 5 dummy tours for "Tours happening lately" (with future dates)
+        Console.WriteLine("INFO: Attempting to seed dummy tours...");
+        try {
+            // Use INSERT IGNORE with high IDs so they don't conflict with existing tours
+            // and won't duplicate on restart. Using guideID=21 (existing Test Guide user).
+            var insertDummyToursSql = @"
+                INSERT IGNORE INTO `Tours` (`tourID`, `guideID`, `title`, `type`, `description`, `date`, `maxPeople`, `price`, `location`, `pictureURL`)
+                VALUES
+                (9001, 21, 'Table Mountain Sunrise Hike', 'Adventure', 'Start your day with a breathtaking sunrise hike up Table Mountain via the Platteklip Gorge route. Witness the golden hour painting Cape Town in warm light as you reach the summit. Suitable for intermediate fitness levels.', '2026-09-05 05:30:00', 12, 350.00, 'Cape Town', 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=600'),
+                (9002, 21, 'Bo-Kaap Cultural Walking Tour', 'Cultural', 'Explore the vibrant streets of Bo-Kaap, one of Cape Town''s most iconic neighbourhoods. Learn about the rich Cape Malay heritage, sample traditional koeksisters, and capture stunning photos of the colourful houses.', '2026-09-12 10:00:00', 20, 200.00, 'Bo-Kaap, Cape Town', 'https://images.unsplash.com/photo-1588828195558-cf25e7e8d248?w=600'),
+                (9003, 21, 'Cape Winelands Tasting Experience', 'Food & Wine', 'Journey through the picturesque Stellenbosch and Franschhoek wine valleys. Visit three award-winning estates for tastings of world-class wines paired with artisan cheeses and charcuterie.', '2026-09-20 09:00:00', 8, 750.00, 'Stellenbosch', 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=600'),
+                (9004, 21, 'Shark Cage Diving Adventure', 'Adventure', 'Face your fears with an unforgettable shark cage diving experience in Gansbaai, the Great White Shark capital of the world. All equipment and safety briefings included. Lunch on board.', '2026-10-03 07:00:00', 10, 1800.00, 'Gansbaai', 'https://images.unsplash.com/photo-1560275619-4662e36fa65c?w=600'),
+                (9005, 21, 'Kirstenbosch Botanical Garden Tour', 'Nature', 'Discover the stunning biodiversity of Kirstenbosch National Botanical Garden. Walk the famous Tree Canopy Walkway, explore the fragrance garden, and learn about unique fynbos species from an expert botanist guide.', '2026-09-28 14:00:00', 15, 180.00, 'Newlands, Cape Town', 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=600');
+            ";
+            context.Database.ExecuteSqlRaw(insertDummyToursSql);
+            Console.WriteLine("SUCCESS: Inserted 5 dummy tours (or skipped if already exist)");
+        } catch (Exception e) {
+            Console.WriteLine("FAIL: Could not insert dummy tours. ERROR: " + e.Message);
+        }
+
+
 
         // Ensure Reviews table exists for guide ratings
         context.Database.ExecuteSqlRaw(@"

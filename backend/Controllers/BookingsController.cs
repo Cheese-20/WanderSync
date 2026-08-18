@@ -90,11 +90,12 @@ namespace backend.Controllers
             if (existingBooking != null)
                 return Conflict(new { message = "You have already booked this tour." });
 
-            // Check capacity - count active bookings for this tour
+            // Check capacity - sum active bookings guests for this tour
             var currentBookings = await _context.Bookings
-                .CountAsync(b => b.tourID == request.TourID && b.status != "Cancelled");
-            if (currentBookings >= tour.MaxPeople)
-                return BadRequest(new { message = "This tour is fully booked." });
+                .Where(b => b.tourID == request.TourID && b.status != "Cancelled")
+                .SumAsync(b => (int?)b.numberOfGuests) ?? 0;
+            if (currentBookings + request.NumberOfGuests > tour.MaxPeople)
+                return BadRequest(new { message = "Not enough spots remaining on this tour." });
 
             var booking = new Booking
             {
@@ -102,7 +103,8 @@ namespace backend.Controllers
                 tourID = request.TourID,
                 bookingType = "Tour",
                 status = "Pending", // Set to pending to allow guide to accept/decline
-                bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow
+                bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow,
+                numberOfGuests = request.NumberOfGuests
             };
 
             try
@@ -285,5 +287,6 @@ namespace backend.Controllers
         public int UserID { get; set; }
         public int TourID { get; set; }
         public DateTime BookingDate { get; set; }
+        public int NumberOfGuests { get; set; }
     }
 }

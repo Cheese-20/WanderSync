@@ -10,11 +10,11 @@ namespace backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SpotController : ControllerBase
+    public class SpotsController : ControllerBase
     {
         private readonly WanderSyncDbContext _context;
 
-        public SpotController(WanderSyncDbContext context)
+        public SpotsController(WanderSyncDbContext context)
         {
             _context = context;
         }
