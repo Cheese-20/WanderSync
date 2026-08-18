@@ -378,3 +378,42 @@
 - If a network error occurs during the flag or delete action, the system displays an error message and the spot remains unchanged.
 - If the Admin tries to delete a spot with 5 or fewer reports, the system prevents the action and displays a message (e.g., "A spot must have more than 5 reports to be deleted").
 - If the Admin tries to flag a spot with fewer than 3 reports, the system prevents the action and displays a message (e.g., "A spot must have at least 3 reports to be flagged").
+
+---
+
+## Use Case 11: Manage Itinerary (D800)
+**Actor:** User (Travel Guide / Organizer)
+
+**Trigger:** The actor selects "Manage Itinerary" from the dashboard trip management view.
+
+**Preconditions:**
+1. The actor is successfully authenticated and logged into the system.
+2. The actor has active administrative or guide permissions for the selected tourist/group trip.
+
+**Main Flow (How it is accomplished):**
+1. The actor navigates to the Dashboard and selects an assigned tourist's active trip.
+2. The system retrieves and displays the trip calendar, timeline, and current schedule items.
+3. The actor selects a specific day/date from the calendar to manage.
+4. The actor chooses an action: Add Activity, Remove Activity, Reorder Timeline, or Block Transit Time.
+5. The system prompts the actor with the relevant input form or drag-and-drop timeline interface.
+6. The actor inputs or modifies the required details (e.g., activity name, start/end time, location, category, and notes).
+7. The actor clicks the "Save" or "Update" button.
+8. The system performs a validation check for schedule overlapping, invalid time bounds, or missing mandatory fields.
+9. The system updates the itinerary records and timestamps in the database.
+10. The system triggers a real-time synchronization update across active client sessions.
+11. The system generates and sends a notification to the assigned tourist regarding the updated schedule.
+12. The system displays a success confirmation message and returns the actor to the updated itinerary view.
+
+**Postconditions:**
+1. The itinerary database records are successfully updated.
+2. Real-time synchronization propagates changes to connected client views.
+3. A notification is dispatched to the assigned tourist(s).
+
+**Alternative Flows:**
+- **8a. Validation Failure (Overlapping Times or Missing Fields):**
+  - 8a.1. The system detects a time conflict with an existing scheduled activity or a missing mandatory field.
+  - 8a.2. The system aborts the save operation and displays a descriptive error message highlighting the conflict.
+  - 8a.3. The actor modifies the conflicting time slot or fills in missing data, then returns to step 7.
+- **10a. Network Connectivity Loss During Sync:**
+  - 10a.1. The system fails to connect to the backend database/real-time server.
+  - 10a.2. The system caches the itinerary updates locally and displays a "Pending Sync / Offline Mode" warning banner to the actor.

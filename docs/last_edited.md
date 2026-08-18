@@ -1,6 +1,19 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-14]
+- **Feature (Manage Itinerary)**: Implemented Use Case D800 (Manage Itinerary).
+  - **Backend**: Added `GET /api/local-guide/{guideId}/assigned-tourists` to fetch accepted tourist matches in `LocalGuideController.cs`.
+  - **Backend**: Added `GET /api/local-guide/{guideId}/itinerary/{touristId}` to get or create a "CustomItinerary" `Tour` record. The itinerary timeline is serialized as a JSON string and saved in `Tour.Description`.
+  - **Backend**: Added `PUT /api/local-guide/itinerary/{tourId}` to update the serialized JSON timeline.
+  - **Backend**: Configured the PUT endpoint to generate a notification for the tourist upon schedule updates, using the `Notifications` table.
+  - **Frontend**: Updated `GuideHome.jsx` to fetch and display assigned tourists. Added a "Manage Itinerary" modal with an interactive timeline builder (add, remove, reorder activities/transit).
+  - **Frontend (UI Overhaul)**: Completely redesigned the Manage Itinerary feature into a dedicated, full-page layout (`ManageItinerary.jsx`) based on user mockups. Replaced the modal with a light-themed, dual-column view featuring a drag-and-drop sidebar for pre-saved activities, and an interactive, card-based vertical timeline for precise itinerary management.
+  - **Documentation**: Formally documented the detailed flow for "Use Case 11: Manage Itinerary (D800)" in `docs/use_case_narratives.md`, outlining the basic flow (calendar selection, timeline modification, validation) and alternative flows (validation failures, network loss).
+  - **Frontend (Validation & Offline Mode)**: Implemented strict validation sweeps across the itinerary timeline array prior to saving, preventing missing fields (title, time, duration) and dynamically calculating time-duration intersections to prevent overlapping schedules. Introduced `localStorage` caching and a fallback offline banner triggered upon encountering `ERR_NETWORK` during the save process.
+  - **Why**: Allows Local Guides to plan and edit personalized trips for matched tourists without requiring any new database tables, meeting project constraints while delivering full functionality. Meets the extended D800 requirements for error handling and connection resilience.
+  - **How**: We repurposed the `Tour` table to represent an itinerary (setting `Type` = "CustomItinerary") and used the `Description` field to store a JSON array of activities. A `Booking` record automatically links the tourist to this itinerary tour.
+
 ## [2026-08-11]
 - **Feature (Recommend New Location)**: Implemented Use Case D500 (Recommend new location / Submit New Spot).
   - **Backend**: Created the `Spot.cs` model and added it to the `WanderSyncDbContext`.
