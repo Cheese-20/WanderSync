@@ -356,7 +356,7 @@ export default function ExplorerHome() {
               })()}
 
               <div className="post-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-                {loggedInUserId !== post.userID && (
+                {Number(loggedInUserId) !== Number(post.userID) && (
                   <div style={{ position: 'relative', marginLeft: 'auto' }}>
                     <span
                       onClick={() => toggleMenu(post.postID)}
@@ -372,7 +372,7 @@ export default function ExplorerHome() {
                     )}
                   </div>
                 )}
-                {loggedInUserId === post.userID && (
+                {Number(loggedInUserId) === Number(post.userID) && (
                   <>
                     <span
                       className="action-icon edit-icon"
