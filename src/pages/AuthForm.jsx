@@ -5,8 +5,6 @@ import logo from '../assets/images/logo.png';
 
 function AuthForm() {
   const [isSignUpActive, setIsSignUpActive] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginValues, setLoginValues] = useState({
     email: '',
@@ -25,17 +23,6 @@ function AuthForm() {
   });
 
   const [signupStatus, setSignupStatus] = useState({
-    message: '',
-    type: '',
-  });
-
-  const [resetValues, setResetValues] = useState({
-    email: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-
-  const [resetStatus, setResetStatus] = useState({
     message: '',
     type: '',
   });
@@ -87,47 +74,6 @@ function AuthForm() {
   // ADDED: Make function async and send signup payload to backend
   // NOTE: We use a relative `/api` path so the Vite dev server proxy
   // forwards this request to the ASP.NET backend during development.
-
-  const handleResetChange = event => {
-    const { name, value } = event.target;
-    setResetValues(prev => ({ ...prev, [name]: value }));
-    setResetStatus({ message: '', type: '' });
-  };
-
-  const submitReset = async event => {
-    event.preventDefault();
-
-    if (resetValues.newPassword !== resetValues.confirmPassword) {
-      setResetStatus({ message: 'Passwords do not match.', type: 'error' });
-      return;
-    }
-
-    if (resetValues.newPassword.length < 6) {
-      setResetStatus({ message: 'Password must be at least 6 characters.', type: 'error' });
-      return;
-    }
-
-    try {
-      const response = await axios.post('/api/auth/reset-password', {
-        email: resetValues.email,
-        newPassword: resetValues.newPassword,
-      });
-
-      setResetStatus({ message: response.data.message || 'Password reset successfully!', type: 'success' });
-
-      setTimeout(() => {
-        setShowForgotPassword(false);
-        setResetValues({ email: '', newPassword: '', confirmPassword: '' });
-        setResetStatus({ message: '', type: '' });
-      }, 2000);
-    } catch (error) {
-      setResetStatus({
-        message: error.response?.data?.message || 'Failed to reset password. Please try again.',
-        type: 'error',
-      });
-    }
-  };
-
   const submitSignup = async event => {
     event.preventDefault();
 
@@ -164,62 +110,7 @@ function AuthForm() {
   };
 
   return (
-    <>
-      {/* Forgot Password Overlay */}
-      {showForgotPassword && (
-        <div className="forgot-overlay">
-          <div className="forgot-card">
-            <h2 className="form-title">Reset Password</h2>
-            <p className="form-subtitle">Enter your email and new password</p>
-            <form onSubmit={submitReset} className="form">
-              <input
-                name="email"
-                type="email"
-                value={resetValues.email}
-                onChange={handleResetChange}
-                placeholder="Your registered email"
-                required
-              />
-              <input
-                name="newPassword"
-                type="password"
-                value={resetValues.newPassword}
-                onChange={handleResetChange}
-                placeholder="New password"
-                required
-              />
-              <input
-                name="confirmPassword"
-                type="password"
-                value={resetValues.confirmPassword}
-                onChange={handleResetChange}
-                placeholder="Confirm new password"
-                required
-              />
-              <button type="submit" className="btn solid">Reset Password</button>
-              <button
-                type="button"
-                className="btn transparent"
-                onClick={() => { setShowForgotPassword(false); setResetStatus({ message: '', type: '' }); }}
-              >
-                Back to Sign In
-              </button>
-              {resetStatus.message && (
-                <p className={`signup-status ${resetStatus.type}`}>
-                  {resetStatus.message}
-                </p>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
-      {isLoading && (
-        <div className="global-loading-overlay">
-          <div className="global-spinner"></div>
-          <div className="global-loading-text">Processing...</div>
-        </div>
-      )}
-      <div className="signin-signup-page">
+    <div className="signin-signup-page">
       <div className="logo-top">
         <img src={logo} alt="WanderSync logo" className="brand-logo" />
         <button type="button" className="logo-text-button" onClick={() => navigate('/home')}>
@@ -277,10 +168,8 @@ function AuthForm() {
                 </label>
               </div>
 
-              <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }}>Forgot password?</a>
-              <button type="submit" className="btn solid" disabled={isLoading}>
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </button>
+              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
+              <button type="submit" className="btn solid">Sign In</button>
             </form>
           </div>
 
@@ -406,8 +295,8 @@ function AuthForm() {
           </div>
         </div>
       )}
+
     </div>
-    </>
   );
 }
 

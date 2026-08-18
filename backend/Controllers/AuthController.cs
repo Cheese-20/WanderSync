@@ -85,6 +85,47 @@ namespace backend.Controllers
                 return BadRequest("Email and password are required.");
             }
 
+            string providedUsername = model.Email;
+            
+            // Normalize email to username if it ends with @wandersync.com
+            if (providedUsername.EndsWith("@wandersync.com", StringComparison.OrdinalIgnoreCase))
+            {
+                providedUsername = providedUsername.Substring(0, providedUsername.IndexOf("@"));
+            }
+
+            if (providedUsername.StartsWith("s", StringComparison.OrdinalIgnoreCase) && !providedUsername.Contains("@"))
+            {
+                var adminQueryUsername = providedUsername + "@wandersync.com";
+                var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Username == adminQueryUsername);
+                if (admin != null)
+                {
+                    _logger.LogInformation($"Admin DB password: '{admin.HashedPassword}', Provided: '{model.Password}'");
+                    // Admin passwords are not hashed according to schema requirements
+                    if (admin.HashedPassword == model.Password)
+                    {
+                        var returnedRole = "admin";
+                        var adminToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{admin.Username}:{Guid.NewGuid()}"));
+                        return Ok(new
+                        {
+                            message = "Login successful",
+                            token = adminToken,
+                            user = new
+                            {
+                                id = admin.AdminID,
+                                email = admin.Username,
+                                name = "Admin",
+                                surname = "User",
+                                role = returnedRole
+                            }
+                        });
+                    }
+                    else
+                    {
+                        return Unauthorized("Invalid email or password.");
+                    }
+                }
+            }
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
             if (user == null)
             {
@@ -97,22 +138,10 @@ namespace backend.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
-            // Check if account is suspended
-            if (user.AccountStatus == "Suspended")
+            if (string.Equals(model.Role, "guide", StringComparison.OrdinalIgnoreCase) && 
+                !string.Equals(user.Role, "guide", StringComparison.OrdinalIgnoreCase))
             {
-                // Check if suspension period has expired
-                if (user.SuspendedUntil.HasValue && user.SuspendedUntil.Value <= DateTime.UtcNow)
-                {
-                    // Suspension expired — reactivate the account
-                    user.AccountStatus = "Active";
-                    user.SuspendedUntil = null;
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    var suspendedUntil = user.SuspendedUntil?.ToString("dd MMMM yyyy") ?? "unknown";
-                    return Unauthorized($"Your account has been suspended. You will be able to log in again after {suspendedUntil}.");
-                }
+                return Unauthorized(new { message = "There is no record of you being a local guide please try again later or login as an explorer" });
             }
 
             var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Email}:{Guid.NewGuid()}") );
@@ -133,7 +162,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest model)
         {
             _logger.LogInformation($"Password reset attempt for {model.Email}");
 
@@ -170,7 +199,7 @@ namespace backend.Controllers
         }
     }
 
-    public class ResetPasswordModel
+    public class ResetPasswordRequest
     {
         public string Email { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;

@@ -4,11 +4,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models
 {
-    [Table("Curated_spots")]
+    [Table("curatedSpots")]
     public class CuratedSpot
     {
         [Key]
-        [Column("curatedSpotID")]
+        [Column("spotID")]
         public int SpotID { get; set; }
 
         [Column("activityName")]
@@ -26,6 +26,15 @@ namespace backend.Models
         public string Location { get; set; } = string.Empty;
 
         [Column("isVerified")]
-        public bool IsVerified { get; set; } = false;
+        public string IsVerified { get; set; } = "pending";
+
+        [Column("pictureURL")]
+        public string? PictureURL { get; set; }
+
+        [Column("submittedByUserID")]
+        public int? SubmittedByUserID { get; set; }
+
+        [Column("submittedAt")]
+        public DateTime? SubmittedAt { get; set; }
     }
 }

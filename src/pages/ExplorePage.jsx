@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from '../components/NavBar';
 import '../styles/explore.css';
 
 export default function ExplorePage() {
@@ -129,7 +130,7 @@ export default function ExplorePage() {
         tourID: tourId,
         bookingDate: new Date().toISOString()
       });
-      alert(res.data.message || 'Booking confirmed!');
+      alert(res.data.message || 'Booking request submitted successfully!');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to book. Please try again.';
       alert(msg);
@@ -137,7 +138,9 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="explore-page">
+    <>
+      <NavBar />
+      <div className="explore-page">
 
       {/* Search Bar */}
       <section className="explore-search-section">
@@ -377,5 +380,6 @@ export default function ExplorePage() {
         </>
       )}
     </div>
+    </>
   );
 }
