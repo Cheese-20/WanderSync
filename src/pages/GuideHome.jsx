@@ -187,28 +187,9 @@ export default function GuideHome() {
   };
 
   return (
-    <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
-      <section className="assigned-tourists-section" style={{ marginBottom: '30px' }}>
-        <div className="section-header">
-          <h2>Assigned Tourists & Itineraries</h2>
-        </div>
-        {assignedTourists.length > 0 ? (
-          <div className="tours-grid" style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
-            {assignedTourists.map(tourist => (
-              <article key={tourist.userId} className="tour-card" style={{ minWidth: '250px', flexShrink: 0, padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#007bff', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '10px' }}>
-                  {tourist.firstName ? tourist.firstName[0].toUpperCase() : 'T'}
-                </div>
-                <h3 style={{ margin: '0 0 5px 0' }}>{tourist.firstName} {tourist.lastName}</h3>
-                <span style={{ fontSize: '0.85rem', color: '#666', marginBottom: '15px' }}>{tourist.email}</span>
-                <button className="mint-btn" onClick={() => navigate(`/manage-itinerary/${tourist.userId}`)}>Manage Itinerary</button>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p style={{ padding: '0 20px' }}>You have no assigned tourists currently.</p>
-        )}
-      </section>
+    <>
+      <NavBar />
+      <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
 
       <section className="happening-lately-section">
         <div className="section-header">
@@ -596,6 +577,7 @@ export default function GuideHome() {
         editPost={editingPost}
       />
     </div>
+    </>
   );
 }
 
