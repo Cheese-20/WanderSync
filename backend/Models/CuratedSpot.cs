@@ -13,17 +13,17 @@ namespace backend.Models
 
         [Column("activityName")]
         [MaxLength(200)]
-        public string ActivityName { get; set; } = string.Empty;
+        public string? ActivityName { get; set; }
 
         [Column("activityType")]
         [MaxLength(50)]
-        public string ActivityType { get; set; } = string.Empty;
+        public string? ActivityType { get; set; }
 
         [Column("description")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
         [Column("location")]
-        public string Location { get; set; } = string.Empty;
+        public string? Location { get; set; }
 
         [Column("isVerified")]
         public string IsVerified { get; set; } = "pending";

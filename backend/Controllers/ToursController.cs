@@ -64,7 +64,6 @@ namespace backend.Controllers
                                price = tu.t.Price, 
                                maxPeople = tu.t.MaxPeople, 
                                type = tu.t.Type, 
-                               imageURL = tu.t.ImageURL, 
                                pictureURL = tu.t.PictureURL, 
                                location = tu.t.Location,
                                guideID = tu.t.GuideId,

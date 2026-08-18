@@ -1,6 +1,7 @@
-# Last Edited - Spot Verification Card Layout Fix
+# Last Edited - Fixed numberOfGuests Bug in Tour Bookings
 
 ## [2026-08-18]
+- **Bug Fix (Bookings)**: Fixed `numberOfGuests` bug in Tour Bookings. Updated `CreateBooking` API in `backend/Controllers/BookingsController.cs` to correctly receive and save the `numberOfGuests` value when a user submits a booking request. Improved capacity check to sum `numberOfGuests` instead of counting bookings.
 - **Feature (Report Spot)**: Implemented Use Case D900 (Report Spot).
   - **Backend**: Added `SpotReportRequest` DTO and a new `POST /api/spots/{id}/report` endpoint in `SpotController.cs`. This endpoint stores spot reports in the `SpotReports` table.
   - **Frontend**: Updated `ExplorerHome.jsx` and `GuideHome.jsx` to include a "Report" button in the `LocalSpotModal` (Verified Local Favourites view).
@@ -56,32 +57,16 @@
 
 ## What Changed
 
-The spot verification card layout was switched from **CSS Flexbox** to **CSS Grid**.
+Updated the `CreateBooking` API endpoint to correctly receive and save the `numberOfGuests` value when a user submits a booking request. Also fixed a bug where tour capacity checking was counting total bookings instead of total guests.
 
 ## Why It Changed
 
-The spot cards displayed images on the left but the content area (title, description, approve/reject buttons) to the right of the image was completely invisible. The root cause was:
+The user noticed that whenever someone made a booking for a tour, the number of guests on the Dashboard always showed as `0`, even if they selected multiple people during checkout. 
 
-1. `.spot-card` used `display: flex` with `overflow: hidden`
-2. `.spot-card-img` had `flex: 0 0 300px` to reserve 300px for the image
-3. However, `<img>` elements have **intrinsic dimensions** (their natural pixel width/height). Browsers give intrinsic dimensions higher priority than `flex-basis` in certain rendering scenarios, meaning the image could stretch beyond 300px
-4. When the image exceeded its intended 300px, it pushed `.spot-card-content` partially or fully outside the card boundary
-5. Since `.spot-card` had `overflow: hidden`, the pushed-out content was **clipped and invisible**
+This happened because the backend's `CreateBookingRequest` model was completely missing the `NumberOfGuests` field, so it ignored the number sent by the frontend. Additionally, the backend was creating the new `Booking` database record using the C# default integer value (0) for `numberOfGuests`.
 
-## How The Fix Works
+## How It Works
 
-**CSS Grid** was used instead of Flexbox because Grid enforces column sizing strictly:
-
-```css
-.spot-card {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-}
-```
-
-- `grid-template-columns: 280px 1fr` creates exactly two columns: the first is **exactly** 280px (the image column), and the second takes **all remaining space** (the content column)
-- Unlike Flexbox, Grid column tracks are absolute — the image cannot grow beyond 280px regardless of its intrinsic dimensions
-- The image uses `width: 100%; height: 100%; object-fit: cover;` to fill its grid cell without overflowing
-- The content column is guaranteed to be visible since `1fr` always resolves to the remaining space
-
-**JSX cleanup:** Removed debug `console.log` statements and inline style overrides that were previously added as workarounds. The CSS Grid layout handles everything correctly without inline styles.
+1. Added `public int NumberOfGuests { get; set; }` to the `CreateBookingRequest` class.
+2. Updated the `Booking` creation logic to map `numberOfGuests = request.NumberOfGuests`.
+3. Improved the capacity check (`currentBookings`) to use `.SumAsync(b => b.numberOfGuests)` instead of `.CountAsync()`, preventing tours from being overbooked if multiple users book with several guests each!

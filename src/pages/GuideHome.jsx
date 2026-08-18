@@ -188,28 +188,8 @@ export default function GuideHome() {
 
   return (
     <>
-    <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
-      <section className="assigned-tourists-section" style={{ marginBottom: '30px' }}>
-        <div className="section-header">
-          <h2>Assigned Tourists & Itineraries</h2>
-        </div>
-        {assignedTourists.length > 0 ? (
-          <div className="tours-grid" style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
-            {assignedTourists.map(tourist => (
-              <article key={tourist.userId} className="tour-card" style={{ minWidth: '250px', flexShrink: 0, padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#007bff', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '10px' }}>
-                  {tourist.firstName ? tourist.firstName[0].toUpperCase() : 'T'}
-                </div>
-                <h3 style={{ margin: '0 0 5px 0' }}>{tourist.firstName} {tourist.lastName}</h3>
-                <span style={{ fontSize: '0.85rem', color: '#666', marginBottom: '15px' }}>{tourist.email}</span>
-                <button className="mint-btn" onClick={() => navigate(`/manage-itinerary/${tourist.userId}`)}>Manage Itinerary</button>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p style={{ padding: '0 20px' }}>You have no assigned tourists currently.</p>
-        )}
-      </section>
+      <NavBar />
+      <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
 
       <section className="happening-lately-section">
         <div className="section-header">
@@ -291,7 +271,7 @@ export default function GuideHome() {
             <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
                 <img src={spot.pictureURL || 'https://via.placeholder.com/260x140'} alt="Spot" />
-                <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255,255,255,0.9)', color: '#1a8f66', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>âœ“ Verified</span>
+                <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255,255,255,0.9)', color: '#1a8f66', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Verified</span>
               </div>
               <div className="tour-card-body">
                 <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
