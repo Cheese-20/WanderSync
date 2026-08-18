@@ -98,7 +98,7 @@ export default function Dashboard() {
   const fetchPendingSpots = async () => {
     setLoadingSpots(true);
     try {
-      const response = await fetch(`/api/spot/pending/${guideId}`);
+      const response = await fetch(`/api/spots/pending/${guideId}`);
       if (response.ok) {
         const data = await response.json();
         setPendingSpots(data);
@@ -112,7 +112,7 @@ export default function Dashboard() {
   const handleVote = async (spotId, voteType) => {
     setIsVoting(true);
     try {
-      const response = await fetch(`/api/spot/${spotId}/vote`, {
+      const response = await fetch(`/api/spots/${spotId}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ guideId, voteType })
