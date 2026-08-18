@@ -16,46 +16,7 @@ import EditActivity from './pages/EditActivity.jsx';
 import AdminHome from './pages/AdminHome.jsx';
 import ReportForm from './pages/ReportForm.jsx';
 import LocalGuideApplication from './pages/LocalGuideApplication.jsx';
-import SetupProfileModal from './components/SetupProfileModal.jsx';
-
-function AuthWrapper({ children }) {
-  const [needsSetup, setNeedsSetup] = useState(false);
-  const [userId, setUserId] = useState(null);
-  const location = useLocation();
-
-  useEffect(() => {
-    const checkProfile = async () => {
-      const userJson = localStorage.getItem('user');
-      if (userJson) {
-        try {
-          const user = JSON.parse(userJson);
-          const uid = user.id || user.userID;
-          if (uid) {
-            setUserId(uid);
-            await axios.get(`/api/profile/${uid}`);
-          }
-        } catch (error) {
-          if (error.response && error.response.status === 404) {
-            setNeedsSetup(true);
-          }
-        }
-      }
-    };
-    checkProfile();
-  }, [location.pathname]);
-
-  return (
-    <>
-      {children}
-      {needsSetup && userId && (
-        <SetupProfileModal 
-          userId={userId} 
-          onComplete={() => setNeedsSetup(false)} 
-        />
-      )}
-    </>
-  );
-}
+import ManageItinerary from './pages/ManageItinerary.jsx';
 
 function HomeRouter() {
   const userJson = localStorage.getItem('user');
@@ -75,19 +36,19 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/login" element={<AuthForm />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/home" element={<AuthWrapper><HomeRouter /></AuthWrapper>} />
-        <Route path="/dashboard" element={<AuthWrapper><Dashboard /></AuthWrapper>} />
-        <Route path="/discover" element={<AuthWrapper><Discover /></AuthWrapper>} />
-        <Route path="/match" element={<AuthWrapper><Match /></AuthWrapper>} />
-        <Route path="/explore" element={<AuthWrapper><ExplorePage /></AuthWrapper>} />
-        <Route path="/messages" element={<AuthWrapper><Messages /></AuthWrapper>} />
-        <Route path="/profile" element={<AuthWrapper><Profile /></AuthWrapper>} />
-        <Route path="/activities" element={<AuthWrapper><Activities /></AuthWrapper>} />
-        <Route path="/edit-activity/:id" element={<AuthWrapper><EditActivity /></AuthWrapper>} />
-        <Route path="/admin" element={<AuthWrapper><AdminHome /></AuthWrapper>} />
-        <Route path="/report" element={<AuthWrapper><ReportForm /></AuthWrapper>} />
-        <Route path="/local-guide-application" element={<AuthWrapper><LocalGuideApplication /></AuthWrapper>} />
-        <Route path="/apply-guide" element={<AuthWrapper><LocalGuideApplication /></AuthWrapper>} />
+        <Route path="/home" element={<HomeRouter />} />
+        <Route path="/discover" element={<Discover />} />
+        <Route path="/match" element={<Match />} />
+        <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/edit-activity/:id" element={<EditActivity />} />
+        <Route path="/admin" element={<AdminHome />} />
+        <Route path="/report" element={<ReportForm />} />
+        <Route path="/local-guide-application" element={<LocalGuideApplication />} />
+        <Route path="/apply-guide" element={<LocalGuideApplication />} />
+        <Route path="/manage-itinerary/:touristId" element={<ManageItinerary />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
