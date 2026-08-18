@@ -452,6 +452,161 @@ namespace backend.Controllers
                 return StatusCode(500, new { message = "Failed to retrieve guides." });
             }
         }
+
+        /// <summary>
+        /// GET /api/local-guide/{guideId}/assigned-tourists
+        /// Returns a list of tourists that have an accepted match with this guide.
+        /// </summary>
+        [HttpGet("{guideId:int}/assigned-tourists")]
+        public async Task<IActionResult> GetAssignedTourists(int guideId)
+        {
+            try
+            {
+                var matches = await _context.Matches
+                    .Where(m => (m.RequesterID == guideId || m.ReceiverID == guideId) && m.Status == "accepted")
+                    .ToListAsync();
+
+                var touristIds = matches
+                    .Select(m => m.RequesterID == guideId ? m.ReceiverID : m.RequesterID)
+                    .Distinct()
+                    .ToList();
+
+                var tourists = await _context.Users
+                    .Where(u => touristIds.Contains(u.UserID) && u.Role != "Guide")
+                    .Select(u => new
+                    {
+                        userId = u.UserID,
+                        firstName = u.FirstName,
+                        lastName = u.LastName,
+                        email = u.Email
+                    })
+                    .ToListAsync();
+
+                return Ok(tourists);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching assigned tourists for guideId={GuideId}", guideId);
+                return StatusCode(500, new { message = "Failed to retrieve assigned tourists." });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/local-guide/{guideId}/itinerary/{touristId}
+        /// Gets the active itinerary for the assigned tourist, or creates one if it doesn't exist.
+        /// </summary>
+        [HttpGet("{guideId:int}/itinerary/{touristId:int}")]
+        public async Task<IActionResult> GetItinerary(int guideId, int touristId)
+        {
+            try
+            {
+                // Verify match exists
+                var isMatched = await _context.Matches
+                    .AnyAsync(m => (m.RequesterID == guideId && m.ReceiverID == touristId || m.RequesterID == touristId && m.ReceiverID == guideId) && m.Status == "accepted");
+
+                if (!isMatched)
+                    return BadRequest(new { message = "You are not matched with this tourist." });
+
+                // Find a tour representing the itinerary (Type = "CustomItinerary")
+                var booking = await _context.Bookings
+                    .Join(_context.Tours, b => b.tourID, t => t.TourId, (b, t) => new { b, t })
+                    .Where(bt => bt.b.userID == touristId && bt.t.GuideId == guideId && bt.t.Type == "CustomItinerary")
+                    .FirstOrDefaultAsync();
+
+                if (booking == null)
+                {
+                    // Create an empty itinerary
+                    var newTour = new Tour
+                    {
+                        GuideId = guideId,
+                        Title = "Custom Trip Itinerary",
+                        Type = "CustomItinerary",
+                        Description = "[]", // Empty JSON array for timeline
+                        Date = DateTime.UtcNow.Date,
+                        MaxPeople = 1,
+                        Price = 0,
+                        Location = "Various"
+                    };
+
+                    _context.Tours.Add(newTour);
+                    await _context.SaveChangesAsync();
+
+                    var newBooking = new Booking
+                    {
+                        userID = touristId,
+                        tourID = newTour.TourId,
+                        numberOfGuests = 1,
+                        bookingType = "Itinerary",
+                        status = "Confirmed",
+                        bookingDate = DateTime.UtcNow.Date,
+                        timeOfBooking = DateTime.UtcNow.ToString("HH:mm")
+                    };
+
+                    _context.Bookings.Add(newBooking);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new
+                    {
+                        tourId = newTour.TourId,
+                        timeline = "[]"
+                    });
+                }
+
+                // Return existing timeline
+                return Ok(new
+                {
+                    tourId = booking.t.TourId,
+                    timeline = string.IsNullOrEmpty(booking.t.Description) ? "[]" : booking.t.Description
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching itinerary for guideId={GuideId}, touristId={TouristId}", guideId, touristId);
+                return StatusCode(500, new { message = "Failed to retrieve itinerary." });
+            }
+        }
+
+        /// <summary>
+        /// PUT /api/local-guide/itinerary/{tourId:int}
+        /// Updates the itinerary timeline and notifies the tourist.
+        /// </summary>
+        [HttpPut("itinerary/{tourId:int}")]
+        public async Task<IActionResult> UpdateItinerary(int tourId, [FromBody] UpdateItineraryRequest request)
+        {
+            try
+            {
+                var tour = await _context.Tours.FirstOrDefaultAsync(t => t.TourId == tourId && t.Type == "CustomItinerary");
+                if (tour == null)
+                    return NotFound(new { message = "Itinerary not found." });
+
+                tour.Description = request.TimelineJson ?? "[]";
+                _context.Tours.Update(tour);
+
+                // Notify tourist
+                var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.tourID == tourId);
+                if (booking != null)
+                {
+                    var notification = new Notification
+                    {
+                        UserID = booking.userID,
+                        Message = "Your local guide has updated your itinerary schedule. Please check the dashboard for changes.",
+                        IsRead = false,
+                        Type = "ItineraryUpdate",
+                        RelatedEntityID = tourId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(notification);
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Itinerary updated successfully!" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating itinerary tourId={TourId}", tourId);
+                return StatusCode(500, new { message = "Failed to update itinerary." });
+            }
+        }
     }
 
     // ===== Request DTOs =====
@@ -470,5 +625,10 @@ namespace backend.Controllers
         public int UserID { get; set; }
         public int Score { get; set; }
         public string? Comment { get; set; }
+    }
+
+    public class UpdateItineraryRequest
+    {
+        public string? TimelineJson { get; set; }
     }
 }
