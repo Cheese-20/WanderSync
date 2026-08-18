@@ -267,7 +267,7 @@
 ## Use Case 9: Reporting a User or Content
 **Actor:** User (Explorer or Guide)
 
-**Trigger:** The user clicks on the ellipsis menu (⋯) in the top-left corner of a post.
+**Trigger:** The user clicks on the ellipsis menu (⋯) in the top-right corner of a post.
 
 **Preconditions:**
 - The user is registered and logged into the application.
