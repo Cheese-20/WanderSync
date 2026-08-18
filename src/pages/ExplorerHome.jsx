@@ -25,6 +25,10 @@ export default function ExplorerHome() {
   const [visibleSpotsCount, setVisibleSpotsCount] = useState(4);
   const [visiblePostsCount, setVisiblePostsCount] = useState(3);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [isReportSpotModalOpen, setIsReportSpotModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('Inaccurate Information');
+  const [reportComment, setReportComment] = useState('');
+  const [reportStatus, setReportStatus] = useState('idle');
   const scrollRef = useRef(null);
   const spotsScrollRef = useRef(null);
   const navigate = useNavigate();
@@ -39,6 +43,28 @@ export default function ExplorerHome() {
 
   const handleLoadMorePosts = () => {
     setVisiblePostsCount(prev => Math.min(prev + 3, posts.length));
+  };
+
+  const handleOpenReportModal = () => {
+    setIsLocalSpotModalOpen(false);
+    setReportReason('Inaccurate Information');
+    setReportComment('');
+    setReportStatus('idle');
+    setIsReportSpotModalOpen(true);
+  };
+
+  const handleSubmitReport = async () => {
+    try {
+      const fullReason = reportComment ? `${reportReason} - ${reportComment}` : reportReason;
+      await axios.post(`http://localhost:5200/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/report`, {
+        reporterId: loggedInUserId,
+        reason: fullReason
+      });
+      setReportStatus('success');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to submit report. Please try again.');
+    }
   };
 
   const scrollLeft = () => {
@@ -481,7 +507,16 @@ export default function ExplorerHome() {
             <button className="close-btn" onClick={() => setIsLocalSpotModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
-              <h2 style={{ margin: '0 0 15px 0', fontSize: '1.4rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2 style={{ margin: '0', fontSize: '1.4rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
+                <button 
+                  onClick={handleOpenReportModal}
+                  style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem', fontWeight: 'bold' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                  Report
+                </button>
+              </div>
               
               <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
                 <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h3>
@@ -503,6 +538,67 @@ export default function ExplorerHome() {
 
             <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
               <button className="btn-primary" onClick={() => setIsLocalSpotModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>Awesome!</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isReportSpotModalOpen && selectedLocalSpot && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', position: 'relative' }}>
+            <button className="close-btn" onClick={() => setIsReportSpotModalOpen(false)}>&times;</button>
+            <div style={{ marginBottom: '20px' }}>
+              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
+              <h2 style={{ margin: '0 0 15px 0', fontSize: '1.4rem', color: '#1a1a1a' }}>Report Spot</h2>
+              
+              {reportStatus === 'idle' ? (
+                <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px' }}>
+                  <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '0.95rem' }}>
+                    Why are you reporting <strong>{selectedLocalSpot.activityName || selectedLocalSpot.name}</strong>?
+                  </p>
+                  
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '0.9rem' }}>Reason</label>
+                    <select 
+                      value={reportReason} 
+                      onChange={(e) => setReportReason(e.target.value)}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.95rem' }}
+                    >
+                      <option value="Inaccurate Information">Inaccurate Information</option>
+                      <option value="Offensive Content">Offensive Content</option>
+                      <option value="Spam">Spam</option>
+                      <option value="Does Not Exist">Spot Does Not Exist</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '0.9rem' }}>Additional Comments (Optional)</label>
+                    <textarea 
+                      value={reportComment}
+                      onChange={(e) => setReportComment(e.target.value)}
+                      rows="3"
+                      placeholder="Provide more details..."
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.95rem', resize: 'vertical' }}
+                    ></textarea>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="btn-secondary" onClick={() => setIsReportSpotModalOpen(false)} style={{ flex: 1, borderRadius: '24px', padding: '12px', fontWeight: 'bold' }}>Cancel</button>
+                    <button className="btn-primary" onClick={handleSubmitReport} style={{ flex: 1, borderRadius: '24px', padding: '12px', fontWeight: 'bold', backgroundColor: '#dc3545', border: 'none' }}>Submit Report</button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#28a745', marginBottom: '20px' }}>
+                    Report Submitted Successfully!
+                  </p>
+                  <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '20px' }}>
+                    Thank you for keeping WanderSync safe. Our admin team will review this spot shortly.
+                  </p>
+                  <button className="btn-primary" onClick={() => setIsReportSpotModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '12px', fontWeight: 'bold' }}>Close</button>
+                </div>
+              )}
             </div>
           </div>
         </div>

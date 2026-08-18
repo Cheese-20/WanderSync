@@ -1,5 +1,12 @@
 # Last Edited - Spot Verification Card Layout Fix
 
+## [2026-08-18]
+- **Feature (Report Spot)**: Implemented Use Case D900 (Report Spot).
+  - **Backend**: Added `SpotReportRequest` DTO and a new `POST /api/spots/{id}/report` endpoint in `SpotController.cs`. This endpoint stores spot reports in the `SpotReports` table.
+  - **Frontend**: Updated `ExplorerHome.jsx` and `GuideHome.jsx` to include a "Report" button in the `LocalSpotModal` (Verified Local Favourites view).
+  - **Frontend**: Implemented a new `ReportSpotModal` that captures the reason (via dropdown) and optional comments from the user. Submitting the form calls the backend API and provides success feedback.
+  - **Why**: Allows users to flag inappropriate or non-existent spots for admin review, ensuring content quality and safety on the platform.
+
 ## [2026-08-14]
 - **Feature (Manage Itinerary)**: Implemented Use Case D800 (Manage Itinerary).
   - **Backend**: Added `GET /api/local-guide/{guideId}/assigned-tourists` to fetch accepted tourist matches in `LocalGuideController.cs`.

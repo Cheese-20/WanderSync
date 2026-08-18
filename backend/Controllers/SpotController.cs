@@ -138,5 +138,28 @@ namespace backend.Controllers
 
             return CreatedAtAction(nameof(GetPendingSpotsForGuide), new { guideId = 0 }, spot);
         }
+        // POST: api/spots/{id}/report
+        [HttpPost("{id}/report")]
+        public async Task<IActionResult> ReportSpot(int id, [FromBody] SpotReportRequest request)
+        {
+            var report = new SpotReport
+            {
+                SpotID = id,
+                ReporterID = request.ReporterId,
+                Reason = request.Reason,
+                SentAt = DateTime.UtcNow
+            };
+
+            _context.SpotReports.Add(report);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Spot reported successfully." });
+        }
+    }
+
+    public class SpotReportRequest
+    {
+        public int ReporterId { get; set; }
+        public string Reason { get; set; } = string.Empty;
     }
 }
