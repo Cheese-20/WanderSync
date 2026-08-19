@@ -578,7 +578,6 @@ export default function GuideHome() {
         editPost={editingPost}
       />
     </div>
-    </>
   );
 }
 
