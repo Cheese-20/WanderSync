@@ -109,7 +109,7 @@ export default function ExplorerHome() {
       );
 
       promises.push(
-        axios.get('http://localhost:5200/api/spots/verified')
+        axios.get(`http://localhost:5200/api/spots/verified?userId=${loggedInUserId || ''}`)
           .then(res => setSpots(res.data))
           .catch(err => console.error('Error fetching spots:', err))
       );
@@ -142,7 +142,26 @@ export default function ExplorerHome() {
     };
 
     loadData();
-  }, []);
+  }, [loggedInUserId]);
+
+  const handleUpvote = async (spotId) => {
+    if (!loggedInUserId) {
+      alert("Please log in to upvote.");
+      return;
+    }
+    try {
+      await axios.post(`http://localhost:5200/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
+      setSpots(spots.map(s => {
+        if ((s.spotID || s.spotId) === spotId) {
+          return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
+        }
+        return s;
+      }));
+    } catch (e) {
+      console.error('Error upvoting spot:', e);
+      alert(e.response?.data?.message || e.response?.data || 'Failed to upvote spot.');
+    }
+  };
 
   const handlePostCreated = (newOrUpdatedPost, isEdit) => {
     // Normalize casing for postID/userID from backend POST/PUT requests
@@ -318,6 +337,14 @@ export default function ExplorerHome() {
                   </span>
                 </div>
                 <div className="tour-footer">
+                  <button 
+                    className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
+                    onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
+                    title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
+                  >
+                    <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                    {spot.upvotesCount || 0}
+                  </button>
                   <div style={{ flex: 1 }}></div>
                   <button 
                     className="mint-btn" 

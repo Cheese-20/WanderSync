@@ -149,7 +149,7 @@ namespace backend.Controllers
             try
             {
                 var bookings = await _context.Bookings
-                    .Where(b => b.userID == userId && b.bookingType == "Tour")
+                    .Where(b => b.userID == userId)
                     .Join(
                         _context.Tours,
                         booking => booking.tourID,
@@ -164,13 +164,20 @@ namespace backend.Controllers
                         {
                             bookingId = bt.booking.bookingID,
                             tourId = bt.tour.TourId,
+                            bookingType = bt.booking.bookingType,
                             tourTitle = bt.tour.Title,
                             tourType = bt.tour.Type,
                             tourDate = bt.tour.Date,
                             bookingDate = bt.booking.bookingDate,
                             status = bt.booking.status,
                             guideId = guide.UserID,
-                            guideName = guide.FirstName + " " + guide.LastName
+                            guideName = guide.FirstName + " " + guide.LastName,
+                            pictureURL = bt.tour.PictureURL,
+                            location = bt.tour.Location,
+                            price = bt.tour.Price,
+                            description = bt.tour.Description,
+                            numberOfGuests = bt.booking.numberOfGuests,
+                            timeOfBooking = bt.booking.timeOfBooking
                         }
                     )
                     .ToListAsync();

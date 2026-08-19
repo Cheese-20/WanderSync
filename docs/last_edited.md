@@ -1,4 +1,56 @@
-# Last Edited - Fixed numberOfGuests Bug in Tour Bookings
+# Last Edited - Restored Manage Itinerary UI in GuideHome
+
+## [2026-08-19]
+- **UI Redesign (Manage Itinerary)**: Full redesign of `ManageItinerary.jsx` and `manage-itinerary.css`.
+  - **Overview tab**: Read-only summary of all activities in order, showing type badge (colour-coded), location, time range, duration, and notes. Empty state guides the user to the builder.
+  - **Itinerary Builder tab**: Replaced the old drag-and-drop sidebar with a structured form (name, type dropdown with 8 emoji types, location, start time, duration, notes). Activities auto-sort by time. Inline time conflict detection prevents overlapping bookings. Each timeline card is editable inline with a ✕ remove button. Timeline connector colour matches the activity type.
+  - **Locations tab**: Ordered list of all activities that have a location, showing sequence number, address, and time range — useful for the tourist to follow the route.
+  - **Stats bar**: Live stats always visible — number of activities, total duration, start time, end time.
+  - **Save & Notify button**: Prominent button in the header, saves to backend and notifies the tourist.
+  - **Why**: The old page had broken `<Layout>` wrapper (blank page), placeholder tabs with no function, and a confusing drag-and-drop sidebar. This replaces it with a clear, step-by-step UI that tells the guide exactly what to do at each step.
+
+- **Bug Fix (Explore Page Submit Spot button)**: Fixed case sensitivity issue preventing the "Submit New Spot" button from rendering for guides.
+  - **Root cause**: The UI checked `userRole.includes('guide')` but roles in the database might be capitalized (e.g., `Guide`).
+  - **Fix**: Standardized the role string by calling `.toLowerCase()` before checking.
+
+- **UI Redesign (Submit Spot Modal)**: Full redesign of the submit spot modal in `ExplorePage.jsx` and added new CSS to `explore.css`.
+  - **Look & Feel**: Added a backdrop blur overlay (`backdrop-filter: blur(6px)`) and a glassmorphic card with a gradient header matching the WanderSync brand colours. Also updated the trigger button (`✨ Submit New Spot`) with a matching green gradient, rounded pill shape, drop shadow, and a lift-on-hover effect.
+  - **Usability**: Replaced the free-text `Activity Type` input with a predefined `<select>` dropdown (using the exact same 8 categories as the Manage Itinerary page).
+  - **Icons**: Added intuitive emojis to all input fields and the submit button to make the form feel modern and "cool".
+  - **Animations**: Added smooth `fadeIn` and `slideUp` keyframe animations when the modal opens.
+
+- **Bug Fix (Submit Spot Modal Error)**: Fixed the `"An error occurred while saving the record. Please try again."` error when submitting a new spot.
+  - **Root cause**: The frontend payload was sending `isVerified: false` (a boolean). The backend C# model `CuratedSpot` defines `IsVerified` as a `string` (default `"pending"`). The mismatch caused ASP.NET Core model validation to fail and reject the request with a `400 Bad Request`. Additionally, the frontend was completely omitting the `submittedByUserID` field, which meant spots weren't linked to the guides who submitted them.
+  - **Fix**: Changed the payload to send `isVerified: "pending"`, and added code to extract the current user's ID from `localStorage` to include `submittedByUserID` and `submittedAt` in the payload.
+
+- **Feature (Conversational Spot Wizard & Upvotes)**: Converted the spot submission form into a conversational wizard and added a community upvoting feature.
+  - **Conversational UI (`ExplorePage.jsx`)**: The modal is now a 3-step wizard ("What's the spot called?" -> "Where is it?" -> "Activity Type & Description") utilizing smooth CSS sliding animations.
+  - **Spot Image Upload**: Step 3 of the wizard now includes a sleek, clickable drag-and-drop style upload zone. When an image is uploaded, it is converted to a base64 string and shows a preview with a nice overlay remove button.
+  - **Upvoting API (`SpotController.cs`)**: Added `POST /api/spots/{id}/upvote` which inserts a new `SpotVote` (type `"upvote"`) and automatically creates a `Notification` for the original spot submitter.
+  - **Upvote UI (`GuideHome.jsx` & `ExplorerHome.jsx`)**: Verified spots in the "Local Favourites" section now display an interactive Upvote button showing the live `UpvotesCount` fetched from the backend.
+
+- **Bug Fix (Prevent Self-Approval)**: Added validation so guides cannot approve spots they submitted themselves.
+  - **API Changes (`SpotController.cs`)**: 
+    - Updated `GetPendingSpotsForGuide` to hide spots where `s.SubmittedByUserID == guideId`.
+    - Added a check in `VoteOnSpot` to return `BadRequest("You cannot vote on your own spot.")` if the original submitter attempts to bypass the UI and vote directly.
+
+- **Feature (Detailed View Bookings)**: Completely redesigned the Explorer "My Activities" page for a richer viewing experience.
+  - **API Changes (`BookingsController.cs`)**: 
+    - Updated `GET /api/bookings/user/{userId}/with-details` to return BOTH "Tour" and "Itinerary" bookings (removed hardcoded filter).
+    - Added `pictureURL`, `location`, `price`, `description`, `numberOfGuests`, `timeOfBooking`, and `bookingType` fields.
+  - **UI Changes (`MyActivities.jsx`, `Profile.jsx`, & `discover.css`)**: Completely overhauled the booking cards to feature an ultra-premium glassmorphic aesthetic. The entire `.detailed-booking-card` now uses `backdrop-filter: blur(20px)` with a translucent, glowing gradient border. Details items are styled as sleek glass pills with hover micro-animations, the image features a smooth scale effect on hover, and the booking type tag (`TOUR` / `ITINERARY`) is now a glowing neon gradient. For **Custom Itineraries**, the timeline is cleanly parsed and rendered as a vertical timeline with pulsing glowing dots and floating glass nodes. This rich, visually stunning view is synchronized across both the "My Activities" page and the "Bookings" tab in the user's Profile.
+
+- **Feature (Explorer Spot Submission)**: Allowed explorers to submit spots as well.
+  - **UI Changes (`ExplorePage.jsx`)**: Removed the `userRole.includes('guide')` restriction on the "Submit New Spot" button. Now any logged-in user can submit a spot for verification.
+  - **Root cause**: The page was wrapped in `<Layout>` which is a router outlet layout component (`<Outlet />`). This component ignores any children passed to it directly — it only renders content from nested route definitions. So the entire page body was silently discarded.
+  - **Fix**: Replaced `<Layout>children</Layout>` with `<><NavBar /><div className="manage-itinerary-page">...</div></>`, matching the pattern used by every other page in the app (`ExplorerHome.jsx`, `GuideHome.jsx`, etc).
+  - **Additional**: Improved remove-item button label from `...` to `✕` for clarity, and improved duration placeholder text to `e.g. 1h or 30m`.
+- **Feature (Manage Itinerary entry point)**: Re-added the **"Manage Tourist Itineraries"** section to `GuideHome.jsx` (had been removed in main branch merge commit `8cd6772`). Now renders a card per matched tourist with a **Manage Itinerary** button navigating to `/manage-itinerary/:touristId`.
+  - **Why it was missing**: The section was silently removed during the `main` branch merge (commit `8cd6772: UI: remove Assigned Tourists section`). The backend fetch and state (`assignedTourists`) were still present but nothing was rendered on screen.
+  - **Fix**: Added a new `<section>` between "Local Favourites" and "Community Feed" that maps over `assignedTourists` and renders a card per tourist with their name, email, and a **"Manage Itinerary"** button.
+  - **How it works**: Clicking the button navigates to `/manage-itinerary/{tourist.userId}`, which loads `ManageItinerary.jsx` and fetches the tourist's itinerary via the `GET /api/local-guide/{guideId}/itinerary/{touristId}` endpoint. The route is protected by `AuthWrapper` in `App.jsx`.
+  - **Styling note**: Synced import from `useLocation` → `useNavigate` in `ExplorerHome.jsx` to match the main branch (navigate is actively used on line 35).
+- **Bug Fix (Syntax)**: Fixed missing closing `</>` fragment tag in `GuideHome.jsx` caused by the auto-merge from main (line 581).
 
 ## [2026-08-18]
 - **Bug Fix (Bookings)**: Fixed `numberOfGuests` bug in Tour Bookings. Updated `CreateBooking` API in `backend/Controllers/BookingsController.cs` to correctly receive and save the `numberOfGuests` value when a user submits a booking request. Improved capacity check to sum `numberOfGuests` instead of counting bookings.

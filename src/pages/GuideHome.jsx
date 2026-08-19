@@ -8,6 +8,7 @@ import '../styles/explorer.css';
 import '../styles/guide.css';
 
 export default function GuideHome() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -103,7 +104,7 @@ export default function GuideHome() {
       }
       
       // Fetch verified spots for Local Favourites
-      axios.get('http://localhost:5200/api/spots/verified')
+      axios.get(`http://localhost:5200/api/spots/verified?userId=${userId}`)
         .then(res => setSpots(res.data))
         .catch(err => console.error(err));
     } catch (e) {
@@ -183,6 +184,21 @@ export default function GuideHome() {
     } catch (e) {
       console.error(e);
       alert('Error recording vote.');
+    }
+  };
+
+  const handleUpvote = async (spotId) => {
+    try {
+      await axios.post(`http://localhost:5200/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
+      setSpots(spots.map(s => {
+        if ((s.spotID || s.spotId) === spotId) {
+          return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
+        }
+        return s;
+      }));
+    } catch (e) {
+      console.error('Error upvoting spot:', e);
+      alert(e.response?.data || 'Failed to upvote spot.');
     }
   };
 
@@ -283,6 +299,14 @@ export default function GuideHome() {
                   </span>
                 </div>
                 <div className="tour-footer">
+                  <button 
+                    className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
+                    onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
+                    title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
+                  >
+                    <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                    {spot.upvotesCount || 0}
+                  </button>
                   <div style={{ flex: 1 }}></div>
                   <button 
                     className="mint-btn" 
@@ -324,6 +348,30 @@ export default function GuideHome() {
 
           {spots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites yet.</p>}
         </div>
+      </section>
+
+      <section className="happening-lately-section">
+        <div className="section-header">
+          <h2>Manage Tourist Itineraries</h2>
+        </div>
+        {assignedTourists.length > 0 ? (
+          <div className="tours-grid" style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
+            {assignedTourists.map(tourist => (
+              <article key={tourist.userId} className="tour-card" style={{ minWidth: '250px', flexShrink: 0, padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#a6d8b6', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '12px' }}>
+                  {tourist.firstName ? tourist.firstName[0].toUpperCase() : 'T'}
+                </div>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{tourist.firstName} {tourist.lastName}</h3>
+                <span style={{ fontSize: '0.82rem', color: '#888', marginBottom: '16px', display: 'block' }}>{tourist.email}</span>
+                <button className="mint-btn" style={{ width: '100%' }} onClick={() => navigate(`/manage-itinerary/${tourist.userId}`)}>
+                  Manage Itinerary
+                </button>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p style={{ padding: '0 20px', color: '#888' }}>You have no assigned tourists yet. Tourists will appear here once they match with you.</p>
+        )}
       </section>
 
       <section className="community-feed-section">
