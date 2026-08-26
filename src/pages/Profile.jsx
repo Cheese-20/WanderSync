@@ -16,6 +16,8 @@ export default function Profile() {
     firstName: '',
     lastName: '',
     email: '',
+    cellNumber: '',
+    age: '',
     job: '',
     interests: '',
     description: '',
@@ -59,7 +61,9 @@ export default function Profile() {
         const user = JSON.parse(userJson);
         setForm(f => ({ ...f, firstName: user.name || user.firstName || f.firstName, lastName: user.surname || user.lastName || f.lastName, email: user.email || f.email }));
         if (user.id || user.userID) {
-          fetchProfile(user.id || user.userID);
+          const uid = user.id || user.userID;
+          fetchProfile(uid);
+          fetchUserData(uid);
         }
       }
     } catch (e) {}
@@ -113,6 +117,25 @@ export default function Profile() {
       }
     } catch (err) {
       console.warn('Could not fetch existing profile', err);
+    }
+  };
+
+  const fetchUserData = async userId => {
+    try {
+      const response = await axios.get(`/api/profile/user/${userId}`);
+      const userData = response.data;
+      if (userData) {
+        setForm(f => ({
+          ...f,
+          firstName: userData.firstName || f.firstName,
+          lastName: userData.lastName || f.lastName,
+          email: userData.email || f.email,
+          cellNumber: userData.cellNumber || f.cellNumber,
+          age: userData.age ? String(userData.age) : f.age
+        }));
+      }
+    } catch (err) {
+      console.warn('Could not fetch user data', err);
     }
   };
 
@@ -197,6 +220,30 @@ export default function Profile() {
 
     try {
       await axios.post('/api/profile', payload);
+
+      // Also update the User table with editable user fields
+      await axios.put(`/api/profile/user/${payload.userID}`, {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        cellNumber: form.cellNumber,
+        age: form.age ? parseInt(form.age, 10) : null
+      });
+
+      // Update localStorage so the rest of the app reflects the changes
+      try {
+        const userJson = localStorage.getItem('user');
+        if (userJson) {
+          const user = JSON.parse(userJson);
+          user.name = form.firstName;
+          user.firstName = form.firstName;
+          user.surname = form.lastName;
+          user.lastName = form.lastName;
+          user.email = form.email;
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+      } catch (e) {}
+
       setStatusModal({ open: true, success: true, message: 'User profile saved successfully.' });
     } catch (err) {
       console.warn('Could not save profile to backend, payload:', payload, err);
@@ -264,6 +311,17 @@ export default function Profile() {
                 <div className="field-group full-width">
                   <label>Email</label>
                   <input name="email" value={form.email} onChange={handleInput} type="email" required />
+                </div>
+              </div>
+
+              <div className="field-row split">
+                <div className="field-group">
+                  <label>Phone Number</label>
+                  <input name="cellNumber" value={form.cellNumber} onChange={handleInput} type="tel" placeholder="e.g. 0812345678" />
+                </div>
+                <div className="field-group">
+                  <label>Age</label>
+                  <input name="age" value={form.age} onChange={handleInput} type="number" min="1" max="120" placeholder="e.g. 25" />
                 </div>
               </div>
 
