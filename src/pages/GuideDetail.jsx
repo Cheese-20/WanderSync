@@ -8,6 +8,7 @@ export default function GuideDetail() {
   const navigate = useNavigate();
   const [guide, setGuide] = useState(null);
   const [ratings, setRatings] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [bookingTourId, setBookingTourId] = useState(null);
@@ -15,9 +16,17 @@ export default function GuideDetail() {
   const [bookingError, setBookingError] = useState('');
   const [isBooking, setIsBooking] = useState(false);
 
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewScore, setReviewScore] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
   useEffect(() => {
     fetchGuideDetails();
     fetchGuideRatings();
+    fetchGuideReviews();
   }, [guideId]);
 
   const fetchGuideDetails = async () => {
@@ -45,6 +54,15 @@ export default function GuideDetail() {
     }
   };
 
+  const fetchGuideReviews = async () => {
+    try {
+      const res = await axios.get(`/api/local-guide/${guideId}/reviews`);
+      setReviews(res.data || []);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    }
+  };
+
   const handleBookTour = async (tourId) => {
     const userJson = localStorage.getItem('user');
     if (!userJson) {
@@ -68,10 +86,41 @@ export default function GuideDetail() {
       });
       setBookingMessage(res.data.message || 'Booking request submitted successfully!');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to book tour. Please try again.';
-      setBookingError(msg);
+      setBookingError(err.response?.data?.message || 'Failed to book tour');
     } finally {
       setIsBooking(false);
+    }
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    const userJson = localStorage.getItem('user');
+    if (!userJson) {
+      navigate('/login', { state: { message: 'Please login to submit a review' } });
+      return;
+    }
+    const user = JSON.parse(userJson);
+    const userId = user.id || user.userID;
+
+    setIsSubmittingReview(true);
+    setReviewError('');
+    setReviewSuccess('');
+
+    try {
+      await axios.post(`/api/local-guide/${guideId}/rate`, {
+        userID: userId,
+        score: reviewScore,
+        comment: reviewComment
+      });
+      setReviewSuccess('Review submitted successfully!');
+      setReviewScore(5);
+      setReviewComment('');
+      setShowReviewForm(false);
+      fetchGuideReviews();
+    } catch (err) {
+      setReviewError(err.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -218,27 +267,84 @@ export default function GuideDetail() {
           )}
         </div>
 
-        {ratings.length > 0 && (
-          <div className="guide-detail-section">
+        <div className="guide-reviews">
+          <div className="reviews-header-container">
             <h2>Reviews</h2>
-            <div className="ratings-list">
-              {ratings.map((rating) => (
-                <div key={rating.ratingId} className="rating-card">
-                  <div className="rating-card-header">
-                    <span className="rating-user">{rating.userName}</span>
-                    <div className="rating-stars-small">
-                      {renderStars(rating.score)}
-                    </div>
+            <button 
+              className="btn-add-review"
+              onClick={() => setShowReviewForm(!showReviewForm)}
+            >
+              {showReviewForm ? 'Cancel Review' : 'Add Review'}
+            </button>
+          </div>
+
+          {showReviewForm && (
+            <div className="review-form-container">
+              <form onSubmit={submitReview} className="review-form">
+                <div className="form-group">
+                  <label>Rating</label>
+                  <select 
+                    value={reviewScore} 
+                    onChange={(e) => setReviewScore(Number(e.target.value))}
+                    required
+                  >
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Average</option>
+                    <option value="2">2 - Poor</option>
+                    <option value="1">1 - Terrible</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Comment</label>
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Write your review here..."
+                    rows="4"
+                    required
+                  ></textarea>
+                </div>
+                {reviewError && <p className="review-error">{reviewError}</p>}
+                <button 
+                  type="submit" 
+                  className="btn-submit-review"
+                  disabled={isSubmittingReview}
+                >
+                  {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </form>
+            </div>
+          )}
+          {reviewSuccess && <p className="review-success">{reviewSuccess}</p>}
+
+          {reviews && reviews.length > 0 ? (
+            <div className="reviews-list">
+              {reviews.map((review) => (
+                <div key={review.ratingId || review.reviewId} className="review-card">
+                  <div className="review-header">
+                    <span className="reviewer-name">
+                      {review.reviewerName} {review.reviewerSurname}
+                    </span>
+                    <span className="review-date">
+                      {new Date(review.createdAt || review.sentAt).toLocaleDateString()}
+                    </span>
                   </div>
-                  {rating.comment && <p className="rating-comment">{rating.comment}</p>}
-                  <span className="rating-date">
-                    {new Date(rating.createdAt).toLocaleDateString()}
-                  </span>
+                  <div className="review-rating">
+                    {'★'.repeat(review.score || 0)}{'☆'.repeat(5 - (review.score || 0))}
+                  </div>
+                  {review.comment && (
+                    <p className="review-comment">{review.comment}</p>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p className="no-reviews">This guide has no reviews yet.</p>
+          )}
+        </div>
+
+
       </section>
     </div>
   );
