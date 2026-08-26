@@ -59,6 +59,9 @@ namespace backend.Controllers
                                from p in profileGroup.DefaultIfEmpty()
                                let upvotesCount = _context.SpotVotes.Count(v => v.SpotID == s.SpotID && v.VoteType == "upvote")
                                let hasUpvoted = userId.HasValue ? _context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.VoteType == "upvote" && v.GuideID == userId.Value) : false
+                               let averageRating = _context.SpotRatings.Where(r => r.SpotID == s.SpotID).Average(r => (double?)r.RatingScore) ?? 0.0
+                               let totalRatings = _context.SpotRatings.Count(r => r.SpotID == s.SpotID)
+                               let hasRated = userId.HasValue ? _context.SpotRatings.Any(r => r.SpotID == s.SpotID && r.UserID == userId.Value) : false
                                select new {
                                    spotID = s.SpotID,
                                    activityName = s.ActivityName,
@@ -70,7 +73,10 @@ namespace backend.Controllers
                                    submitterAvatar = p != null ? p.ProfilePictureLink : null,
                                    submittedAt = s.SubmittedAt,
                                    upvotesCount = upvotesCount,
-                                   hasUpvoted = hasUpvoted
+                                   hasUpvoted = hasUpvoted,
+                                   averageRating = averageRating,
+                                   totalRatings = totalRatings,
+                                   hasRated = hasRated
                                }).ToListAsync();
 
             return Ok(spots);
@@ -217,11 +223,61 @@ namespace backend.Controllers
 
             return Ok(new { message = "Spot reported successfully." });
         }
+
+        // POST: api/spots/{id}/rate
+        [HttpPost("{id}/rate")]
+        public async Task<IActionResult> RateSpot(int id, [FromBody] RateRequest request)
+        {
+            if (request.RatingScore < 1 || request.RatingScore > 5)
+                return BadRequest("Rating score must be between 1 and 5.");
+
+            var spot = await _context.CuratedSpots.FindAsync(id);
+            if (spot == null)
+                return NotFound("Spot not found.");
+
+            // Check for duplicate rating (D1000 precondition)
+            var existingRating = await _context.SpotRatings
+                .FirstOrDefaultAsync(r => r.SpotID == id && r.UserID == request.UserId);
+
+            if (existingRating != null)
+                return BadRequest("You have already rated this spot.");
+
+            // Add rating
+            var newRating = new SpotRating
+            {
+                SpotID = id,
+                UserID = request.UserId,
+                RatingScore = request.RatingScore,
+                ReviewText = request.ReviewText,
+                SubmittedAt = DateTime.UtcNow
+            };
+
+            _context.SpotRatings.Add(newRating);
+            await _context.SaveChangesAsync();
+
+            // Recalculate average
+            var averageRating = await _context.SpotRatings
+                .Where(r => r.SpotID == id)
+                .AverageAsync(r => (double)r.RatingScore);
+                
+            var totalRatings = await _context.SpotRatings
+                .Where(r => r.SpotID == id)
+                .CountAsync();
+
+            return Ok(new { message = "Rating submitted successfully.", averageRating, totalRatings });
+        }
     }
 
     public class SpotReportRequest
     {
         public int ReporterId { get; set; }
         public string Reason { get; set; } = string.Empty;
+    }
+
+    public class RateRequest
+    {
+        public int UserId { get; set; }
+        public int RatingScore { get; set; }
+        public string? ReviewText { get; set; }
     }
 }
