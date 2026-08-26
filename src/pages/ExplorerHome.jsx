@@ -445,7 +445,7 @@ export default function ExplorerHome() {
                     onClick={() => toggleMenu(post.postID)}
                     style={{ cursor: 'pointer', fontSize: '0.9rem', color: '#666', padding: '2px 8px', border: '1px solid #ddd', borderRadius: '4px', background: '#f8f8f8' }}
                   >
-                    ••• Report
+                    •••
                   </span>
                   {openMenuId === post.postID && (
                     <div style={{ position: 'absolute', right: '0', bottom: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: '999', minWidth: '160px', overflow: 'hidden', marginBottom: '4px' }}>
