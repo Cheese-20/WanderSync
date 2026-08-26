@@ -27,5 +27,17 @@ namespace backend.Models
 
         [Column("sentAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("guideName")]
+        public string? GuideName { get; set; }
+
+        [Column("guideSurname")]
+        public string? GuideSurname { get; set; }
+
+        [Column("reviewerName")]
+        public string? ReviewerName { get; set; }
+
+        [Column("reviewerSurname")]
+        public string? ReviewerSurname { get; set; }
     }
 }

@@ -267,6 +267,10 @@ namespace backend.Controllers
             if (guide == null)
                 return NotFound(new { message = "Guide not found." });
 
+            var reviewer = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
+            if (reviewer == null)
+                return NotFound(new { message = "Reviewer not found." });
+
             // Verify user has booked a tour with this guide
             var hasBooking = await _context.Bookings
                 .Join(
@@ -292,6 +296,10 @@ namespace backend.Controllers
                     existingRating.Score = request.Score;
                     existingRating.Comment = request.Comment ?? string.Empty;
                     existingRating.CreatedAt = DateTime.UtcNow;
+                    existingRating.GuideName = guide.FirstName;
+                    existingRating.GuideSurname = guide.LastName;
+                    existingRating.ReviewerName = reviewer.FirstName;
+                    existingRating.ReviewerSurname = reviewer.LastName;
                     _context.GuideRatings.Update(existingRating);
                 }
                 else
@@ -303,7 +311,11 @@ namespace backend.Controllers
                         GuideId = guideId,
                         Score = request.Score,
                         Comment = request.Comment ?? string.Empty,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
+                        GuideName = guide.FirstName,
+                        GuideSurname = guide.LastName,
+                        ReviewerName = reviewer.FirstName,
+                        ReviewerSurname = reviewer.LastName
                     };
                     _context.GuideRatings.Add(rating);
                 }
@@ -369,6 +381,29 @@ namespace backend.Controllers
             {
                 _logger.LogError(ex, "Error fetching ratings for guideId={GuideId}", guideId);
                 return StatusCode(500, new { message = "Failed to retrieve ratings." });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/local-guide/{guideId}/reviews
+        /// Returns all reviews from the Reviews table for a specific guide.
+        /// </summary>
+        [HttpGet("{guideId:int}/reviews")]
+        public async Task<IActionResult> GetGuideReviews(int guideId)
+        {
+            try
+            {
+                var reviews = await _context.GuideRatings
+                    .Where(r => r.GuideId == guideId)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
+
+                return Ok(reviews);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching reviews for guideId={GuideId}", guideId);
+                return StatusCode(500, new { message = "Failed to retrieve reviews." });
             }
         }
 
