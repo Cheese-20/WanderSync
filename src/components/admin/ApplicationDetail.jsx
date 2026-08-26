@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import ConfirmationPopup from './ConfirmationPopup';
 
 export default function ApplicationDetail({ application, onBack, onProcessed }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [popup, setPopup] = useState(null);
 
   const handleAccept = async () => {
     setActionLoading('accept');
@@ -14,14 +16,14 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
         { method: 'PATCH' }
       );
       if (response.ok) {
-        setSuccessMsg('Application accepted successfully! User has been promoted to Local Guide.');
-        setTimeout(() => onProcessed(application.applicationID), 2000);
+        setPopup({ type: 'success', message: 'Application accepted successfully! User has been promoted to Local Guide.' });
+        setTimeout(() => onProcessed(application.applicationID), 3000);
       } else {
-        setError('Failed to accept the application. Please try again.');
+        setPopup({ type: 'error', message: 'Failed to accept the application. Please try again.' });
       }
     } catch (err) {
       console.error('Error accepting application:', err);
-      setError('A network error occurred. Please try again.');
+      setPopup({ type: 'error', message: 'A network error occurred. Please try again.' });
     } finally {
       setActionLoading(null);
     }
@@ -36,14 +38,14 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
         { method: 'DELETE' }
       );
       if (response.ok) {
-        setSuccessMsg('Application rejected successfully. The applicant has been notified.');
-        setTimeout(() => onProcessed(application.applicationID), 2000);
+        setPopup({ type: 'success', message: 'Application rejected successfully. The applicant has been notified.' });
+        setTimeout(() => onProcessed(application.applicationID), 3000);
       } else {
-        setError('Failed to reject the application. Please try again.');
+        setPopup({ type: 'error', message: 'Failed to reject the application. Please try again.' });
       }
     } catch (err) {
       console.error('Error rejecting application:', err);
-      setError('A network error occurred. Please try again.');
+      setPopup({ type: 'error', message: 'A network error occurred. Please try again.' });
     } finally {
       setActionLoading(null);
     }
@@ -114,6 +116,13 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
           </div>
         )}
       </div>
+      {popup && (
+        <ConfirmationPopup
+          type={popup.type}
+          message={popup.message}
+          onClose={() => setPopup(null)}
+        />
+      )}
     </div>
   );
 }

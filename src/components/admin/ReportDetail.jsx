@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import ConfirmationPopup from './ConfirmationPopup';
 
 export default function ReportDetail({ report, onBack, onProcessed }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [popup, setPopup] = useState(null);
 
   const handleSuspend = async () => {
     setActionLoading('suspend');
@@ -14,14 +16,14 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
         { method: 'PATCH' }
       );
       if (response.ok) {
-        setSuccessMsg('Account suspended successfully for 2 weeks. The user has been notified.');
-        setTimeout(() => onProcessed(report.reportID), 2000);
+        setPopup({ type: 'success', message: 'Account suspended successfully for 2 weeks. The user has been notified.' });
+        setTimeout(() => onProcessed(report.reportID), 3000);
       } else {
-        setError('Failed to suspend the account. Please try again.');
+        setPopup({ type: 'error', message: 'Failed to suspend the account. Please try again.' });
       }
     } catch (err) {
       console.error('Error suspending account:', err);
-      setError('A network error occurred. Please try again.');
+      setPopup({ type: 'error', message: 'A network error occurred. Please try again.' });
     } finally {
       setActionLoading(null);
     }
@@ -36,14 +38,14 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
         { method: 'DELETE' }
       );
       if (response.ok) {
-        setSuccessMsg('Report deleted successfully. The reported user\'s account remains unaffected.');
-        setTimeout(() => onProcessed(report.reportID), 2000);
+        setPopup({ type: 'success', message: 'Report deleted successfully. The reported user\'s account remains unaffected.' });
+        setTimeout(() => onProcessed(report.reportID), 3000);
       } else {
-        setError('Failed to delete the report. Please try again.');
+        setPopup({ type: 'error', message: 'Failed to delete the report. Please try again.' });
       }
     } catch (err) {
       console.error('Error deleting report:', err);
-      setError('A network error occurred. Please try again.');
+      setPopup({ type: 'error', message: 'A network error occurred. Please try again.' });
     } finally {
       setActionLoading(null);
     }
@@ -61,15 +63,15 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
         { method: 'PATCH' }
       );
       if (response.ok) {
-        setSuccessMsg('User has been permanently banned. They will no longer be able to access the platform.');
-        setTimeout(() => onProcessed(report.reportID), 2000);
+        setPopup({ type: 'success', message: 'User has been permanently banned. They will no longer be able to access the platform.' });
+        setTimeout(() => onProcessed(report.reportID), 3000);
       } else {
         const data = await response.text();
-        setError(data || 'Failed to ban the user. Please try again.');
+        setPopup({ type: 'error', message: data || 'Failed to ban the user. Please try again.' });
       }
     } catch (err) {
       console.error('Error banning user:', err);
-      setError('A network error occurred. Please try again.');
+      setPopup({ type: 'error', message: 'A network error occurred. Please try again.' });
     } finally {
       setActionLoading(null);
     }
@@ -120,6 +122,13 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
           </div>
         </div>
 
+        {popup && (
+          <ConfirmationPopup
+            type={popup.type}
+            message={popup.message}
+            onClose={() => setPopup(null)}
+          />
+        )}
         {successMsg && <div className="detail-success">{successMsg}</div>}
         {error && <div className="detail-error">{error}</div>}
 
