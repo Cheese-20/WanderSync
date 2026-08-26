@@ -417,3 +417,24 @@
 - **10a. Network Connectivity Loss During Sync:**
   - 10a.1. The system fails to connect to the backend database/real-time server.
   - 10a.2. The system caches the itinerary updates locally and displays a "Pending Sync / Offline Mode" warning banner to the actor.
+
+---
+
+## Use Case 12: Report Spot (D900)
+**Actor:** User (Travel Guide, Tourist)
+
+**Trigger:** Clicking the Report option on a specific spot.
+
+**Preconditions:**
+- The user must be logged in.
+
+**Main Flow (How it is accomplished):**
+1. The actor navigates to a specific spot detail page.
+2. The actor clicks the Report icon.
+3. The system displays a modal requesting the reason for the report.
+4. The actor selects the appropriate reason, optionally adds a comment, and clicks submit.
+5. The system logs the report in the database and flags the spot for review by Admin.
+6. The system displays a "Report Submitted Successfully" message.
+
+**Postconditions:**
+- The spot will be flagged for administrative review.
