@@ -25,11 +25,25 @@ namespace backend.Controllers
         public async Task<IActionResult> GetNewProfilesCount([FromQuery] int days = 30)
         {
             var since = DateTime.UtcNow.AddDays(-days);
-            var count = await _context.Profiles
+            var profiles = await _context.Profiles
                 .Where(p => p.CreatedAt >= since)
-                .CountAsync();
+                .Join(_context.Users,
+                    profile => profile.UserID,
+                    user => user.UserID,
+                    (profile, user) => new
+                    {
+                        user.UserID,
+                        user.FirstName,
+                        user.LastName,
+                        user.Email,
+                        user.Role,
+                        profile.Location,
+                        profile.CreatedAt
+                    })
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
 
-            return Ok(new { reportType = "New Profiles Created", period = $"Last {days} days", count });
+            return Ok(new { reportType = "New Profiles Created", period = $"Last {days} days", count = profiles.Count, data = profiles });
         }
 
         [HttpGet("reports/reported-accounts")]
@@ -44,11 +58,20 @@ namespace backend.Controllers
         [HttpGet("reports/active-users")]
         public async Task<IActionResult> GetActiveUsersCount()
         {
-            var count = await _context.Users
+            var activeUsers = await _context.Users
                 .Where(u => u.AccountStatus == "Active")
-                .CountAsync();
+                .Select(u => new
+                {
+                    u.UserID,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    u.Role,
+                    u.AccountStatus
+                })
+                .ToListAsync();
 
-            return Ok(new { reportType = "Active Users", count });
+            return Ok(new { reportType = "Active Users", count = activeUsers.Count, data = activeUsers });
         }
 
         [HttpGet("reports/top-experiences")]

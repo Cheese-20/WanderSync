@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import ConfirmationPopup from '../components/admin/ConfirmationPopup';
 import '../styles/report.css';
 
 export default function ReportForm() {
@@ -11,6 +12,7 @@ export default function ReportForm() {
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [popup, setPopup] = useState(null);
 
   const userJson = localStorage.getItem('user');
   let currentUser = {};
@@ -43,14 +45,15 @@ export default function ReportForm() {
       });
 
       if (response.ok) {
-        navigate('/home', { state: { reportSuccess: true } });
+        setPopup({ type: 'success', message: 'Report submitted successfully. Our team will review it shortly.' });
+        setTimeout(() => navigate('/home'), 3000);
       } else {
         const data = await response.text();
-        setError(data || 'Failed to submit report. Please try again.');
+        setPopup({ type: 'error', message: data || 'Failed to submit report. Please try again.' });
       }
     } catch (err) {
       console.error('Error submitting report:', err);
-      setError('A network error occurred. Please try again.');
+      setPopup({ type: 'error', message: 'A network error occurred. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -110,6 +113,13 @@ export default function ReportForm() {
           </form>
         </div>
       </div>
+      {popup && (
+        <ConfirmationPopup
+          type={popup.type}
+          message={popup.message}
+          onClose={() => setPopup(null)}
+        />
+      )}
     </div>
   );
 }
