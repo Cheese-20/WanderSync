@@ -1,6 +1,14 @@
 # Last Edited
 *Keep track of recent changes and updates in the project.*
 
+## [2026-08-26]
+- **Bug Fix / Database Refactor (Backend Compilation Fixes)**: Resolved compilation errors caused by mismatched merge conflicts.
+  - **WanderSyncDbContextModelSnapshot.cs**: Closed the builder entity block configuration for `GuideApplication` using the missing `});` brackets, resolving nested type structure errors.
+  - **Program.cs**: Properly wrapped the raw SQL table creation statement for `GuideApplication` in `context.Database.ExecuteSqlRaw(@" ... ");` execution blocks to prevent compiling SQL as inline C# code. Added dynamic `ALTER TABLE Bookings` scripts to ensure columns `curatedSpotID`, `numberOfGuests`, and `timeOfBooking` exist in the database table safely.
+  - **Booking.cs**: Added `curatedSpotID` field to the `Booking` class definition to align with database table column mapping and prevent compilation/mapping errors.
+  - **BookingsController.cs**: Unified the interleaved duplicate implementations of the `CreateBooking` action method resulting from the merge conflict. The new method is fully parameterized on `CreateBookingRequest` model to map properties such as `numberOfGuests`, `timeOfBooking`, and `bookingType` dynamically, while defaulting booking state to `Pending` for guide authorization, and dispatching proper notifications.
+  - **ToursController.cs**: Removed the duplicate `GetAllTours` HTTP GET endpoint from the class, keeping the version that fetches tours with details and joins guide names.
+
 ## [2026-08-08]
 - **Documentation**: Completely rewrote the `README.md` to professionally present the project's problem statement, solution, tech stack, and team contributors for the 3rd-year 2026 group project.
 - **Documentation**: Compiled and centralized all active system behaviors into a new `docs/business_rules.md` file, covering authentication, messaging, booking lifecycles, and notification rules.

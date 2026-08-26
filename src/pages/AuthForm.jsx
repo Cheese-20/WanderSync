@@ -171,7 +171,7 @@ function AuthForm() {
   };
 
   return (
-    <div className="signin-signup-page">
+    <>
       {/* Forgot Password Overlay */}
       {showForgotPassword && (
         <div className="forgot-overlay">
@@ -220,7 +220,6 @@ function AuthForm() {
           </div>
         </div>
       )}
-    <>
       {isLoading && (
         <div className="global-loading-overlay">
           <div className="global-spinner"></div>

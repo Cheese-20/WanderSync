@@ -160,6 +160,8 @@ using (var scope = app.Services.CreateScope())
                 UNIQUE KEY `IX_SpotVotes_UniqueVote` (`spotID`, `guideID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
+
+        context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS `GuideApplication` (
                 `applicationID` int NOT NULL AUTO_INCREMENT,
                 `IDno` bigint NOT NULL,
@@ -224,6 +226,24 @@ using (var scope = app.Services.CreateScope())
         };
 
         foreach (var sql in curatedSpotsColumnSqls)
+        {
+            try { 
+                context.Database.ExecuteSqlRaw(sql); 
+                Console.WriteLine("SUCCESS: " + sql);
+            } 
+            catch (Exception ex) { 
+                Console.WriteLine("FAIL: " + sql + " ERROR: " + ex.Message);
+            }
+        }
+
+        string[] bookingColumnSqls = new[]
+        {
+            "ALTER TABLE `Bookings` ADD COLUMN `curatedSpotID` int NOT NULL DEFAULT 0;",
+            "ALTER TABLE `Bookings` ADD COLUMN `numberOfGuests` int NOT NULL DEFAULT 0;",
+            "ALTER TABLE `Bookings` ADD COLUMN `timeOfBooking` longtext NULL;"
+        };
+
+        foreach (var sql in bookingColumnSqls)
         {
             try { 
                 context.Database.ExecuteSqlRaw(sql); 
