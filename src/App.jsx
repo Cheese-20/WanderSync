@@ -6,6 +6,7 @@ import ForgotPassword from './pages/ForgotPassword.jsx';
 import ExplorerHome from './pages/ExplorerHome.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import GuideHome from './pages/GuideHome.jsx';
+import GuideDetail from './pages/GuideDetail.jsx';
 import Discover from './pages/Discover.jsx';
 import Match from './pages/Match.jsx';
 import ExplorePage from './pages/ExplorePage.jsx';
@@ -87,6 +88,7 @@ function App() {
         <Route path="/edit-activity/:id" element={<AuthWrapper><EditActivity /></AuthWrapper>} />
         <Route path="/admin" element={<AuthWrapper><AdminHome /></AuthWrapper>} />
         <Route path="/report" element={<AuthWrapper><ReportForm /></AuthWrapper>} />
+        <Route path="/guide/:guideId" element={<AuthWrapper><GuideDetail /></AuthWrapper>} />
         <Route path="/local-guide-application" element={<AuthWrapper><LocalGuideApplication /></AuthWrapper>} />
         <Route path="/apply-guide" element={<AuthWrapper><LocalGuideApplication /></AuthWrapper>} />
         <Route path="/manage-itinerary/:touristId" element={<AuthWrapper><ManageItinerary /></AuthWrapper>} />
