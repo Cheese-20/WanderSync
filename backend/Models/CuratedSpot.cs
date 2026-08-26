@@ -12,28 +12,29 @@ namespace backend.Models
         public int SpotID { get; set; }
 
         [Column("activityName")]
-        public string ActivityName { get; set; } = string.Empty;
-        
+        [MaxLength(200)]
+        public string? ActivityName { get; set; }
+
         [Column("activityType")]
+        [MaxLength(50)]
         public string? ActivityType { get; set; }
-        
+
         [Column("description")]
         public string? Description { get; set; }
-        
+
         [Column("location")]
         public string? Location { get; set; }
 
+        [Column("isVerified")]
+        public string IsVerified { get; set; } = "pending";
+
         [Column("pictureURL")]
         public string? PictureURL { get; set; }
-        
+
         [Column("submittedByUserID")]
         public int? SubmittedByUserID { get; set; }
 
         [Column("submittedAt")]
         public DateTime? SubmittedAt { get; set; }
-
-        // pending, approved, rejected
-        [Column("isVerified")]
-        public string? IsVerified { get; set; } = "pending";
     }
 }

@@ -54,9 +54,6 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("curatedSpotID")
-                        .HasColumnType("int");
-
                     b.Property<int>("numberOfGuests")
                         .HasColumnType("int");
 
@@ -111,41 +108,6 @@ namespace backend.Migrations
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
-                {
-                    b.Property<int>("ApplicationID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("applicationID");
-
-                    b.Property<string>("Bio")
-                        .HasMaxLength(250)
-                        .HasColumnType("varchar(250)")
-                        .HasColumnName("bio");
-
-                    b.Property<long>("IDno")
-                        .HasColumnType("bigint")
-                        .HasColumnName("IDno");
-
-                    b.Property<string>("Location")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("loaction");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("longtext")
-                        .HasColumnName("reason");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int")
-                        .HasColumnName("userID");
-
-                    b.HasKey("ApplicationID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("GuideApplication");
-                });
 
             modelBuilder.Entity("backend.Models.CuratedSpot", b =>
                 {
@@ -190,6 +152,42 @@ namespace backend.Migrations
                     b.HasKey("SpotID");
 
                     b.ToTable("curatedSpots");
+                });
+
+            modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
+                {
+                    b.Property<int>("ApplicationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("applicationID");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("bio");
+
+                    b.Property<long>("IDno")
+                        .HasColumnType("bigint")
+                        .HasColumnName("IDno");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("loaction");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("longtext")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int")
+                        .HasColumnName("userID");
+
+                    b.HasKey("ApplicationID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("GuideApplication");
                 });
 
             modelBuilder.Entity("backend.Models.Message", b =>
@@ -397,6 +395,10 @@ namespace backend.Migrations
                     b.Property<int>("GuideId")
                         .HasColumnType("int")
                         .HasColumnName("guideID");
+
+                    b.Property<string>("ImageURL")
+                        .HasColumnType("longtext")
+                        .HasColumnName("imageURL");
 
                     b.Property<int>("MaxPeople")
                         .HasColumnType("int")

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
+import NavBar from '../components/NavBar';
 import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
+import '../styles/discover.css';
 
 export default function Profile() {
   const locationHook = useLocation();
@@ -80,7 +81,7 @@ export default function Profile() {
           if (userStr) {
             const user = JSON.parse(userStr);
             // using local proxy config since main uses axios with relative paths
-            const response = await axios.get(`/api/bookings/user/${user.id || user.userID}`);
+            const response = await axios.get(`/api/bookings/user/${user.id || user.userID}/with-details`);
             if (response.data) {
               setBookings(response.data);
             }
@@ -204,7 +205,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="profile-page">
+    <>
+      <NavBar />
+      <div className="profile-page">
 
       <main className="page profile-container">
         <h2>User Profile</h2>
@@ -223,8 +226,8 @@ export default function Profile() {
             Bookings
           </button>
           <button 
-            className="delete button" 
-            onClick={handleLogout} 
+            className="delete button logout-btn" 
+            onClick={handleLogout}
             style={{ marginLeft: 'auto' }}
           >
             Logout
@@ -321,85 +324,110 @@ export default function Profile() {
               <p>You have no bookings yet.</p>
             ) : (
               <div className="bookings-list">
-                {bookings.map(booking => (
-                  <div 
-                    key={booking.bookingID} 
-                    onClick={() => setSelectedBooking(booking)}
-                    className="booking-item"
-                  >
-                    <div className="booking-header">
-                      <h4 className="booking-title">Booking #{booking.bookingID}</h4>
-                      <span className={`booking-status ${booking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
-                        {booking.status}
-                      </span>
+                {bookings.map(booking => {
+                  const fallbackImage = 'https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&q=80&w=400';
+                  let imageSrc = fallbackImage;
+                  if (booking.pictureURL) {
+                    try {
+                      imageSrc = booking.pictureURL.startsWith('[') ? JSON.parse(booking.pictureURL)[0] : booking.pictureURL;
+                    } catch (e) {
+                      imageSrc = fallbackImage;
+                    }
+                  }
+                  const price = booking.price || 0;
+                  const guests = booking.numberOfGuests || 1;
+                  const total = price * guests;
+
+                  return (
+                    <div key={booking.bookingId} className="detailed-booking-card">
+                      <div className="detailed-booking-image">
+                        <img src={imageSrc} alt={booking.tourTitle} />
+                        <span className="detailed-tour-type">{booking.tourType}</span>
+                      </div>
+                      <div className="detailed-booking-body">
+                        <div className="detailed-booking-header">
+                          <div>
+                            {booking.bookingType && (
+                              <span className="detailed-booking-type-tag">{booking.bookingType.toUpperCase()}</span>
+                            )}
+                            <h4>{booking.tourTitle}</h4>
+                          </div>
+                          <span className={`detailed-status status-${booking.status?.toLowerCase()}`}>
+                            {booking.status}
+                          </span>
+                        </div>
+                        
+                        {booking.location && (
+                          <p className="detailed-booking-location">📍 {booking.location}</p>
+                        )}
+                        
+                        {(() => {
+                          if (booking.bookingType?.toLowerCase() === 'itinerary') {
+                            try {
+                              const timeline = JSON.parse(booking.description);
+                              if (Array.isArray(timeline) && timeline.length > 0) {
+                                return (
+                                  <div className="cool-itinerary-timeline">
+                                    {timeline.slice(0, 3).map((item, index) => (
+                                      <div 
+                                        key={item.id || index} 
+                                        className="timeline-node" 
+                                        style={{ animationDelay: `${index * 0.15}s` }}
+                                      >
+                                        <div className="timeline-dot"></div>
+                                        <div className="timeline-content">
+                                          <div className="timeline-content-top">
+                                            <span className="spot-name">{item.name}</span>
+                                            {item.type && <span className="spot-type">{item.type}</span>}
+                                          </div>
+                                          {item.location && <span className="spot-location">📍 {item.location}</span>}
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {timeline.length > 3 && (
+                                      <div className="timeline-overflow">
+                                        + {timeline.length - 3} more spots in this trip
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return <p className="detailed-booking-desc">Empty itinerary.</p>;
+                            } catch (e) {
+                              return <p className="detailed-booking-desc">Custom itinerary details unavailable.</p>;
+                            }
+                          }
+                          return (
+                            <p className="detailed-booking-desc">
+                              {booking.description ? (booking.description.length > 100 ? booking.description.substring(0, 100) + '...' : booking.description) : 'No description provided.'}
+                            </p>
+                          );
+                        })()}
+                        
+                        <div className="detailed-booking-details">
+                          <div className="detail-item">
+                            <span className="detail-label">Tour Date</span>
+                            <span className="detail-value">{new Date(booking.tourDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-label">Booked On</span>
+                            <span className="detail-value">{new Date(booking.bookingDate).toLocaleDateString()} {booking.timeOfBooking}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-label">Guests</span>
+                            <span className="detail-value">👥 {guests}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-label">Total Price</span>
+                            <span className="detail-value price-value">R {total}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p className="booking-detail-text">Type: {booking.bookingType}</p>
-                    <p className="booking-detail-text">
-                      Date: {new Date(booking.bookingDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
-          </div>
-        )}
-
-        {/* Modal for detailed booking view */}
-        {selectedBooking && (
-          <div className="booking-modal-overlay">
-            <div className="booking-modal-content">
-              <div className="booking-modal-header">
-                <h3 className="booking-modal-title">Booking Details</h3>
-                <button 
-                  onClick={() => setSelectedBooking(null)} 
-                  className="booking-modal-close"
-                >
-                  &times;
-                </button>
-              </div>
-              
-              <div className="booking-modal-body">
-                <div className="booking-modal-row">
-                  <strong className="booking-modal-label">Booking ID:</strong>
-                  <span>{selectedBooking.bookingID}</span>
-                </div>
-                <div className="booking-modal-row">
-                  <strong className="booking-modal-label">Status:</strong>
-                  <span className={`booking-status ${selectedBooking.status === 'Confirmed' ? 'status-confirmed' : 'status-pending'}`}>
-                    {selectedBooking.status}
-                  </span>
-                </div>
-                <div className="booking-modal-row">
-                  <strong className="booking-modal-label">Type:</strong>
-                  <span>{selectedBooking.bookingType}</span>
-                </div>
-                <div className="booking-modal-row">
-                  <strong className="booking-modal-label">Date:</strong>
-                  <span>{new Date(selectedBooking.bookingDate).toLocaleString()}</span>
-                </div>
-                {selectedBooking.tourID !== 0 && (
-                  <div className="booking-modal-row">
-                    <strong className="booking-modal-label">Tour ID:</strong>
-                    <span>{selectedBooking.tourID}</span>
-                  </div>
-                )}
-                {selectedBooking.curatedSpotID !== 0 && (
-                  <div className="booking-modal-row">
-                    <strong className="booking-modal-label">Curated Spot ID:</strong>
-                    <span>{selectedBooking.curatedSpotID}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="booking-modal-footer">
-                <button 
-                  onClick={() => setSelectedBooking(null)}
-                  className="booking-modal-btn"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
@@ -415,5 +443,6 @@ export default function Profile() {
 
       </main>
     </div>
+    </>
   );
 }

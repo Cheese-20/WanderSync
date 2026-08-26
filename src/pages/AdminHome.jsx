@@ -1,45 +1,57 @@
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import AdminNavBar from '../components/AdminNavBar';
+import Overview from '../components/admin/Overview';
+import Applications from '../components/admin/Applications';
+import Reports from '../components/admin/Reports';
+import '../styles/admin.css';
 
-function AdminHome() {
-  const navigate = useNavigate();
-  const [adminUser, setAdminUser] = useState(null);
+export default function AdminHome() {
+  const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    const userJson = localStorage.getItem('user');
-    if (!userJson) {
-      navigate('/login');
-      return;
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <Overview />;
+      case 'applications':
+        return <Applications />;
+      case 'reports':
+        return <Reports />;
+      default:
+        return <Overview />;
     }
-    
-    try {
-      const user = JSON.parse(userJson);
-      if (user.role !== 'admin') {
-        navigate('/home');
-      } else {
-        setAdminUser(user);
-      }
-    } catch (e) {
-      navigate('/login');
-    }
-  }, [navigate]);
-
-
-
-  if (!adminUser) return <div>Loading...</div>;
+  };
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <main>
-        <h1 style={{ marginBottom: '2rem' }}>WanderSync Admin Dashboard</h1>
-        <div style={{ padding: '1.5rem', backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #ddd' }}>
-          <h2>Welcome, {adminUser.email}</h2>
-          <p>You have successfully logged into the restricted Admin portal.</p>
-          <p>System metrics and administrative controls will appear here.</p>
-        </div>
+    <div className="admin-page">
+      <AdminNavBar />
+      <header className="admin-header">
+        <h1>Admin Dashboard</h1>
+      </header>
+
+      <nav className="admin-tabs">
+        <button
+          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Overview
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'applications' ? 'active' : ''}`}
+          onClick={() => setActiveTab('applications')}
+        >
+          Applications
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reports')}
+        >
+          Reports
+        </button>
+      </nav>
+
+      <main className="admin-content">
+        {renderTabContent()}
       </main>
     </div>
   );
 }
-
-export default AdminHome;

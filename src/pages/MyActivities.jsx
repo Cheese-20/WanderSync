@@ -216,21 +216,108 @@ export default function MyActivities() {
                 )}
 
                 <div className="activity-bookings-list">
-                  {group.bookings.map((booking) => (
-                    <div key={booking.bookingId} className="activity-booking-card">
-                      <div className="activity-booking-info">
-                        <h4>{booking.tourTitle}</h4>
-                        <span className="tour-type-badge">{booking.tourType}</span>
+                  {group.bookings.map((booking) => {
+                    const fallbackImage = 'https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&q=80&w=400';
+                    let imageSrc = fallbackImage;
+                    if (booking.pictureURL) {
+                      try {
+                        imageSrc = booking.pictureURL.startsWith('[') ? JSON.parse(booking.pictureURL)[0] : booking.pictureURL;
+                      } catch (e) {
+                        imageSrc = fallbackImage;
+                      }
+                    }
+                    const price = booking.price || 0;
+                    const guests = booking.numberOfGuests || 1;
+                    const total = price * guests;
+
+                    return (
+                      <div key={booking.bookingId} className="detailed-booking-card">
+                        <div className="detailed-booking-image">
+                          <img src={imageSrc} alt={booking.tourTitle} />
+                          <span className="detailed-tour-type">{booking.tourType}</span>
+                        </div>
+                        <div className="detailed-booking-body">
+                          <div className="detailed-booking-header">
+                            <div>
+                              {booking.bookingType && (
+                                <span className="detailed-booking-type-tag">{booking.bookingType.toUpperCase()}</span>
+                              )}
+                              <h4>{booking.tourTitle}</h4>
+                            </div>
+                            <span className={`detailed-status status-${booking.status?.toLowerCase()}`}>
+                              {booking.status}
+                            </span>
+                          </div>
+                          
+                          {booking.location && (
+                            <p className="detailed-booking-location">📍 {booking.location}</p>
+                          )}
+                          
+                          {(() => {
+                            if (booking.bookingType?.toLowerCase() === 'itinerary') {
+                              try {
+                                const timeline = JSON.parse(booking.description);
+                                if (Array.isArray(timeline) && timeline.length > 0) {
+                                  return (
+                                    <div className="cool-itinerary-timeline">
+                                      {timeline.slice(0, 3).map((item, index) => (
+                                        <div 
+                                          key={item.id || index} 
+                                          className="timeline-node" 
+                                          style={{ animationDelay: `${index * 0.15}s` }}
+                                        >
+                                          <div className="timeline-dot"></div>
+                                          <div className="timeline-content">
+                                            <div className="timeline-content-top">
+                                              <span className="spot-name">{item.name}</span>
+                                              {item.type && <span className="spot-type">{item.type}</span>}
+                                            </div>
+                                            {item.location && <span className="spot-location">📍 {item.location}</span>}
+                                          </div>
+                                        </div>
+                                      ))}
+                                      {timeline.length > 3 && (
+                                        <div className="timeline-overflow">
+                                          + {timeline.length - 3} more spots in this trip
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                return <p className="detailed-booking-desc">Empty itinerary.</p>;
+                              } catch (e) {
+                                return <p className="detailed-booking-desc">Custom itinerary details unavailable.</p>;
+                              }
+                            }
+                            return (
+                              <p className="detailed-booking-desc">
+                                {booking.description ? (booking.description.length > 100 ? booking.description.substring(0, 100) + '...' : booking.description) : 'No description provided.'}
+                              </p>
+                            );
+                          })()}
+                          
+                          <div className="detailed-booking-details">
+                            <div className="detail-item">
+                              <span className="detail-label">Tour Date</span>
+                              <span className="detail-value">{new Date(booking.tourDate).toLocaleDateString()}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Booked On</span>
+                              <span className="detail-value">{new Date(booking.bookingDate).toLocaleDateString()} {booking.timeOfBooking}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Guests</span>
+                              <span className="detail-value">👥 {guests}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Total Price</span>
+                              <span className="detail-value price-value">R {total}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="activity-booking-meta">
-                        <span>Tour Date: {new Date(booking.tourDate).toLocaleDateString()}</span>
-                        <span>Booked: {new Date(booking.bookingDate).toLocaleDateString()}</span>
-                        <span className={`activity-status status-${booking.status?.toLowerCase()}`}>
-                          {booking.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}

@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from '../components/NavBar';
 import '../styles/explore.css';
+
+const ACTIVITY_TYPES = [
+  { label: '🏛️ Sightseeing', value: 'Sightseeing' },
+  { label: '🍽️ Dining', value: 'Dining' },
+  { label: '🚗 Transit', value: 'Transit' },
+  { label: '🏕️ Outdoor', value: 'Outdoor' },
+  { label: '🛍️ Shopping', value: 'Shopping' },
+  { label: '🎭 Entertainment', value: 'Entertainment' },
+  { label: '🏨 Accommodation', value: 'Accommodation' },
+  { label: '📸 Photo Stop', value: 'Photo Stop' },
+];
 
 export default function ExplorePage() {
   const [query, setQuery] = useState('');
@@ -11,17 +23,66 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAllTours, setShowAllTours] = useState(false);
+  
+  // Submit New Spot Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [newSpot, setNewSpot] = useState({
+    activityName: '',
+    activityType: '',
+    description: '',
+    location: '',
+    pictureURL: ''
+  });
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const [userRole, setUserRole] = useState('');
+  const [loggedInUserId, setLoggedInUserId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
+    const userJson = localStorage.getItem('user');
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      setUserRole((user.role || '').toLowerCase());
+      setLoggedInUserId(user.id || user.userID);
+    }
   }, []);
+
+  const handleSpotSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      await axios.post('/api/curatedspots', {
+        activityName: newSpot.activityName,
+        activityType: newSpot.activityType,
+        description: newSpot.description,
+        location: newSpot.location,
+        pictureURL: newSpot.pictureURL,
+        isVerified: "pending",
+        submittedByUserID: loggedInUserId,
+        submittedAt: new Date().toISOString()
+      });
+      setSuccessMessage('Spot submitted successfully for review!');
+      setNewSpot({ activityName: '', activityType: '', description: '', location: '', pictureURL: '' });
+      setTimeout(() => {
+        setShowModal(false);
+        setWizardStep(1);
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      setErrorMessage('An error occurred while saving the record. Please try again.');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
-      // Fetch guides and tours in parallel
       const [guidesRes, toursRes] = await Promise.all([
         axios.get('/api/local-guide/list'),
         axios.get('/api/tours')
@@ -44,7 +105,6 @@ export default function ExplorePage() {
       setFilteredGuides(guides);
       return;
     }
-    // Move matching guides to the top, keep the rest below
     const matches = [];
     const rest = [];
     guides.forEach(g => {
@@ -68,212 +128,274 @@ export default function ExplorePage() {
     setFilteredGuides(guides);
   };
 
-  const handleViewGuide = (guideId) => {
-    navigate(`/guide/${guideId}`);
-  };
+  const handleViewGuide = (guideId) => navigate(`/guide/${guideId}`);
 
   const handleBookTour = async (tourId, e) => {
     e.stopPropagation();
-    const userJson = localStorage.getItem('user');
-    if (!userJson) {
+    if (!loggedInUserId) {
       navigate('/login', { state: { message: 'Please login to book a tour' } });
       return;
     }
-    const user = JSON.parse(userJson);
-    const userId = user.id || user.userID;
-
     try {
       const res = await axios.post('/api/bookings', {
-        userID: userId,
+        userID: loggedInUserId,
         tourID: tourId,
         bookingDate: new Date().toISOString()
       });
-      alert(res.data.message || 'Booking confirmed!');
+      alert(res.data.message || 'Booking request submitted successfully!');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to book. Please try again.';
-      alert(msg);
+      alert(err.response?.data?.message || 'Failed to book. Please try again.');
     }
   };
 
-  return (
-    <div className="explore-page">
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-      {/* Search Bar */}
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewSpot({...newSpot, pictureURL: reader.result});
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setTimeout(() => setWizardStep(1), 300); // Reset step after transition
+  };
+
+  return (
+    <>
+      <NavBar />
+      <div className="explore-page">
       <section className="explore-search-section">
         <form className="explore-search-form" onSubmit={handleSearch}>
           <div className="search-input-wrapper">
-            <input
-              type="text"
-              className="explore-search-input"
-              placeholder="Search for Local Guide or spot"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search for local guide or spot"
-            />
-            {query && (
-              <button
-                type="button"
-                className="search-clear-btn"
-                onClick={handleClearSearch}
-                aria-label="Clear search"
-              >
-                &times;
-              </button>
-            )}
+            <input type="text" className="explore-search-input" placeholder="Search for Local Guide or spot" value={query} onChange={(e) => setQuery(e.target.value)} />
+            {query && <button type="button" className="search-clear-btn" onClick={handleClearSearch}>&times;</button>}
           </div>
-          <button type="submit" className="explore-search-btn" aria-label="Search">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+          <button type="submit" className="explore-search-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </button>
         </form>
       </section>
 
-      {/* Hero Text */}
       <header className="explore-hero">
         <h1>Explore with Verified Guides</h1>
         <p>Book authentic experiences led by trusted locals. Every guide is verified and reviewed.</p>
+        {loggedInUserId && (
+          <button className="submit-spot-btn" style={{ marginTop: '15px' }} onClick={() => setShowModal(true)}>
+            ✨ Submit New Spot
+          </button>
+        )}
       </header>
 
-      {loading && (
-        <div className="explore-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading...</p>
+      {showModal && (
+        <div className="cool-modal-overlay">
+          <div className="cool-modal-card">
+            <div className="cool-modal-header">
+              <h2>Recommend a New Spot</h2>
+              <p>Found a hidden gem? Share it with other guides!</p>
+              <button className="cool-modal-close" onClick={closeModal}>&times;</button>
+            </div>
+            
+            <div className="cool-modal-body" style={{ minHeight: '280px', position: 'relative' }}>
+              {successMessage && <div className="cool-alert-success">{successMessage}</div>}
+              {errorMessage && <div className="cool-alert-error">{errorMessage}</div>}
+              
+              {!successMessage && (
+                <form onSubmit={handleSpotSubmit} className={`wizard-step-${wizardStep}`}>
+                  
+                  {/* STEP 1 */}
+                  {wizardStep === 1 && (
+                    <div className="wizard-slide-in">
+                      <h3 style={{ marginBottom: '20px', color: '#1f2937' }}>What's the spot called?</h3>
+                      <div className="cool-form-group">
+                        <div className="cool-input-wrapper">
+                          <span className="cool-input-icon">📌</span>
+                          <input 
+                            type="text" className="cool-input" placeholder="e.g. Kalk Bay Harbour"
+                            value={newSpot.activityName} onChange={(e) => setNewSpot({...newSpot, activityName: e.target.value})} 
+                            required autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '30px' }}>
+                        <button type="button" className="cool-submit-btn" style={{ width: 'auto', padding: '10px 24px' }} 
+                          onClick={() => { if(newSpot.activityName.trim()) setWizardStep(2); }}>
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 2 */}
+                  {wizardStep === 2 && (
+                    <div className="wizard-slide-in">
+                      <h3 style={{ marginBottom: '20px', color: '#1f2937' }}>Awesome, where is {newSpot.activityName}?</h3>
+                      <div className="cool-form-group">
+                        <div className="cool-input-wrapper">
+                          <span className="cool-input-icon">📍</span>
+                          <input 
+                            type="text" className="cool-input" placeholder="e.g. Cape Town, WC"
+                            value={newSpot.location} onChange={(e) => setNewSpot({...newSpot, location: e.target.value})} 
+                            required autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
+                        <button type="button" className="cool-submit-btn" style={{ width: 'auto', padding: '10px 24px', background: '#e5e7eb', color: '#374151' }} 
+                          onClick={() => setWizardStep(1)}>
+                          ← Back
+                        </button>
+                        <button type="button" className="cool-submit-btn" style={{ width: 'auto', padding: '10px 24px' }} 
+                          onClick={() => { if(newSpot.location.trim()) setWizardStep(3); }}>
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 3 */}
+                  {wizardStep === 3 && (
+                    <div className="wizard-slide-in">
+                      <h3 style={{ marginBottom: '20px', color: '#1f2937' }}>Almost done! What type of activity is this?</h3>
+                      
+                      <div className="cool-form-group">
+                        <div className="cool-input-wrapper">
+                          <span className="cool-input-icon">🏷️</span>
+                          <select className="cool-select" value={newSpot.activityType} onChange={(e) => setNewSpot({...newSpot, activityType: e.target.value})} required>
+                            <option value="" disabled>Select a type...</option>
+                            {ACTIVITY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="cool-form-group">
+                        <textarea className="cool-textarea" rows="3" placeholder="What makes this spot special? Why should other guides take tourists here?"
+                          value={newSpot.description} onChange={(e) => setNewSpot({...newSpot, description: e.target.value})} required />
+                      </div>
+
+                      <div className="cool-form-group" style={{ marginTop: '15px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '0.9rem', color: '#374151' }}>Add a Photo (Optional)</label>
+                        
+                        {!newSpot.pictureURL ? (
+                          <div 
+                            className="cool-image-upload-zone"
+                            onClick={() => document.getElementById('spotImageUpload').click()}
+                          >
+                            <div className="upload-icon-large">📸</div>
+                            <p className="upload-text-main">Click to upload a photo</p>
+                            <p className="upload-text-sub">JPEG, PNG up to 5MB</p>
+                            <input 
+                              id="spotImageUpload"
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handleImageUpload} 
+                              style={{ display: 'none' }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="cool-image-upload-zone has-image">
+                            <div className="cool-image-preview-wrapper">
+                              <img src={newSpot.pictureURL} alt="Preview" />
+                              <button 
+                                type="button" 
+                                className="cool-image-remove-btn" 
+                                onClick={(e) => { e.stopPropagation(); setNewSpot({...newSpot, pictureURL: ''}); }}
+                                title="Remove photo"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+                        <button type="button" className="cool-submit-btn" style={{ width: 'auto', padding: '10px 24px', background: '#e5e7eb', color: '#374151' }} 
+                          onClick={() => setWizardStep(2)}>
+                          ← Back
+                        </button>
+                        <button type="submit" className="cool-submit-btn" style={{ width: 'auto', padding: '10px 24px' }}>
+                          Submit ✨
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </form>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {error && (
-        <div className="explore-error">
-          <p>{error}</p>
-        </div>
-      )}
+      {loading && <div className="explore-loading"><div className="loading-spinner"></div><p>Loading...</p></div>}
+      {error && <div className="explore-error"><p>{error}</p></div>}
 
       {!loading && !error && (
         <>
-          {/* Available Activities/Experiences */}
           <section className="explore-experiences">
-            <div className="explore-section-header">
-              <h2>Available experiences</h2>
-            </div>
-
+            <div className="explore-section-header"><h2>Available experiences</h2></div>
             {tours.length > 0 ? (
               <>
                 <div className="experiences-grid">
                   {(showAllTours ? tours : tours.slice(0, 3)).map((tour) => (
                     <div key={tour.tourId} className="experience-card" onClick={() => handleViewGuide(tour.guideId)}>
                       <div className="experience-card-image">
-                        <div className="experience-image-placeholder">
-                          <span>{tour.type || 'Tour'}</span>
-                        </div>
+                        <div className="experience-image-placeholder"><span>{tour.type || 'Tour'}</span></div>
                         <span className="experience-verified-badge">Verified</span>
                       </div>
                       <div className="experience-card-body">
                         <h3 className="experience-title">{tour.title}</h3>
-                        <p className="experience-description">
-                          {tour.description || 'Explore with a verified local guide.'}
-                        </p>
-                        <p className="experience-guide-name">
-                          <span className="guide-dot"></span> {tour.guideName}
-                        </p>
-                        <div className="experience-meta">
-                          <span>{new Date(tour.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                          <span>Max {tour.maxPeople} people</span>
-                        </div>
-                        <div className="experience-card-footer">
-                          <span className="experience-price">R--/person</span>
-                          <button
-                            className="experience-book-btn"
-                            onClick={(e) => handleBookTour(tour.tourId, e)}
-                          >
-                            Book
-                          </button>
-                        </div>
+                        <p className="experience-description">{tour.description}</p>
+                        <p className="experience-guide-name"><span className="guide-dot"></span> {tour.guideName}</p>
+                        <div className="experience-meta"><span>{new Date(tour.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span><span>Max {tour.maxPeople} people</span></div>
+                        <div className="experience-card-footer"><span className="experience-price">R--/person</span><button className="experience-book-btn" onClick={(e) => handleBookTour(tour.tourId, e)}>Book</button></div>
                       </div>
                     </div>
                   ))}
                 </div>
                 {!showAllTours && tours.length > 3 && (
-                  <div className="view-all-container">
-                    <button className="btn-view-all" onClick={() => setShowAllTours(true)}>
-                      View All Experiences ({tours.length})
-                    </button>
-                  </div>
+                  <div className="view-all-container"><button className="btn-view-all" onClick={() => setShowAllTours(true)}>View All ({tours.length})</button></div>
                 )}
               </>
-            ) : (
-              <div className="explore-empty">
-                <p>No activities available yet. Check back soon!</p>
-              </div>
-            )}
+            ) : (<div className="explore-empty"><p>No activities available yet. Check back soon!</p></div>)}
           </section>
 
-          {/* Verified Guides */}
           <section className="explore-verified-guides">
-            <div className="verified-badge-header">
-              <span className="verified-check-icon">&#10003;</span>
-              <span className="verified-label">Verified</span>
-            </div>
+            <div className="verified-badge-header"><span className="verified-check-icon">&#10003;</span><span className="verified-label">Verified</span></div>
             <h2>Verified Guides</h2>
-
             {filteredGuides.length > 0 ? (
               <div className="verified-guides-grid">
                 {filteredGuides.map((guide) => (
-                  <div
-                    key={guide.guideId}
-                    className="verified-guide-card"
-                    onClick={() => handleViewGuide(guide.guideId)}
-                  >
+                  <div key={guide.guideId} className="verified-guide-card" onClick={() => handleViewGuide(guide.guideId)}>
                     <div className="verified-guide-header">
                       <div className="verified-guide-avatar">
-                        {guide.profilePictureLink ? (
-                          <img src={guide.profilePictureLink} alt={`${guide.firstName} ${guide.lastName}`} />
-                        ) : (
-                          <div className="verified-avatar-placeholder">
-                            {guide.firstName?.charAt(0)}{guide.lastName?.charAt(0)}
-                          </div>
-                        )}
+                        {guide.profilePictureLink ? <img src={guide.profilePictureLink} alt={`${guide.firstName} ${guide.lastName}`} /> : <div className="verified-avatar-placeholder">{guide.firstName?.charAt(0)}{guide.lastName?.charAt(0)}</div>}
                       </div>
-                      <div className="verified-guide-name-block">
-                        <h3>{guide.firstName} {guide.lastName}</h3>
-                        <span className="verified-tag">Verified</span>
-                      </div>
+                      <div className="verified-guide-name-block"><h3>{guide.firstName} {guide.lastName}</h3><span className="verified-tag">Verified</span></div>
                     </div>
-                    {guide.location && (
-                      <p className="verified-guide-location">&#x1F4CD; {guide.location}</p>
-                    )}
-                    <p className="verified-guide-bio">
-                      {guide.description || 'Passionate local guide ready to show you the best experiences.'}
-                    </p>
+                    {guide.location && <p className="verified-guide-location">&#x1F4CD; {guide.location}</p>}
+                    <p className="verified-guide-bio">{guide.description || 'Passionate local guide ready to show you the best experiences.'}</p>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="explore-empty">
-                {query ? (
-                  <p>No guides found for "{query}". Try a different search.</p>
-                ) : (
-                  <p>No verified guides available yet.</p>
-                )}
-              </div>
-            )}
+            ) : (<div className="explore-empty">{query ? <p>No guides found for "{query}".</p> : <p>No verified guides available yet.</p>}</div>)}
           </section>
 
-          {/* Trust Section */}
           <section className="explore-trust-section">
             <h2>Every Guide is Verified</h2>
             <p>We verify every guide's identity, check their local knowledge, and review their first experiences to ensure quality.</p>
           </section>
 
-          {/* My Activities Link */}
           <section className="explore-my-activities-link">
             <p>Already booked a tour?</p>
-            <button className="btn-view-all" onClick={() => navigate('/my-activities')}>
-              View My Activities & Rate Guides
-            </button>
+            <button className="btn-view-all" onClick={() => navigate('/my-activities')}>View My Activities & Rate Guides</button>
           </section>
         </>
       )}
     </div>
+    </>
   );
 }

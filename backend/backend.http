@@ -4,3 +4,35 @@ GET {{backend_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# ========== REPORT USE CASE ==========
+
+### Submit a Report (Report Account)
+POST {{backend_HostAddress}}/api/reports
+Content-Type: application/json
+
+{
+  "reporterID": 1,
+  "reportedUserID": 2,
+  "reason": "Inappropriate behaviour and spam"
+}
+
+###
+
+### Submit a Report (Report Content)
+POST {{backend_HostAddress}}/api/reports
+Content-Type: application/json
+
+{
+  "reporterID": 1,
+  "reportedUserID": 2,
+  "reason": "[Content Report] This post contains misinformation and misleading content"
+}
+
+###
+
+### Get all reported accounts (Admin)
+GET {{backend_HostAddress}}/api/admin/reported-accounts
+Accept: application/json
+
+###

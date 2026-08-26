@@ -568,3 +568,347 @@
   margin: 0 0 12px;
   font-size: 0.95rem;
 }
+/* --- New Cool Spot Modal --- */
+.cool-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cool-modal-card {
+  background: #ffffff;
+  width: 90%;
+  max-width: 480px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cool-modal-header {
+  background: linear-gradient(135deg, #1a8f66, #a6d8b6);
+  padding: 24px;
+  color: white;
+  position: relative;
+  text-align: center;
+}
+
+.cool-modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.cool-modal-header p {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.cool-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cool-modal-close:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+.cool-modal-body {
+  padding: 24px;
+}
+
+.cool-form-group {
+  margin-bottom: 16px;
+}
+
+.cool-form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.cool-input-wrapper {
+  position: relative;
+}
+
+.cool-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+.cool-input, .cool-select, .cool-textarea {
+  width: 100%;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px 10px 40px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #1f2937;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+.cool-textarea {
+  padding: 10px 12px;
+}
+
+.cool-input:focus, .cool-select:focus, .cool-textarea:focus {
+  outline: none;
+  border-color: #1a8f66;
+  box-shadow: 0 0 0 3px rgba(26, 143, 102, 0.15);
+}
+
+.cool-submit-btn {
+  width: 100%;
+  background: #1a8f66;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.cool-submit-btn:hover {
+  background: #157a57;
+  transform: translateY(-1px);
+}
+
+.cool-submit-btn:active {
+  transform: translateY(0);
+}
+
+.cool-alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.cool-alert-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Cool Submit Spot Trigger Button */
+.submit-spot-btn {
+  background: linear-gradient(135deg, #1a8f66, #a6d8b6);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(26, 143, 102, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submit-spot-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(26, 143, 102, 0.35);
+}
+
+.submit-spot-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(26, 143, 102, 0.2);
+}
+
+/* Conversational Wizard Animations */
+.wizard-step-1, .wizard-step-2, .wizard-step-3 {
+  position: relative;
+  min-height: 200px;
+}
+
+.wizard-slide-in {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Upvote Button Styles */
+.upvote-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upvote-btn:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.upvote-btn.upvoted {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #10b981;
+}
+
+.upvote-btn.upvoted svg {
+  fill: #10b981;
+  stroke: #10b981;
+}
+
+.upvote-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  transition: all 0.2s ease;
+}
+
+/* Cool Image Upload Zone */
+.cool-image-upload-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f9fafb;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cool-image-upload-zone:hover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.cool-image-upload-zone.has-image {
+  border-style: solid;
+  border-color: #10b981;
+  padding: 10px;
+  background-color: #ecfdf5;
+}
+
+.upload-icon-large {
+  font-size: 2rem;
+  color: #9ca3af;
+  margin-bottom: 5px;
+}
+
+.cool-image-upload-zone:hover .upload-icon-large {
+  color: #3b82f6;
+}
+
+.upload-text-main {
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.upload-text-sub {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.cool-image-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cool-image-preview-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cool-image-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cool-image-remove-btn:hover {
+  background: #ef4444;
+  transform: scale(1.1);
+}

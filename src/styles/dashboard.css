@@ -12,8 +12,10 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  border: 1px solid #e2e8f0; /* Professional gray border */
-  border-radius: 999px; /* Pill-shaped smoother edges */
+  border: 1px solid #e2e8f0;
+  /* Professional gray border */
+  border-radius: 999px;
+  /* Pill-shaped smoother edges */
   padding: 0;
   margin-bottom: 2rem;
   background-color: #f8fafc;
@@ -37,7 +39,8 @@
 }
 
 .dashboard-tab.active {
-  color: #cfd1a0; /* Pale olive text for active */
+  color: #cfd1a0;
+  /* Pale olive text for active */
 }
 
 .dashboard-tab.active::after {
@@ -67,7 +70,7 @@
   width: 200px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .card-icon {
@@ -80,8 +83,15 @@
   margin-bottom: 1rem;
 }
 
-.icon-blue { background-color: #e0f2fe; color: #0284c7; }
-.icon-green { background-color: #dcfce7; color: #16a34a; }
+.icon-blue {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
+
+.icon-green {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
 
 .summary-card h2 {
   font-size: 1.75rem;
@@ -97,12 +107,13 @@
 
 /* Sections */
 .dashboard-section {
-  border: 1px solid #e2e8f0; /* Clean, uniform gray border */
+  border: 1px solid #e2e8f0;
+  /* Clean, uniform gray border */
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 2rem;
   background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .section-header {
@@ -190,10 +201,26 @@
   font-weight: 500;
 }
 
-.badge.active { background-color: #a4ddbc; color: #1f2937; }
-.badge.draft { background-color: #e2e8f0; color: #475569; }
-.badge.confirmed { background-color: #a4ddbc; color: #1f2937; }
-.badge.pending { background-color: #ffffff; border: 1px solid #cbd5e1; color: #475569; }
+.badge.active {
+  background-color: #a4ddbc;
+  color: #1f2937;
+}
+
+.badge.draft {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.badge.confirmed {
+  background-color: #a4ddbc;
+  color: #1f2937;
+}
+
+.badge.pending {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
 
 .exp-actions {
   display: flex;
@@ -233,7 +260,8 @@
 }
 
 .booking-item.highlight {
-  background-color: #fefce8; /* Light yellow tint similar to image */
+  background-color: #fefce8;
+  /* Light yellow tint similar to image */
   border-color: #111827;
 }
 
@@ -264,44 +292,49 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(164, 221, 188, 0.3); /* Mint green tint */
+  border: 4px solid rgba(164, 221, 188, 0.3);
+  /* Mint green tint */
   border-radius: 50%;
-  border-top-color: #a4ddbc; /* Solid mint green */
+  border-top-color: #a4ddbc;
+  /* Solid mint green */
   animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Spot Verification Card */
 .spot-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 280px 1fr;
   background-color: #ffffff;
-  border: 1px solid #a4ddbc; /* Light green border as in screenshot */
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   width: 100%;
-  max-width: 700px; /* A bit smaller */
-  height: 300px; /* Enforce uniform height */
+  max-width: 700px;
+  min-height: 280px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .spot-card-img {
-  flex: 0 0 300px;
-  width: 300px;
-  height: 300px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .spot-card-content {
-  flex: 1;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .spot-card-header {
@@ -340,6 +373,7 @@
   margin-right: 0.75rem;
   object-fit: cover;
   background-color: #e2e8f0;
+  flex-shrink: 0;
 }
 
 .spot-submitter-info p {
@@ -368,6 +402,7 @@
   width: 14px;
   height: 14px;
   margin-right: 6px;
+  flex-shrink: 0;
   color: #6b7280;
 }
 
@@ -375,24 +410,69 @@
   font-size: 0.85rem;
   color: #6b7280;
   margin-bottom: 1.5rem;
-  flex: 1;
   line-height: 1.4;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* Truncate text after 2 lines so it doesn't break height */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
 .spot-card-actions {
   display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+  justify-content: flex-end;
+}
+
+.spot-btn-reject {
+  background-color: #ef4444;
+  color: white;
+  border-radius: 20px;
+  padding: 6px 20px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.spot-btn-reject:hover {
+  opacity: 0.85;
+}
+
+.spot-btn-approve {
+  background-color: #a4ddbc;
+  color: #065f46;
+  border-radius: 20px;
+  padding: 6px 20px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.spot-btn-approve:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 600px) {
+  .spot-card {
+    grid-template-columns: 1fr;
+  }
+  .spot-card-img {
+    height: 200px;
+  }
 }
 
 /* Bookings UI Styles */
 .bookings-list-container {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem; /* Increased spacing between cards */
-  margin-top: 3rem; /* Increased spacing from the header */
+  gap: 2.5rem;
+  /* Increased spacing between cards */
+  margin-top: 3rem;
+  /* Increased spacing from the header */
 }
 
 .b-card {
@@ -406,19 +486,24 @@
 
 .b-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .b-card-pending {
-  background: #fffbeb; /* pale yellow */
+  background: #fffbeb;
+  /* pale yellow */
   border-color: #fde68a;
 }
+
 .b-card-accepted {
-  background: #ecfdf5; /* pale green */
+  background: #ecfdf5;
+  /* pale green */
   border-color: #6ee7b7;
 }
+
 .b-card-declined {
-  background: #fef2f2; /* pale red */
+  background: #fef2f2;
+  /* pale red */
   border-color: #fca5a5;
 }
 
@@ -460,16 +545,22 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 .b-status-pending {
-  background: #f59e0b; /* yellow/amber */
+  background: #f59e0b;
+  /* yellow/amber */
   color: white;
 }
+
 .b-status-accepted {
-  background: #10b981; /* green */
+  background: #a4ddbc;
+  /* green */
   color: white;
 }
+
 .b-status-declined {
-  background: #ef4444; /* red */
+  background: #ef4444;
+  /* red */
   color: white;
 }
 
@@ -514,6 +605,7 @@
   font-size: 0.95rem;
   color: #6b7280;
 }
+
 .b-price strong {
   font-size: 1.1rem;
   color: #111;
@@ -535,6 +627,7 @@
   border: none;
   transition: opacity 0.2s;
 }
+
 .b-btn:hover:not(:disabled) {
   opacity: 0.85;
 }
@@ -564,4 +657,30 @@
 
 .filter-select:focus {
   border-color: var(--primary);
+}
+
+/* Modal Popup Styles for Global Loading & Confirmation Modals */
+.global-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.global-loading-popup {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

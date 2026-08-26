@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -57,7 +61,10 @@ namespace backend.Controllers
             return Ok(bookings);
         }
 
-        // POST: api/bookings
+        /// <summary>
+        /// POST: api/bookings
+        /// Creates a new booking for a tour.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> CreateBooking([FromBody] CreateBookingRequest request)
         {
@@ -77,28 +84,27 @@ namespace backend.Controllers
             if (tour == null)
                 return NotFound(new { message = "Tour not found." });
 
-            // Check if user already booked this tour (excluding Cancelled)
+            // Check if user already booked this tour
             var existingBooking = await _context.Bookings
                 .FirstOrDefaultAsync(b => b.userID == request.UserID && b.tourID == request.TourID && b.status != "Cancelled");
             if (existingBooking != null)
                 return Conflict(new { message = "You have already booked this tour." });
 
-            // Check capacity - count active bookings for this tour
+            // Check capacity - sum active bookings guests for this tour
             var currentBookings = await _context.Bookings
-                .CountAsync(b => b.tourID == request.TourID && b.status != "Cancelled");
-            if (currentBookings >= tour.MaxPeople)
-                return BadRequest(new { message = "This tour is fully booked." });
+                .Where(b => b.tourID == request.TourID && b.status != "Cancelled")
+                .SumAsync(b => (int?)b.numberOfGuests) ?? 0;
+            if (currentBookings + request.NumberOfGuests > tour.MaxPeople)
+                return BadRequest(new { message = "Not enough spots remaining on this tour." });
 
             var booking = new Booking
             {
                 userID = request.UserID,
                 tourID = request.TourID,
-                curatedSpotID = 0,
-                bookingType = string.IsNullOrEmpty(request.BookingType) ? "Tour" : request.BookingType,
-                status = "Pending", // Pending for guide approval
+                bookingType = "Tour",
+                status = "Pending", // Set to pending to allow guide to accept/decline
                 bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow,
-                timeOfBooking = request.TimeOfBooking ?? string.Empty,
-                numberOfGuests = request.NumberOfGuests > 0 ? request.NumberOfGuests : 1
+                numberOfGuests = request.NumberOfGuests
             };
 
             try
@@ -106,12 +112,12 @@ namespace backend.Controllers
                 _context.Bookings.Add(booking);
                 await _context.SaveChangesAsync();
 
-                // Send notification to the guide
+                // Notify the guide
                 var notification = new Notification
                 {
                     UserID = tour.GuideId,
                     Type = "NewBooking",
-                    Message = $"You have a new booking request for {tour.Title}.",
+                    Message = $"{user.FirstName} {user.LastName} sent a new booking request for {tour.Title}.",
                     RelatedEntityID = booking.bookingID,
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
@@ -121,7 +127,7 @@ namespace backend.Controllers
 
                 return Ok(new
                 {
-                    message = "Booking confirmed successfully!",
+                    message = "Booking requested successfully! Waiting for guide to confirm.",
                     bookingId = booking.bookingID,
                     tourTitle = tour.Title,
                     date = booking.bookingDate
@@ -143,7 +149,7 @@ namespace backend.Controllers
             try
             {
                 var bookings = await _context.Bookings
-                    .Where(b => b.userID == userId && b.bookingType == "Tour")
+                    .Where(b => b.userID == userId)
                     .Join(
                         _context.Tours,
                         booking => booking.tourID,
@@ -158,13 +164,20 @@ namespace backend.Controllers
                         {
                             bookingId = bt.booking.bookingID,
                             tourId = bt.tour.TourId,
+                            bookingType = bt.booking.bookingType,
                             tourTitle = bt.tour.Title,
                             tourType = bt.tour.Type,
                             tourDate = bt.tour.Date,
                             bookingDate = bt.booking.bookingDate,
                             status = bt.booking.status,
                             guideId = guide.UserID,
-                            guideName = guide.FirstName + " " + guide.LastName
+                            guideName = guide.FirstName + " " + guide.LastName,
+                            pictureURL = bt.tour.PictureURL,
+                            location = bt.tour.Location,
+                            price = bt.tour.Price,
+                            description = bt.tour.Description,
+                            numberOfGuests = bt.booking.numberOfGuests,
+                            timeOfBooking = bt.booking.timeOfBooking
                         }
                     )
                     .ToListAsync();
@@ -210,14 +223,14 @@ namespace backend.Controllers
 
                 if (existingMatch == null)
                 {
-                    var newMatch = new UserMatch
+                    existingMatch = new UserMatch
                     {
                         RequesterID = booking.userID,
                         ReceiverID = tour.GuideId,
                         Status = "accepted",
                         DateMatched = DateTime.UtcNow
                     };
-                    _context.Matches.Add(newMatch);
+                    _context.Matches.Add(existingMatch);
                 }
                 else if (existingMatch.Status != "accepted")
                 {
@@ -227,6 +240,20 @@ namespace backend.Controllers
                     existingMatch.DateMatched = DateTime.UtcNow; // Refresh match date
                     _context.Entry(existingMatch).State = EntityState.Modified;
                 }
+
+                // Save to generate MatchID if it's a new match
+                await _context.SaveChangesAsync();
+
+                // Automated confirmation message (A200) from Guide to Explorer
+                var automatedMessage = new Message
+                {
+                    MatchID = existingMatch.MatchID,
+                    SenderID = tour.GuideId,
+                    ReceiverID = booking.userID,
+                    TextMessage = $"Hi! I've confirmed your booking for {tour.Title}. Looking forward to it!",
+                    SentAt = DateTime.UtcNow
+                };
+                _context.Messages.Add(automatedMessage);
             }
 
             await _context.SaveChangesAsync();
@@ -267,8 +294,6 @@ namespace backend.Controllers
         public int UserID { get; set; }
         public int TourID { get; set; }
         public DateTime BookingDate { get; set; }
-        public string TimeOfBooking { get; set; }
         public int NumberOfGuests { get; set; }
-        public string BookingType { get; set; }
     }
 }

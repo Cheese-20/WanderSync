@@ -162,7 +162,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest model)
         {
             _logger.LogInformation($"Password reset attempt for {model.Email}");
 
@@ -199,9 +199,9 @@ namespace backend.Controllers
         }
     }
 
-    public class ResetPasswordModel
+    public class ResetPasswordRequest
     {
         public string Email { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
     }
-    }
+}
