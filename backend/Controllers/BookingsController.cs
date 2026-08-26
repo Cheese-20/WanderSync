@@ -101,10 +101,12 @@ namespace backend.Controllers
             {
                 userID = request.UserID,
                 tourID = request.TourID,
-                bookingType = "Tour",
-                status = "Pending", // Set to pending to allow guide to accept/decline
+                curatedSpotID = 0,
+                bookingType = string.IsNullOrEmpty(request.BookingType) ? "Tour" : request.BookingType,
+                status = "Pending", // Pending for guide approval
                 bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow,
-                numberOfGuests = request.NumberOfGuests
+                timeOfBooking = request.TimeOfBooking ?? string.Empty,
+                numberOfGuests = request.NumberOfGuests > 0 ? request.NumberOfGuests : 1
             };
 
             try
@@ -294,6 +296,8 @@ namespace backend.Controllers
         public int UserID { get; set; }
         public int TourID { get; set; }
         public DateTime BookingDate { get; set; }
+        public string TimeOfBooking { get; set; }
         public int NumberOfGuests { get; set; }
+        public string BookingType { get; set; }
     }
 }
