@@ -59,6 +59,17 @@ export default function Overview() {
             <h3>{newProfiles.reportType}</h3>
             <p className="report-stat">{newProfiles.count}</p>
             <span className="report-period">{newProfiles.period}</span>
+            {newProfiles.data && newProfiles.data.length > 0 && (
+              <ul className="report-list" style={{ marginTop: '16px' }}>
+                {newProfiles.data.map((profile) => (
+                  <li key={profile.userID} className="report-list-item">
+                    <strong>{profile.firstName} {profile.lastName}</strong>
+                    <span className="report-tag">{profile.role}</span>
+                    <p>{profile.email} {profile.location ? `• ${profile.location}` : ''}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         );
       case 'reported-accounts':
@@ -74,6 +85,17 @@ export default function Overview() {
           <div className="report-result">
             <h3>{activeUsers.reportType}</h3>
             <p className="report-stat">{activeUsers.count}</p>
+            {activeUsers.data && activeUsers.data.length > 0 && (
+              <ul className="report-list" style={{ marginTop: '16px' }}>
+                {activeUsers.data.map((user) => (
+                  <li key={user.userID} className="report-list-item">
+                    <strong>{user.firstName} {user.lastName}</strong>
+                    <span className="report-tag">{user.role}</span>
+                    <p>{user.email}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         );
       case 'top-experiences':
@@ -101,7 +123,8 @@ export default function Overview() {
                 <li key={guide.userID} className="report-list-item">
                   <strong>{guide.firstName} {guide.lastName}</strong>
                   <span className="report-tag">{guide.location || 'No location'}</span>
-                  <p>{guide.description || 'No description'}</p>
+                  <p>{guide.email}</p>
+                  <p style={{ fontSize: '0.85rem', color: '#666' }}>{guide.description || 'No description'}</p>
                 </li>
               ))}
               {topGuides.data.length === 0 && <li>No guides found.</li>}

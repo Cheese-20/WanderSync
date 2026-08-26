@@ -25,11 +25,25 @@ namespace backend.Controllers
         public async Task<IActionResult> GetNewProfilesCount([FromQuery] int days = 30)
         {
             var since = DateTime.UtcNow.AddDays(-days);
-            var count = await _context.Profiles
+            var profiles = await _context.Profiles
                 .Where(p => p.CreatedAt >= since)
-                .CountAsync();
+                .Join(_context.Users,
+                    profile => profile.UserID,
+                    user => user.UserID,
+                    (profile, user) => new
+                    {
+                        user.UserID,
+                        user.FirstName,
+                        user.LastName,
+                        user.Email,
+                        user.Role,
+                        profile.Location,
+                        profile.CreatedAt
+                    })
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
 
-            return Ok(new { reportType = "New Profiles Created", period = $"Last {days} days", count });
+            return Ok(new { reportType = "New Profiles Created", period = $"Last {days} days", count = profiles.Count, data = profiles });
         }
 
         [HttpGet("reports/reported-accounts")]
@@ -44,11 +58,20 @@ namespace backend.Controllers
         [HttpGet("reports/active-users")]
         public async Task<IActionResult> GetActiveUsersCount()
         {
-            var count = await _context.Users
+            var activeUsers = await _context.Users
                 .Where(u => u.AccountStatus == "Active")
-                .CountAsync();
+                .Select(u => new
+                {
+                    u.UserID,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    u.Role,
+                    u.AccountStatus
+                })
+                .ToListAsync();
 
-            return Ok(new { reportType = "Active Users", count });
+            return Ok(new { reportType = "Active Users", count = activeUsers.Count, data = activeUsers });
         }
 
         [HttpGet("reports/top-experiences")]
@@ -135,7 +158,7 @@ namespace backend.Controllers
             var notification = new Notification
             {
                 UserID = application.UserID,
-                Title = "Application Successful",
+                Type = "ApplicationApproved",
                 Message = "Congratulations! Your application to become a local guide has been accepted. You are now registered as a local guide.",
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
@@ -164,7 +187,7 @@ namespace backend.Controllers
             var notification = new Notification
             {
                 UserID = application.UserID,
-                Title = "Application Unsuccessful",
+                Type = "ApplicationRejected",
                 Message = "We regret to inform you that your application to become a local guide has been unsuccessful.",
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
@@ -226,7 +249,7 @@ namespace backend.Controllers
             var notification = new Notification
             {
                 UserID = report.ReportedUserID,
-                Title = "Account Suspended",
+                Type = "AccountSuspended",
                 Message = "Your account has been suspended for 2 weeks due to a violation of our community guidelines. You will be able to log in again after " + DateTime.UtcNow.AddDays(14).ToString("dd MMMM yyyy") + ".",
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
