@@ -30,6 +30,8 @@ namespace backend.Controllers
             public string? Location { get; set; }
             public string? Job { get; set; }
             public string? CreatedAt { get; set; }
+            public string? FullName { get; set; }
+            public int? Age { get; set; }
         }
 
         [HttpPost]
@@ -85,6 +87,28 @@ namespace backend.Controllers
                         CreatedAt = createdAt
                     };
                     _context.Profiles.Add(profile);
+                }
+
+                // Update User table if FullName or Age are provided
+                if (!string.IsNullOrWhiteSpace(request.FullName) || request.Age.HasValue)
+                {
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
+                    if (user != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(request.FullName))
+                        {
+                            var names = request.FullName.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                            user.FirstName = names.Length > 0 ? names[0] : "";
+                            user.LastName = names.Length > 1 ? names[1] : "";
+                        }
+                        
+                        if (request.Age.HasValue)
+                        {
+                            user.Age = request.Age.Value;
+                        }
+                        
+                        _context.Users.Update(user);
+                    }
                 }
 
                 await _context.SaveChangesAsync();

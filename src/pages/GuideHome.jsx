@@ -8,6 +8,7 @@ import '../styles/explorer.css';
 import '../styles/guide.css';
 
 export default function GuideHome() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -20,6 +21,13 @@ export default function GuideHome() {
   const [selectedLocalSpot, setSelectedLocalSpot] = useState(null);
   const [isLocalSpotModalOpen, setIsLocalSpotModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [isReportSpotModalOpen, setIsReportSpotModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('Inaccurate Information');
+  const [reportComment, setReportComment] = useState('');
+  const [reportStatus, setReportStatus] = useState('idle');
+
+  // Manage Itinerary state
+  const [assignedTourists, setAssignedTourists] = useState([]);
   
   const [visibleSpotsCount, setVisibleSpotsCount] = useState(4);
   const [visibleLocalSpotsCount, setVisibleLocalSpotsCount] = useState(4);
@@ -37,6 +45,28 @@ export default function GuideHome() {
 
   const handleLoadMorePosts = () => {
     setVisiblePostsCount(prev => Math.min(prev + 3, posts.length));
+  };
+
+  const handleOpenReportModal = () => {
+    setIsLocalSpotModalOpen(false);
+    setReportReason('Inaccurate Information');
+    setReportComment('');
+    setReportStatus('idle');
+    setIsReportSpotModalOpen(true);
+  };
+
+  const handleSubmitReport = async () => {
+    try {
+      const fullReason = reportComment ? `${reportReason} - ${reportComment}` : reportReason;
+      await axios.post(`http://localhost:5200/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/report`, {
+        reporterId: loggedInUserId,
+        reason: fullReason
+      });
+      setReportStatus('success');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to submit report. Please try again.');
+    }
   };
 
   useEffect(() => {
@@ -66,10 +96,15 @@ export default function GuideHome() {
         axios.get(`http://localhost:5200/api/spots/pending/${userId}`)
           .then(res => setPendingSpots(res.data))
           .catch(err => console.error(err));
+
+        // Fetch assigned tourists for Itinerary Management
+        axios.get(`http://localhost:5200/api/local-guide/${userId}/assigned-tourists`)
+          .then(res => setAssignedTourists(res.data))
+          .catch(err => console.error('Error fetching assigned tourists:', err));
       }
       
       // Fetch verified spots for Local Favourites
-      axios.get('http://localhost:5200/api/spots/verified')
+      axios.get(`http://localhost:5200/api/spots/verified?userId=${userId}`)
         .then(res => setSpots(res.data))
         .catch(err => console.error(err));
     } catch (e) {
@@ -152,8 +187,26 @@ export default function GuideHome() {
     }
   };
 
+  const handleUpvote = async (spotId) => {
+    try {
+      await axios.post(`http://localhost:5200/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
+      setSpots(spots.map(s => {
+        if ((s.spotID || s.spotId) === spotId) {
+          return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
+        }
+        return s;
+      }));
+    } catch (e) {
+      console.error('Error upvoting spot:', e);
+      alert(e.response?.data || 'Failed to upvote spot.');
+    }
+  };
+
   return (
-    <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
+    <>
+      <NavBar />
+      <div className="explorer-page guide-page" style={{ paddingTop: '20px' }}>
+
       <section className="happening-lately-section">
         <div className="section-header">
           <h2>Spots to be verified</h2>
@@ -246,6 +299,14 @@ export default function GuideHome() {
                   </span>
                 </div>
                 <div className="tour-footer">
+                  <button 
+                    className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
+                    onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
+                    title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
+                  >
+                    <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                    {spot.upvotesCount || 0}
+                  </button>
                   <div style={{ flex: 1 }}></div>
                   <button 
                     className="mint-btn" 
@@ -287,6 +348,30 @@ export default function GuideHome() {
 
           {spots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites yet.</p>}
         </div>
+      </section>
+
+      <section className="happening-lately-section">
+        <div className="section-header">
+          <h2>Manage Tourist Itineraries</h2>
+        </div>
+        {assignedTourists.length > 0 ? (
+          <div className="tours-grid" style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
+            {assignedTourists.map(tourist => (
+              <article key={tourist.userId} className="tour-card" style={{ minWidth: '250px', flexShrink: 0, padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#a6d8b6', color: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '12px' }}>
+                  {tourist.firstName ? tourist.firstName[0].toUpperCase() : 'T'}
+                </div>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{tourist.firstName} {tourist.lastName}</h3>
+                <span style={{ fontSize: '0.82rem', color: '#888', marginBottom: '16px', display: 'block' }}>{tourist.email}</span>
+                <button className="mint-btn" style={{ width: '100%' }} onClick={() => navigate(`/manage-itinerary/${tourist.userId}`)}>
+                  Manage Itinerary
+                </button>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p style={{ padding: '0 20px', color: '#888' }}>You have no assigned tourists yet. Tourists will appear here once they match with you.</p>
+        )}
       </section>
 
       <section className="community-feed-section">
@@ -396,7 +481,7 @@ export default function GuideHome() {
               
               <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
                 <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedSpot.activityName}</h3>
-                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedSpot.activityType} • {selectedSpot.location}</p>
+                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedSpot.activityType} â€¢ {selectedSpot.location}</p>
                 
                 {selectedSpot.pictureURL && (
                   <img src={selectedSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
@@ -437,11 +522,20 @@ export default function GuideHome() {
             <button className="close-btn" onClick={() => setIsLocalSpotModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
-              <h2 style={{ margin: '0 0 15px 0', fontSize: '1.4rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2 style={{ margin: '0', fontSize: '1.4rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
+                <button 
+                  onClick={handleOpenReportModal}
+                  style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem', fontWeight: 'bold' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                  Report
+                </button>
+              </div>
               
               <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
                 <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h3>
-                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} • {selectedLocalSpot.location}</p>
+                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} â€¢ {selectedLocalSpot.location}</p>
                 
                 {selectedLocalSpot.pictureURL && (
                   <img src={selectedLocalSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
@@ -464,6 +558,67 @@ export default function GuideHome() {
         </div>
       )}
 
+      {isReportSpotModalOpen && selectedLocalSpot && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', position: 'relative' }}>
+            <button className="close-btn" onClick={() => setIsReportSpotModalOpen(false)}>&times;</button>
+            <div style={{ marginBottom: '20px' }}>
+              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
+              <h2 style={{ margin: '0 0 15px 0', fontSize: '1.4rem', color: '#1a1a1a' }}>Report Spot</h2>
+              
+              {reportStatus === 'idle' ? (
+                <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px' }}>
+                  <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '0.95rem' }}>
+                    Why are you reporting <strong>{selectedLocalSpot.activityName || selectedLocalSpot.name}</strong>?
+                  </p>
+                  
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '0.9rem' }}>Reason</label>
+                    <select 
+                      value={reportReason} 
+                      onChange={(e) => setReportReason(e.target.value)}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.95rem' }}
+                    >
+                      <option value="Inaccurate Information">Inaccurate Information</option>
+                      <option value="Offensive Content">Offensive Content</option>
+                      <option value="Spam">Spam</option>
+                      <option value="Does Not Exist">Spot Does Not Exist</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '0.9rem' }}>Additional Comments (Optional)</label>
+                    <textarea 
+                      value={reportComment}
+                      onChange={(e) => setReportComment(e.target.value)}
+                      rows="3"
+                      placeholder="Provide more details..."
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.95rem', resize: 'vertical' }}
+                    ></textarea>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="btn-secondary btn-rounded" onClick={() => setIsReportSpotModalOpen(false)} style={{ flex: 1, fontWeight: 'bold' }}>Cancel</button>
+                    <button className="btn-danger btn-rounded" onClick={handleSubmitReport} style={{ flex: 1, fontWeight: 'bold' }}>Submit Report</button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#28a745', marginBottom: '20px' }}>
+                    Report Submitted Successfully!
+                  </p>
+                  <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '20px' }}>
+                    Thank you for keeping WanderSync safe. Our admin team will review this spot shortly.
+                  </p>
+                  <button className="btn-primary btn-rounded" onClick={() => setIsReportSpotModalOpen(false)} style={{ width: '100%', fontWeight: 'bold' }}>Close</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <CreatePostModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -471,5 +626,6 @@ export default function GuideHome() {
         editPost={editingPost}
       />
     </div>
+    </>
   );
 }

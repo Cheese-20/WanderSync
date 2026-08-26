@@ -66,7 +66,7 @@ export default function GuideDetail() {
         tourID: tourId,
         bookingDate: new Date().toISOString()
       });
-      setBookingMessage(res.data.message || 'Booking confirmed!');
+      setBookingMessage(res.data.message || 'Booking request submitted successfully!');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to book tour. Please try again.';
       setBookingError(msg);

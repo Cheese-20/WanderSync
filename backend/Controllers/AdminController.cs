@@ -122,7 +122,7 @@ namespace backend.Controllers
         [HttpGet("applications")]
         public async Task<IActionResult> GetGuideApplications()
         {
-            var applications = await _context.GuideApplications
+            var applications = await _context.LocalGuideApplications
                 .Include(a => a.User)
                 .OrderByDescending(a => a.ApplicationID)
                 .Select(a => new
@@ -144,7 +144,7 @@ namespace backend.Controllers
         [HttpPatch("applications/{id}/approve")]
         public async Task<IActionResult> ApproveApplication(int id)
         {
-            var application = await _context.GuideApplications
+            var application = await _context.LocalGuideApplications
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.ApplicationID == id);
 
@@ -166,7 +166,7 @@ namespace backend.Controllers
             _context.Notifications.Add(notification);
 
             // Remove the application after approval
-            _context.GuideApplications.Remove(application);
+            _context.LocalGuideApplications.Remove(application);
 
             await _context.SaveChangesAsync();
 
@@ -176,7 +176,7 @@ namespace backend.Controllers
         [HttpDelete("applications/{id}/reject")]
         public async Task<IActionResult> RejectApplication(int id)
         {
-            var application = await _context.GuideApplications
+            var application = await _context.LocalGuideApplications
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.ApplicationID == id);
 
@@ -195,7 +195,7 @@ namespace backend.Controllers
             _context.Notifications.Add(notification);
 
             // Permanently delete the application
-            _context.GuideApplications.Remove(application);
+            _context.LocalGuideApplications.Remove(application);
 
             await _context.SaveChangesAsync();
 

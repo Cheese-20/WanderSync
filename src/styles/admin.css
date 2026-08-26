@@ -3,7 +3,8 @@
   font-family: 'Segoe UI', system-ui, Arial, Helvetica, sans-serif;
   padding: 0;
   min-height: 100vh;
-  background: #f9faf7;
+  background: #f9faf7 !important;
+  color: #333 !important;
 }
 
 .admin-header {
@@ -56,6 +57,7 @@
   padding: 28px;
   max-width: 1200px;
   margin: 0 auto;
+  background: #f9faf7;
 }
 
 /* Loading & Empty States */
@@ -234,13 +236,24 @@
   gap: 16px;
 }
 
+.applications-list > div,
+.reports-list > div {
+  background: #ffffff !important;
+  color: #333 !important;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #d4d4d0;
+}
+
 .application-card,
 .report-card-item {
-  background: #fff;
+  background: #ffffff !important;
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid #e8e8e0;
+  color: #333 !important;
 }
 
 .application-header,
@@ -255,12 +268,13 @@
 .reported-user-info h3 {
   margin: 0 0 4px 0;
   font-size: 1.1rem;
-  color: #3d5a3e;
+  color: #1a1a1a;
+  font-weight: 600;
 }
 
 .applicant-email,
 .reported-email {
-  color: #999;
+  color: #555;
   font-size: 0.9rem;
 }
 
@@ -435,12 +449,13 @@
 .reports-list .report-card {
   display: block;
   padding: 20px;
-  background: #fff;
+  background: #ffffff !important;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid #e8e8e0;
   cursor: default;
   transform: none;
+  color: #333 !important;
 }
 
 .reports-list .report-card:hover {
@@ -627,11 +642,13 @@
 /* Application summary row in list view */
 .application-summary {
   padding: 8px 0 12px 0;
+  border-top: 1px solid #e8e8e0;
+  margin-top: 12px;
 }
 
 .summary-item {
   font-size: 0.9rem;
-  color: #777;
+  color: #444;
 }
 
 /* ========== REPORTS SUB-TABS ========== */
@@ -793,4 +810,42 @@
   .report-cards {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* Success message */
+.detail-success {
+  margin: 0 28px 16px 28px;
+  padding: 14px 18px;
+  background: #f4f7f0;
+  color: #3d5a3e;
+  border: 1px solid #6b7f4a;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Ban button (large) */
+.btn-ban-large {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #4a0000;
+  color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-ban-large:hover {
+  background: #2d0000;
+  transform: translateY(-1px);
+}
+
+.btn-ban-large:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }

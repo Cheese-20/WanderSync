@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 export default function ApplicationDetail({ application, onBack, onProcessed }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   const handleAccept = async () => {
     setActionLoading('accept');
@@ -13,7 +14,8 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
         { method: 'PATCH' }
       );
       if (response.ok) {
-        onProcessed(application.applicationID);
+        setSuccessMsg('Application accepted successfully! User has been promoted to Local Guide.');
+        setTimeout(() => onProcessed(application.applicationID), 2000);
       } else {
         setError('Failed to accept the application. Please try again.');
       }
@@ -34,7 +36,8 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
         { method: 'DELETE' }
       );
       if (response.ok) {
-        onProcessed(application.applicationID);
+        setSuccessMsg('Application rejected successfully. The applicant has been notified.');
+        setTimeout(() => onProcessed(application.applicationID), 2000);
       } else {
         setError('Failed to reject the application. Please try again.');
       }
@@ -89,24 +92,27 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
           </div>
         </div>
 
+        {successMsg && <div className="detail-success">{successMsg}</div>}
         {error && <div className="detail-error">{error}</div>}
 
-        <div className="detail-card-footer">
-          <button
-            className="btn-reject-large"
-            onClick={handleReject}
-            disabled={actionLoading !== null}
-          >
-            {actionLoading === 'reject' ? 'Rejecting...' : 'Reject'}
-          </button>
-          <button
-            className="btn-accept-large"
-            onClick={handleAccept}
-            disabled={actionLoading !== null}
-          >
-            {actionLoading === 'accept' ? 'Accepting...' : 'Accept'}
-          </button>
-        </div>
+        {!successMsg && (
+          <div className="detail-card-footer">
+            <button
+              className="btn-reject-large"
+              onClick={handleReject}
+              disabled={actionLoading !== null}
+            >
+              {actionLoading === 'reject' ? 'Rejecting...' : 'Reject'}
+            </button>
+            <button
+              className="btn-accept-large"
+              onClick={handleAccept}
+              disabled={actionLoading !== null}
+            >
+              {actionLoading === 'accept' ? 'Accepting...' : 'Accept'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

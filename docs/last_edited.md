@@ -1,5 +1,77 @@
-# Last Edited
-*Keep track of recent changes and updates in the project.*
+# Last Edited - Restored Manage Itinerary UI in GuideHome
+
+## [2026-08-19]
+- **UI Redesign (Manage Itinerary)**: Full redesign of `ManageItinerary.jsx` and `manage-itinerary.css`.
+  - **Overview tab**: Read-only summary of all activities in order, showing type badge (colour-coded), location, time range, duration, and notes. Empty state guides the user to the builder.
+  - **Itinerary Builder tab**: Replaced the old drag-and-drop sidebar with a structured form (name, type dropdown with 8 emoji types, location, start time, duration, notes). Activities auto-sort by time. Inline time conflict detection prevents overlapping bookings. Each timeline card is editable inline with a ✕ remove button. Timeline connector colour matches the activity type.
+  - **Locations tab**: Ordered list of all activities that have a location, showing sequence number, address, and time range — useful for the tourist to follow the route.
+  - **Stats bar**: Live stats always visible — number of activities, total duration, start time, end time.
+  - **Save & Notify button**: Prominent button in the header, saves to backend and notifies the tourist.
+  - **Why**: The old page had broken `<Layout>` wrapper (blank page), placeholder tabs with no function, and a confusing drag-and-drop sidebar. This replaces it with a clear, step-by-step UI that tells the guide exactly what to do at each step.
+
+- **Bug Fix (Explore Page Submit Spot button)**: Fixed case sensitivity issue preventing the "Submit New Spot" button from rendering for guides.
+  - **Root cause**: The UI checked `userRole.includes('guide')` but roles in the database might be capitalized (e.g., `Guide`).
+  - **Fix**: Standardized the role string by calling `.toLowerCase()` before checking.
+
+- **UI Redesign (Submit Spot Modal)**: Full redesign of the submit spot modal in `ExplorePage.jsx` and added new CSS to `explore.css`.
+  - **Look & Feel**: Added a backdrop blur overlay (`backdrop-filter: blur(6px)`) and a glassmorphic card with a gradient header matching the WanderSync brand colours. Also updated the trigger button (`✨ Submit New Spot`) with a matching green gradient, rounded pill shape, drop shadow, and a lift-on-hover effect.
+  - **Usability**: Replaced the free-text `Activity Type` input with a predefined `<select>` dropdown (using the exact same 8 categories as the Manage Itinerary page).
+  - **Icons**: Added intuitive emojis to all input fields and the submit button to make the form feel modern and "cool".
+  - **Animations**: Added smooth `fadeIn` and `slideUp` keyframe animations when the modal opens.
+
+- **Bug Fix (Submit Spot Modal Error)**: Fixed the `"An error occurred while saving the record. Please try again."` error when submitting a new spot.
+  - **Root cause**: The frontend payload was sending `isVerified: false` (a boolean). The backend C# model `CuratedSpot` defines `IsVerified` as a `string` (default `"pending"`). The mismatch caused ASP.NET Core model validation to fail and reject the request with a `400 Bad Request`. Additionally, the frontend was completely omitting the `submittedByUserID` field, which meant spots weren't linked to the guides who submitted them.
+  - **Fix**: Changed the payload to send `isVerified: "pending"`, and added code to extract the current user's ID from `localStorage` to include `submittedByUserID` and `submittedAt` in the payload.
+
+- **Feature (Conversational Spot Wizard & Upvotes)**: Converted the spot submission form into a conversational wizard and added a community upvoting feature.
+  - **Conversational UI (`ExplorePage.jsx`)**: The modal is now a 3-step wizard ("What's the spot called?" -> "Where is it?" -> "Activity Type & Description") utilizing smooth CSS sliding animations.
+  - **Spot Image Upload**: Step 3 of the wizard now includes a sleek, clickable drag-and-drop style upload zone. When an image is uploaded, it is converted to a base64 string and shows a preview with a nice overlay remove button.
+  - **Upvoting API (`SpotController.cs`)**: Added `POST /api/spots/{id}/upvote` which inserts a new `SpotVote` (type `"upvote"`) and automatically creates a `Notification` for the original spot submitter.
+  - **Upvote UI (`GuideHome.jsx` & `ExplorerHome.jsx`)**: Verified spots in the "Local Favourites" section now display an interactive Upvote button showing the live `UpvotesCount` fetched from the backend.
+
+- **Bug Fix (Prevent Self-Approval)**: Added validation so guides cannot approve spots they submitted themselves.
+  - **API Changes (`SpotController.cs`)**: 
+    - Updated `GetPendingSpotsForGuide` to hide spots where `s.SubmittedByUserID == guideId`.
+    - Added a check in `VoteOnSpot` to return `BadRequest("You cannot vote on your own spot.")` if the original submitter attempts to bypass the UI and vote directly.
+
+- **Feature (Detailed View Bookings)**: Completely redesigned the Explorer "My Activities" page for a richer viewing experience.
+  - **API Changes (`BookingsController.cs`)**: 
+    - Updated `GET /api/bookings/user/{userId}/with-details` to return BOTH "Tour" and "Itinerary" bookings (removed hardcoded filter).
+    - Added `pictureURL`, `location`, `price`, `description`, `numberOfGuests`, `timeOfBooking`, and `bookingType` fields.
+  - **UI Changes (`MyActivities.jsx`, `Profile.jsx`, & `discover.css`)**: Completely overhauled the booking cards to feature an ultra-premium glassmorphic aesthetic. The entire `.detailed-booking-card` now uses `backdrop-filter: blur(20px)` with a translucent, glowing gradient border. Details items are styled as sleek glass pills with hover micro-animations, the image features a smooth scale effect on hover, and the booking type tag (`TOUR` / `ITINERARY`) is now a glowing neon gradient. For **Custom Itineraries**, the timeline is cleanly parsed and rendered as a vertical timeline with pulsing glowing dots and floating glass nodes. This rich, visually stunning view is synchronized across both the "My Activities" page and the "Bookings" tab in the user's Profile.
+
+- **Feature (Explorer Spot Submission)**: Allowed explorers to submit spots as well.
+  - **UI Changes (`ExplorePage.jsx`)**: Removed the `userRole.includes('guide')` restriction on the "Submit New Spot" button. Now any logged-in user can submit a spot for verification.
+  - **Root cause**: The page was wrapped in `<Layout>` which is a router outlet layout component (`<Outlet />`). This component ignores any children passed to it directly — it only renders content from nested route definitions. So the entire page body was silently discarded.
+  - **Fix**: Replaced `<Layout>children</Layout>` with `<><NavBar /><div className="manage-itinerary-page">...</div></>`, matching the pattern used by every other page in the app (`ExplorerHome.jsx`, `GuideHome.jsx`, etc).
+  - **Additional**: Improved remove-item button label from `...` to `✕` for clarity, and improved duration placeholder text to `e.g. 1h or 30m`.
+- **Feature (Manage Itinerary entry point)**: Re-added the **"Manage Tourist Itineraries"** section to `GuideHome.jsx` (had been removed in main branch merge commit `8cd6772`). Now renders a card per matched tourist with a **Manage Itinerary** button navigating to `/manage-itinerary/:touristId`.
+  - **Why it was missing**: The section was silently removed during the `main` branch merge (commit `8cd6772: UI: remove Assigned Tourists section`). The backend fetch and state (`assignedTourists`) were still present but nothing was rendered on screen.
+  - **Fix**: Added a new `<section>` between "Local Favourites" and "Community Feed" that maps over `assignedTourists` and renders a card per tourist with their name, email, and a **"Manage Itinerary"** button.
+  - **How it works**: Clicking the button navigates to `/manage-itinerary/{tourist.userId}`, which loads `ManageItinerary.jsx` and fetches the tourist's itinerary via the `GET /api/local-guide/{guideId}/itinerary/{touristId}` endpoint. The route is protected by `AuthWrapper` in `App.jsx`.
+  - **Styling note**: Synced import from `useLocation` → `useNavigate` in `ExplorerHome.jsx` to match the main branch (navigate is actively used on line 35).
+- **Bug Fix (Syntax)**: Fixed missing closing `</>` fragment tag in `GuideHome.jsx` caused by the auto-merge from main (line 581).
+
+## [2026-08-18]
+- **Bug Fix (Bookings)**: Fixed `numberOfGuests` bug in Tour Bookings. Updated `CreateBooking` API in `backend/Controllers/BookingsController.cs` to correctly receive and save the `numberOfGuests` value when a user submits a booking request. Improved capacity check to sum `numberOfGuests` instead of counting bookings.
+- **Feature (Report Spot)**: Implemented Use Case D900 (Report Spot).
+  - **Backend**: Added `SpotReportRequest` DTO and a new `POST /api/spots/{id}/report` endpoint in `SpotController.cs`. This endpoint stores spot reports in the `SpotReports` table.
+  - **Frontend**: Updated `ExplorerHome.jsx` and `GuideHome.jsx` to include a "Report" button in the `LocalSpotModal` (Verified Local Favourites view).
+  - **Frontend**: Implemented a new `ReportSpotModal` that captures the reason (via dropdown) and optional comments from the user. Submitting the form calls the backend API and provides success feedback.
+  - **Why**: Allows users to flag inappropriate or non-existent spots for admin review, ensuring content quality and safety on the platform.
+
+## [2026-08-14]
+- **Feature (Manage Itinerary)**: Implemented Use Case D800 (Manage Itinerary).
+  - **Backend**: Added `GET /api/local-guide/{guideId}/assigned-tourists` to fetch accepted tourist matches in `LocalGuideController.cs`.
+  - **Backend**: Added `GET /api/local-guide/{guideId}/itinerary/{touristId}` to get or create a "CustomItinerary" `Tour` record. The itinerary timeline is serialized as a JSON string and saved in `Tour.Description`.
+  - **Backend**: Added `PUT /api/local-guide/itinerary/{tourId}` to update the serialized JSON timeline.
+  - **Backend**: Configured the PUT endpoint to generate a notification for the tourist upon schedule updates, using the `Notifications` table.
+  - **Frontend**: Updated `GuideHome.jsx` to fetch and display assigned tourists. Added a "Manage Itinerary" modal with an interactive timeline builder (add, remove, reorder activities/transit).
+  - **Frontend (UI Overhaul)**: Completely redesigned the Manage Itinerary feature into a dedicated, full-page layout (`ManageItinerary.jsx`) based on user mockups. Replaced the modal with a light-themed, dual-column view featuring a drag-and-drop sidebar for pre-saved activities, and an interactive, card-based vertical timeline for precise itinerary management.
+  - **Documentation**: Formally documented the detailed flow for "Use Case 11: Manage Itinerary (D800)" in `docs/use_case_narratives.md`, outlining the basic flow (calendar selection, timeline modification, validation) and alternative flows (validation failures, network loss).
+  - **Frontend (Validation & Offline Mode)**: Implemented strict validation sweeps across the itinerary timeline array prior to saving, preventing missing fields (title, time, duration) and dynamically calculating time-duration intersections to prevent overlapping schedules. Introduced `localStorage` caching and a fallback offline banner triggered upon encountering `ERR_NETWORK` during the save process.
+  - **Why**: Allows Local Guides to plan and edit personalized trips for matched tourists without requiring any new database tables, meeting project constraints while delivering full functionality. Meets the extended D800 requirements for error handling and connection resilience.
+  - **How**: We repurposed the `Tour` table to represent an itinerary (setting `Type` = "CustomItinerary") and used the `Description` field to store a JSON array of activities. A `Booking` record automatically links the tourist to this itinerary tour.
 
 ## [2026-08-11]
 - **Feature (Recommend New Location)**: Implemented Use Case D500 (Recommend new location / Submit New Spot).
@@ -35,151 +107,18 @@
 - **UI (Matches)**: Added a loading state overlay with a spinner to `Match.jsx` while profiles are being fetched to improve UX.
 - **Backend Optimization**: Optimized the `GetMatches` raw SQL query in `ProfileController.cs` by adding a `LIMIT 20` clause. This significantly speeds up the data fetch by preventing thousands of unneeded rows from being sent to the frontend at once.
 
-## [2026-08-09]
-- **Documentation**: Added Use Case A800 (Set up User profile) to `docs/use_case_narratives.md`, matching the required basic flow and UI fields (Full Name, Location, Age, Interests).
-- **Bug Fix**: Fixed a bug in `NavBar.jsx` where clicking a `MatchRequest` notification incorrectly routed the user to `/messages` instead of `/match`. Now, the user correctly lands on the Match page to view and accept their pending requests.
-- **Feature (Automated Messaging)**: Added logic in `ProfileController.cs` to automatically insert a welcome chat message ("It's a match! Say hi!") into the `Messages` table when a match is successfully accepted.
-- **Documentation**: Refined the Main Flow for Use Case 2 (Explorer Matching) in `docs/use_case_narratives.md` to use a succinct, sentence-by-sentence style while accurately capturing the actual backend behavior (e.g., dispatching `MatchRequest` and `MatchAccepted` notifications during a right swipe).
-- **Feature (Rejection Confirmation UI)**: Added a custom confirmation modal in `src/pages/Dashboard.jsx` when a Local Guide attempts to decline a booking. The modal displays the WanderSync logo, details of the booking (Explorer name, Tour title), and asks for explicit confirmation before triggering the decline API. This was added to prevent accidental booking rejections and ensure a smoother, safer user experience.
-- **Feature (Automated Messaging)**: Updated `AcceptBooking` in `BookingsController.cs` to automatically dispatch a confirmation chat message (A200) from the Local Guide to the Explorer upon booking acceptance.
-- **Documentation**: Refined Use Cases 12.1 (Accept Booking) and 12.2 (Reject Booking) in `docs/use_case_narratives.md` to incorporate the requested clarifications from the annotated table (e.g., navigating to bookings section, automated message dispatch, UI background color changes).
-- **Documentation**: Split Use Case 12 into Use Case 12.1 "Accept Booking" and Use Case 12.2 "Reject Booking" in `docs/use_case_narratives.md` based on existing system business rules and notification flows.
+## What Changed
 
-## [2026-08-08]
-- **Documentation**: Completely rewrote the `README.md` to professionally present the project's problem statement, solution, tech stack, and team contributors for the 3rd-year 2026 group project.
-- **Documentation**: Compiled and centralized all active system behaviors into a new `docs/business_rules.md` file, covering authentication, messaging, booking lifecycles, and notification rules.
-- **Feature (Notification System):** Implemented a complete booking-based notification and matching system.
-  - Added `NotificationsController.cs` with GET and PUT endpoints for fetching and reading notifications.
-  - Added a `POST /api/bookings` endpoint in `BookingsController.cs` to handle tourists creating bookings, which instantly dispatches a `NewBooking` notification to the tour guide.
-  - Updated the `PUT /api/bookings/{id}/accept` endpoint to automatically create a `BookingAccepted` notification for the tourist, AND seamlessly generate a mutually accepted `UserMatch` between the guide and the tourist so they can communicate via the existing Messages page.
-  - Updated the `PUT /api/bookings/{id}/decline` endpoint to generate a `BookingDeclined` notification for the tourist.
-  - Created a `.NET BackgroundService` (`BookingReminderService.cs`) that runs continuously in the background, polling the database for `Accepted` bookings happening in the next 24 hours. It automatically generates `BookingReminder` notifications for both the tourist and the guide exactly one day before the tour.
-  - Added a Notification Bell to the `NavBar.jsx` with an unread counter badge. Clicking it opens a dropdown list of recent notifications.
-  - Implemented dynamic notification routing: Clicking a `MatchRequest` or `BookingAccepted` routes the user to `/messages`, clicking a `BookingReminder` routes to `/profile` (bookings), and clicking a `NewBooking` routes the guide to their `/dashboard`.
-  - Upgraded `ExplorerHome.jsx` to dynamically fetch all available tours from the backend (`GET /api/tours`) instead of showing static placeholder cards.
-  - Added a "Book Now" flow to the `ExplorerHome.jsx` tour cards, allowing tourists to actually create real bookings for real tours, directly triggering the new notification lifecycle.
-  - Added a data retention and visibility rule to `BookingsController.cs` (`GetGuideBookings`). All bookings are permanently retained in the database, but any bookings strictly older than 7 days from the current date are dynamically filtered out and hidden from the Local Guide's Dashboard to keep the UI clean.
-  - Updated the global loading popup in `Dashboard.jsx` to display a pulsing image of the WanderSync logo instead of text, and simplified the loading text to just say "Updating, please wait" for both Spot Verification voting and Booking accept/reject actions.
-- **Feature (Local Guide Authentication)**: Added strict role validation for Local Guides during login.
-  - Updated `AuthController.cs` to return a 401 Unauthorized with a custom error message if an Explorer attempts to log in as a Local Guide.
-  - Replaced the standard browser alert in `AuthForm.jsx` with a custom visual modal popup to display login errors gracefully.
-- **Feature (Local Guide Dashboard)**: Introduced a new Dashboard page exclusively for Local Guides.
-  - Created `Dashboard.jsx` as a new page for guide management.
-  - Implemented the complete Dashboard UI matching the design mockup. Added interactive state management to the tab navigation, allowing seamless toggling between "Overview" (default view with summary cards, experiences, and bookings), "Bookings", and "Spot verification" without reloading the page.
-  - Implemented full Spot Verification UI logic: fetches pending spots from the backend API, displays them nicely, and handles sending Approve/Reject votes to the backend. Added a custom, animated loading spinner (mint green) while the data is being fetched.
-  - Refined the dashboard's aesthetics by updating the tab navigation container to a smooth pill-shape (`border-radius: 999px`) and updating structural borders to a clean, uniform gray (`#e2e8f0`).
-  - Updated the backend `SpotController.cs` to fetch and return the `submitterName` and `submitterAvatar` of the user who submitted the spot so guides can see who submitted it.
-  - Added the `/dashboard` Spot Verification loading state flags for accept and decline using the global full-screen spinner overlay!
-  - Redesigned the Spot Verification pending spot cards to match the user's two-column card mockup (image on the left, info on the right) with a slightly smaller max-width (700px).
-  - Enforced a strict 300x300px image size on Spot Verification cards to keep the design uniform.
+Updated the `CreateBooking` API endpoint to correctly receive and save the `numberOfGuests` value when a user submits a booking request. Also fixed a bug where tour capacity checking was counting total bookings instead of total guests.
 
-- **Database Refactor (Bookings):**
-  - **Tours**: Added `Price` (decimal) to calculate total earnings.
-  - **Bookings**: Added `numberOfGuests` (int) and `timeOfBooking` (string) to natively support all dashboard fields. Dropped the redundant `UserBooking` associative table to improve performance by merging its fields (`userID`) straight into `Bookings`.
-  - Updated the actual Aiven MySQL remote database schema to reflect these changes.
+## Why It Changed
 
-- **Bookings API (`BookingsController.cs`):**
-  - Added `GET /api/bookings/guide/{guideId}` to fetch and join a guide's bookings across `Tours`, `Users`, and `Profiles`.
-  - Added `PUT /api/bookings/{id}/accept` to accept a booking.
-  - Added `PUT /api/bookings/{id}/decline` to decline a booking.
+The user noticed that whenever someone made a booking for a tour, the number of guests on the Dashboard always showed as `0`, even if they selected multiple people during checkout. 
 
-- **Bookings Dashboard UI (`Dashboard.jsx`):**
-  - Replaced the placeholder Bookings tab with a fully functional interface.
-  - Implemented dynamic **Tour Type** and **Status** dropdown filters.
-  - Created dynamic Booking Cards that parse API data: User Avatar, User Name, Number of Guests, Date, Time, Tour Title, and Earnings (`Price * NumberOfGuests`).
-  - Added conditional dynamic background colors based on booking status: Pending (Yellow gradient), Accepted (Green gradient), and Declined (Red gradient).
-  - Integrated the Accept/Decline action buttons with the Bookings API endpoints and the global full-screen loading spinner.
-  - Enforced a uniform height (`300px`) and `100%` width constraints across all Spot Verification cards, ensuring consistent dimensions regardless of image aspect ratios or text lengths (using line-clamping to truncate long descriptions).
-  - Enforced exact uniform `300px` by `300px` dimensions for the spot images within the cards to ensure pictures never stretch unevenly.
-  - Updated the backend `SpotController.cs` to fetch and return the `submitterName` and `submitterAvatar` of the user who submitted the spot so guides can see who submitted it.
-  - Added the `/dashboard` route in `App.jsx`.
-  - **Feature (Global Loading States & Button Disabling)**: Implemented full-screen loading overlays and disabled button states across the entire system for API interactions.
-    - **Why:** To prevent duplicate API submissions if a user clicks a button multiple times rapidly, and to provide clear visual feedback that a background process (like network fetching or saving) is occurring.
-    - **How it works:** Added `.global-loading-overlay`, `.global-spinner`, and `.btn:disabled` CSS rules to `styles.css`. Then, introduced `useState` flags (like `isLoading`, `isVoting`, `isSubmitting`, `isDeleting`, `isSaving`) to `AuthForm.jsx`, `Dashboard.jsx`, `CreatePostModal.jsx`, `Activities.jsx`, and `EditActivity.jsx`. When an API call starts, the flag is set to `true`, which disables the submit button and renders the full-screen overlay (with a blur effect and spinner). In the `finally` block of the API call, the flag is reset to `false`.
-  - **Bug Fix**: Fixed a bug where `guideId` was returning `undefined` because the login model stores the ID as `id`, not `userID`, preventing the fetch from firing.
-  - Updated `NavBar.jsx` to dynamically render the "Dashboard" navigation link before "Profile" only when the logged-in user's role includes 'guide'.
-- **Frontend / Bug Fix**: Fixed a compilation error in `src/pages/ExplorerHome.jsx` caused by a duplicate `import React from 'react';` declaration which prevented the Vite development server from compiling.
-- **UI / Styling**: Updated the primary solid button colors across the application (including the Sign In, Sign Up, and Close buttons) to use the mint green brand color (`#a4ddbc`) extracted from the WanderSync logo.
-- **General / Cleanup**: Deleted the unnecessary file `Android Studio - Quail 3 | ` from the project root. This appeared to be an accidentally created file or web shortcut with no purpose.
-- **General / Cleanup**: Deleted leftover `vite.config.js.timestamp-*.mjs` temporary files. These are sometimes left behind if the Vite development server process is forcefully stopped or crashes. They are not required for the code to run.
-- **Config**: Added `vite.config.js.timestamp-*` to `.gitignore` to prevent these temporary files from accidentally being committed in the future.
-- **Documentation (Local Guide Application)**: Documented the Local Guide Application feature (Use Case C400) in `docs/LGApplication.md`.
-  - The feature allows users to apply as a Local Guide via a form at `/apply-guide`, accessible from a button on the Profile page.
-  - The form collects ID Number, Location, Bio (max 250 chars), and an optional Reason field, then submits to `POST /api/local-guide/apply`.
-  - The backend validates the request, checks for duplicate applications, inserts into the `GuideApplication` table, and updates the user's role to "PendingGuide".
-  - Frontend implementation lives in `src/pages/LocalGuideApplication.jsx` with the apply button in `src/pages/Profile.jsx`.
-- **Double Navigation Fix**: Removed the duplicate `<NavBar />` from `src/pages/LocalGuideApplication.jsx` because the page is already wrapped in `Layout.jsx` which renders the global navigation.
-  - Changed `IDno` type from `int` to `long` in `backend/Models/LocalGuideApplication.cs` and `GuideApplicationRequest` in `backend/Controllers/LocalGuideController.cs` to prevent integer overflows with 13-digit ID numbers.
-  - Added table creation raw SQL for `GuideApplication` (using `bigint` for `IDno`) inside `backend/Program.cs` to automatically initialize the table if it is missing.
-  - Added an `ALTER TABLE` statement in `backend/Program.cs` to add the `loaction` column if it is missing in the database schema, resolving the `Unknown column 'g.loaction'` error for pre-existing tables.
-  - Added an `ALTER TABLE` statement in `backend/Program.cs` to modify the `IDno` column type to `bigint` for pre-existing tables, preventing overflow errors on database save.
-  - Updated `docs/LGApplication.md` to reflect `bigint` type for `IDno`.
-- **Bug Fix (ExplorerHome)**: Removed duplicate `import React from 'react'` line in `src/pages/ExplorerHome.jsx` that was causing build failure.
-- **Bug Fix (App.jsx)**: Added missing `Discover` component import to `src/App.jsx` which was referenced in a route but never imported.
+This happened because the backend's `CreateBookingRequest` model was completely missing the `NumberOfGuests` field, so it ignored the number sent by the frontend. Additionally, the backend was creating the new `Booking` database record using the C# default integer value (0) for `numberOfGuests`.
 
-## [2026-08-06]
-- **Feature (Multiple Images)**: Added support for uploading up to 7 images per post.
-  - Updated `CreatePostModal.jsx` to allow multiple image selection and preview generation.
-  - Serialized the images array into JSON and saved it to the existing `longtext` `pictureURL` column to prevent backend migrations.
-  - Updated `ExplorerHome.jsx` to parse and render multiple images as a horizontal carousel.
-- **Feature (Edit Experience Post)**: Implemented Use Case D600 (Edit experience post).
-  - Added `UpdatePost` (PUT) endpoint in `PostsController.cs` to handle post modifications.
-  - Updated `CreatePostModal.jsx` to support an edit mode with pre-populated fields.
-  - Modified `ExplorerHome.jsx` to show an edit icon for the user's own posts and update the post list without refreshing.
-  - Documented Use Case D600 in `docs/use_case_narratives.md`.
-- **Feature (Delete Experience Post)**: Implemented Use Case D700 (Delete experience post).
-  - Added `DeletePost` (DELETE) endpoint in `PostsController.cs` to handle post deletion.
-  - Added a trash icon on the user's posts in `ExplorerHome.jsx`.
-  - Implemented `handleDeleteClick` with a confirmation dialog, API deletion logic, and feed refresh.
-  - Documented Use Case D700 in `docs/use_case_narratives.md`.
+## How It Works
 
-## [2026-08-04]
-- **Backend / Bug Fix**: Fixed a critical database schema issue where sending messages failed due to an outdated `Notifications` table from a previous iteration of the project. The old table lacked the `userID` and `message` columns. Updated `Program.cs` to execute `DROP TABLE IF EXISTS Notifications` before recreating it, ensuring the schema perfectly matches the current Entity Framework `Notification.cs` model. Tests confirm this resolves the 500 server error and messages now send successfully.
-- **UI / Feature**: Implemented Optimistic UI updates in `Messages.jsx`. When a user sends a message, it is immediately appended to the chat interface and the input box is cleared, preventing double-submissions and providing instant visual feedback. The message is then silently replaced by the confirmed server response in the background.
-- **Documentation**: Updated `docs/use_case_narratives.md` to formally include "Use Case 7: Send Notification" and "Use Case 8: View Notification". This documents the recently built Notification system, detailing how notifications are inserted by the system upon user actions, and how actors interact with the UI to view and mark them as read.
-- **Backend / Feature**: Implemented Phases 2 and 3 of the Notification system. Created `NotificationController.cs` to handle fetching and marking notifications as read.
-- **Backend / Feature**: Integrated notifications into the core workflows. `MessageController.cs` now triggers a "NewMessage" notification that includes the sender's first name (e.g., "You have a new message from John."), and `ProfileController.cs` triggers "MatchRequest" and "MatchAccepted" notifications dynamically.
-- **Backend / Optimization**: Eliminated the N+1 database query problem and optimized MySQL index utilization in `MessageController.cs` and `ProfileController.cs`. Previously, EF Core was translating LINQ queries into multiple sequential SQL queries, and the subsequent Raw SQL rewrite still suffered from a full-table scan due to an `OR` clause in the `WHERE` statement (`m.requesterID = x OR m.receiverID = x`). Rewrote the queries using `UNION ALL` and `NOT EXISTS` to perfectly align with MySQL's B-Tree indexing on foreign keys, guaranteeing exactly one network roundtrip with near-instant execution speed.
-- **UI / Bugfix**: Fixed an issue in `Messages.jsx` where message timestamps were displaying in UTC instead of the user's local timezone. When EF Core reads `datetime` fields from MySQL, it drops the UTC 'Z' indicator. The frontend now forces the 'Z' indicator before parsing the date, allowing the browser to correctly convert the UTC server time into the device's exact local time.
-- **UI / Feature**: Added a Notification Bell to `NavBar.jsx` with an unread badge counter. Clicking the bell opens a sleek dropdown list of notifications. Clicking a notification marks it as read in the database and navigates the user to the relevant page (Messages or Match).
-- **Backend / Feature**: Implemented the first phase of the new Notification system. Created the `Notification.cs` model mapping to a new `Notifications` database table. Added the DbSet to `WanderSyncDbContext.cs` and executed the raw SQL generation inside `Program.cs`. The table structure includes a `scheduledFor` column to support future delayed notifications (e.g. reminders), along with standard fields like `type`, `message`, and `isRead`.
-- **Backend / Feature**: Refactored the `Swipe` logic in `ProfileController.cs` to strictly enforce a single-record architecture for match requests between any two users, avoiding duplicate row insertions. It now checks for an existing match row (regardless of who the requester is) and strictly updates its status (`pending`, `accepted`, `rejected`) rather than creating a new reverse row.
-- **UI / Bug Fix**: Fixed a bug in `Match.jsx` where the frontend would loop back to hardcoded mock profiles (Bob Joe, Sarah Smith) when the backend returned an empty list of matches. Removed the `getMockMatches` fallback entirely so users correctly see the "No more matches available right now!" empty state.
-- **UI / Refactor**: Relocated the Logout button from the main navigation bar (`NavBar.jsx`) to the `Profile.jsx` page. It now sits next to the "Bookings" tab and shares the same styling as the "Delete Profile" button for visual consistency.
-- **Git / Merge**: Executed `git pull` again as requested. The codebase remains up to date.
-- **UI / Refactor**: Enforced navigation consistency across all pages. Created a central `Layout.jsx` wrapper for all protected routes in `App.jsx`, replacing the manual `<NavBar />` imports on each page.
-- **Feature**: Removed the "Discover" page and its route. Added a global "Logout" button to the `NavBar` so it's accessible everywhere, effectively unifying the layout used by Admin, Guide, and Explorer roles.
-- **Environment**: Stopped the background C# backend server process to free up port 5200. This resolves the `Address already in use` error and allows the server to be run interactively in the terminal.
-- **Git / Merge**: Executed `git pull` again as requested. The codebase remains up to date with no new changes from the remote.
-- **Git / Merge**: Executed `git pull` to fetch the latest code from the remote repository again. The codebase was already up to date. This ensures the local repository has the latest remote updates before starting new work.
-- **Git / Merge**: Executed `git pull` to fetch the latest code from the remote repository. The codebase was already up to date. This ensures the local repository has the latest remote updates before starting new work.
-
-## [2026-08-03]
-- **Git / Merge**: Pulled the latest code from the remote `main` branch into the local `Messages` branch using `git pull origin main`. This updates the local environment with recent merged features and fixes to keep the codebase up-to-date.
-- **Documentation**: Updated `docs/use_case_narratives.md` to split the overarching "Messaging" use case into two separate, detailed narratives: "Send Message" and "View Message". This provides a clearer, step-by-step documentation flow for how each specific action is accomplished and validated within the application architecture.
-## [2026-08-03]
-- **Feature (Post Experience)**: Implemented the Post Experience Use Case (D100). Added `Post` backend model, `PostsController`, and updated `WanderSyncDbContext`.
-- **UI (Explorer Home)**: Created `CreatePostModal.jsx` for the Post Experience flow and updated `ExplorerHome.jsx` to fetch and display the feed. Added styles to `explorer.css`.
-- **Database / Backend**: Appended raw SQL to `Program.cs` to auto-create the `Posts` table on startup.
-
-## [2026-07-30]
-- **Feature (Activities)**: Implemented the Edit Activity Use Case. Added `Tour` backend model, `ToursController`, and updated `WanderSyncDbContext`.
-- **UI (Activities)**: Created `Activities.jsx` and `EditActivity.jsx` to list guide tours and edit them. Updated routing in `App.jsx` and linked from `GuideHome.jsx`.
-- **Database / Backend**: Appended raw SQL to `Program.cs` to auto-create the `Tours` table on startup to bypass EF migrations.
-
-## [2026-07-28]
-- **General**: Created `docs` folder.
-- **Documentation**: Added initial documentation: `system_design.md`, `functionality.md`, `use_case_narratives.md`, and `last_edited.md`.
-- **Refactor**: Moved `AuthForm.jsx` from `src/` to `src/pages/` to maintain better folder structure. Updated import path in `App.jsx`.
-- **Documentation**: Expanded `use_case_narratives.md` to include preconditions, postconditions, and main flows.
-- **Feature (Match Page)**: Redesigned `Match.jsx` to include Tinder-style swiping cards, added `match.css` for styling, and created a Pending Requests sidebar.
-- **Backend**: Added `GetMatches` endpoint to `ProfileController.cs` to fetch users for the Match page.
-- **Documentation**: Added Triggers to `use_case_narratives.md`.
-- **Database / Backend**: Added `Job` column to `Profile` model and generated EF migrations. Mapped `Job` across all Profile API requests.
-- **UI Tweaks**: Centered header in `Match.jsx` and updated Match Card to read `Job` from API. Updated `Profile.jsx` so users can edit their Job role.
-- **Bug Fix**: Updated `Program.cs` to execute raw SQL (`ALTER TABLE Profile ADD COLUMN job`) on startup to fix 500 Internal Server Errors, bypassing EF migrations.
-- **Feature (Match Tracking)**: Implemented `UserMatch` database model and tracking. Swiping right creates a "pending" match, or "accepted" if the other user already swiped right. Refactored pending requests sidebar to pull dynamically from the backend instead of using mock data.
-- **Feature (Messages)**: Created `Message` table and `MessageController.cs`. Users can now send messages strictly to mutually accepted matches. Redesigned `Messages.jsx` to feature a sidebar of active connections and a chat window sorted with the newest messages appearing at the top.
-- **Git / Merge**: Merged remote `viewBookings` branch into `Match` and resolved `WanderSyncDbContext` conflicts to integrate new bookings models.
-- **Bug Fix**: Fixed matching queue logic in `ProfileController.cs` to properly filter out profiles that the current user has already interacted with (pending, accepted, or rejected).
-- **Bug Fix**: Rewrote LINQ queries in `ProfileController.cs` (pending requests) and `MessageController.cs` (messaging contacts) to use safe `LEFT JOIN`s on `UserID` instead of traversing navigation properties, fixing an issue where requests and contacts wouldn't load if users had incomplete profiles.
+1. Added `public int NumberOfGuests { get; set; }` to the `CreateBookingRequest` class.
+2. Updated the `Booking` creation logic to map `numberOfGuests = request.NumberOfGuests`.
+3. Improved the capacity check (`currentBookings`) to use `.SumAsync(b => b.numberOfGuests)` instead of `.CountAsync()`, preventing tours from being overbooked if multiple users book with several guests each!

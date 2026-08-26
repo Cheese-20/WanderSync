@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace backend.Controllers
 {
@@ -25,6 +29,36 @@ namespace backend.Controllers
                 .ToListAsync();
 
             return bookings;
+        }
+
+        // GET: api/bookings/guide/5
+        [HttpGet("guide/{guideId}")]
+        public async Task<ActionResult<IEnumerable<object>>> GetGuideBookings(int guideId)
+        {
+            var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+
+            var bookings = await (from b in _context.Bookings
+                                  join t in _context.Tours on b.tourID equals t.TourId
+                                  join u in _context.Users on b.userID equals u.UserID
+                                  join p in _context.Profiles on u.UserID equals p.UserID into profileGroup
+                                  from p in profileGroup.DefaultIfEmpty()
+                                  where t.GuideId == guideId && b.bookingDate >= sevenDaysAgo
+                                  select new
+                                  {
+                                      BookingId = b.bookingID,
+                                      TourTitle = t.Title,
+                                      TourType = t.Type,
+                                      TourDescription = t.Description,
+                                      Price = t.Price,
+                                      NumberOfGuests = b.numberOfGuests,
+                                      Status = b.status,
+                                      BookingDate = b.bookingDate,
+                                      TimeOfBooking = b.timeOfBooking,
+                                      UserName = u.FirstName + " " + u.LastName,
+                                      UserAvatar = p != null ? p.ProfilePictureLink : null
+                                  }).ToListAsync();
+
+            return Ok(bookings);
         }
 
         /// <summary>
@@ -56,19 +90,21 @@ namespace backend.Controllers
             if (existingBooking != null)
                 return Conflict(new { message = "You have already booked this tour." });
 
-            // Check capacity - count active bookings for this tour
+            // Check capacity - sum active bookings guests for this tour
             var currentBookings = await _context.Bookings
-                .CountAsync(b => b.tourID == request.TourID && b.status != "Cancelled");
-            if (currentBookings >= tour.MaxPeople)
-                return BadRequest(new { message = "This tour is fully booked." });
+                .Where(b => b.tourID == request.TourID && b.status != "Cancelled")
+                .SumAsync(b => (int?)b.numberOfGuests) ?? 0;
+            if (currentBookings + request.NumberOfGuests > tour.MaxPeople)
+                return BadRequest(new { message = "Not enough spots remaining on this tour." });
 
             var booking = new Booking
             {
                 userID = request.UserID,
                 tourID = request.TourID,
                 bookingType = "Tour",
-                status = "Confirmed",
-                bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow
+                status = "Pending", // Set to pending to allow guide to accept/decline
+                bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow,
+                numberOfGuests = request.NumberOfGuests
             };
 
             try
@@ -76,61 +112,32 @@ namespace backend.Controllers
                 _context.Bookings.Add(booking);
                 await _context.SaveChangesAsync();
 
-                // Send notification to the guide
-                var tourForNotification = await _context.Tours.FindAsync(request.TourID);
-                if (tourForNotification != null)
+                // Notify the guide
+                var notification = new Notification
                 {
-                    var notification = new Notification
-                    {
-                        UserID = tourForNotification.GuideId,
-                        Type = "NewBooking",
-                        Message = $"You have a new booking request for {tourForNotification.Title}.",
-                        RelatedEntityID = booking.bookingID,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.Notifications.Add(notification);
-                    await _context.SaveChangesAsync();
-                }
+                    UserID = tour.GuideId,
+                    Type = "NewBooking",
+                    Message = $"{user.FirstName} {user.LastName} sent a new booking request for {tour.Title}.",
+                    RelatedEntityID = booking.bookingID,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Booking successful", bookingId = booking.bookingID });
+                return Ok(new
+                {
+                    message = "Booking requested successfully! Waiting for guide to confirm.",
+                    bookingId = booking.bookingID,
+                    tourTitle = tour.Title,
+                    date = booking.bookingDate
+                });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Failed to create booking. Please try again." });
             }
         }
-
-        // GET: api/bookings/guide/5
-        [HttpGet("guide/{guideId}")]
-        public async Task<ActionResult<IEnumerable<object>>> GetGuideBookings(int guideId)
-        {
-                                  var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
-
-            var bookings = await (from b in _context.Bookings
-                                  join t in _context.Tours on b.tourID equals t.TourId
-                                  join u in _context.Users on b.userID equals u.UserID
-                                  join p in _context.Profiles on u.UserID equals p.UserID into profileGroup
-                                  from p in profileGroup.DefaultIfEmpty()
-                                  where t.GuideId == guideId && b.bookingDate >= sevenDaysAgo
-                                  select new
-                                  {
-                                      BookingId = b.bookingID,
-                                      TourTitle = t.Title,
-                                      TourType = t.Type,
-                                      TourDescription = t.Description,
-                                      Price = t.Price,
-                                      NumberOfGuests = b.numberOfGuests,
-                                      Status = b.status,
-                                      BookingDate = b.bookingDate,
-                                      TimeOfBooking = b.timeOfBooking,
-                                      UserName = u.FirstName + " " + u.LastName,
-                                      UserAvatar = p != null ? p.ProfilePictureLink : null
-                                  }).ToListAsync();
-
-            return Ok(bookings);
-        }
-
-
 
         /// <summary>
         /// GET: api/bookings/user/{userId}/with-details
@@ -142,7 +149,7 @@ namespace backend.Controllers
             try
             {
                 var bookings = await _context.Bookings
-                    .Where(b => b.userID == userId && b.bookingType == "Tour")
+                    .Where(b => b.userID == userId)
                     .Join(
                         _context.Tours,
                         booking => booking.tourID,
@@ -157,13 +164,20 @@ namespace backend.Controllers
                         {
                             bookingId = bt.booking.bookingID,
                             tourId = bt.tour.TourId,
+                            bookingType = bt.booking.bookingType,
                             tourTitle = bt.tour.Title,
                             tourType = bt.tour.Type,
                             tourDate = bt.tour.Date,
                             bookingDate = bt.booking.bookingDate,
                             status = bt.booking.status,
                             guideId = guide.UserID,
-                            guideName = guide.FirstName + " " + guide.LastName
+                            guideName = guide.FirstName + " " + guide.LastName,
+                            pictureURL = bt.tour.PictureURL,
+                            location = bt.tour.Location,
+                            price = bt.tour.Price,
+                            description = bt.tour.Description,
+                            numberOfGuests = bt.booking.numberOfGuests,
+                            timeOfBooking = bt.booking.timeOfBooking
                         }
                     )
                     .ToListAsync();
@@ -194,7 +208,9 @@ namespace backend.Controllers
                 UserID = booking.userID,
                 Type = "BookingAccepted",
                 Message = $"Your booking for {tour?.Title ?? "a tour"} has been accepted!",
-                RelatedEntityID = booking.bookingID
+                RelatedEntityID = booking.bookingID,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
             };
             _context.Notifications.Add(notification);
 
@@ -262,7 +278,9 @@ namespace backend.Controllers
                 UserID = booking.userID,
                 Type = "BookingDeclined",
                 Message = $"Your booking for {tour?.Title ?? "a tour"} was declined.",
-                RelatedEntityID = booking.bookingID
+                RelatedEntityID = booking.bookingID,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
             };
             _context.Notifications.Add(notification);
 
@@ -276,5 +294,6 @@ namespace backend.Controllers
         public int UserID { get; set; }
         public int TourID { get; set; }
         public DateTime BookingDate { get; set; }
+        public int NumberOfGuests { get; set; }
     }
 }

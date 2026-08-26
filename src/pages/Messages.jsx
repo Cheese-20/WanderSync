@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from '../components/NavBar';
 import logo from '../assets/images/logo.png';
 
 import '../styles/messages.css';
@@ -122,7 +123,9 @@ export default function Messages() {
   };
 
   return (
-    <div className="messages-page">
+    <>
+      <NavBar />
+      <div className="messages-page">
 
       
       <div className="messages-layout">
@@ -182,16 +185,8 @@ export default function Messages() {
                   className="chat-header-name clickable-name" 
                   onClick={() => navigate(`/user/${activeContact.userID}`)}
                   title="View profile"
+                  style={{ display: 'flex', alignItems: 'center' }}
                 >
-                  {activeContact.firstName} {activeContact.lastName}
-                </span>
-                <button 
-                  className="btn-view-chat-profile" 
-                  onClick={() => navigate(`/user/${activeContact.userID}`)}
-                >
-                  View Profile
-                </button>
-                <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center' }}>
                   {activeContact.firstName} {activeContact.lastName}
                   {(activeContact.role?.toLowerCase() === 'guide' || activeContact.role?.toLowerCase() === 'local guide') && (
                     <svg title="Verified Local Guide" style={{ marginLeft: '6px', color: '#10b981', flexShrink: 0 }} width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -235,5 +230,6 @@ export default function Messages() {
         </div>
       </div>
     </div>
+    </>
   );
 }

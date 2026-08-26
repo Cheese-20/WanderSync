@@ -12,9 +12,6 @@ export default defineConfig({
     // Proxy /api requests to the ASP.NET backend running locally.
     // This avoids CORS issues during development — the browser hits Vite,
     // and Vite forwards the request to the backend.
-    watch: {
-      ignored: ['**/backend/**']
-    },
     proxy: {
       '/api': {
         target: 'http://localhost:5200',

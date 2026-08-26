@@ -308,35 +308,33 @@
 
 /* Spot Verification Card */
 .spot-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 280px 1fr;
   background-color: #ffffff;
-  border: 1px solid #a4ddbc;
-  /* Light green border as in screenshot */
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   width: 100%;
   max-width: 700px;
-  /* A bit smaller */
-  height: 300px;
-  /* Enforce uniform height */
+  min-height: 280px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .spot-card-img {
-  flex: 0 0 300px;
-  width: 300px;
-  height: 300px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .spot-card-content {
-  flex: 1;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .spot-card-header {
@@ -375,6 +373,7 @@
   margin-right: 0.75rem;
   object-fit: cover;
   background-color: #e2e8f0;
+  flex-shrink: 0;
 }
 
 .spot-submitter-info p {
@@ -403,6 +402,7 @@
   width: 14px;
   height: 14px;
   margin-right: 6px;
+  flex-shrink: 0;
   color: #6b7280;
 }
 
@@ -410,17 +410,59 @@
   font-size: 0.85rem;
   color: #6b7280;
   margin-bottom: 1.5rem;
-  flex: 1;
   line-height: 1.4;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  /* Truncate text after 2 lines so it doesn't break height */
   -webkit-box-orient: vertical;
 }
 
 .spot-card-actions {
   display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+  justify-content: flex-end;
+}
+
+.spot-btn-reject {
+  background-color: #ef4444;
+  color: white;
+  border-radius: 20px;
+  padding: 6px 20px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.spot-btn-reject:hover {
+  opacity: 0.85;
+}
+
+.spot-btn-approve {
+  background-color: #a4ddbc;
+  color: #065f46;
+  border-radius: 20px;
+  padding: 6px 20px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.spot-btn-approve:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 600px) {
+  .spot-card {
+    grid-template-columns: 1fr;
+  }
+  .spot-card-img {
+    height: 200px;
+  }
 }
 
 /* Bookings UI Styles */
@@ -615,4 +657,30 @@
 
 .filter-select:focus {
   border-color: var(--primary);
+}
+
+/* Modal Popup Styles for Global Loading & Confirmation Modals */
+.global-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.global-loading-popup {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

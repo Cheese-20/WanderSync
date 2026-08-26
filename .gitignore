@@ -32,3 +32,5 @@ appsettings.Local.json
 .env.production
 
 .DS_Store
+
+.jsx.icloud

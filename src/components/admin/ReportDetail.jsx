@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 export default function ReportDetail({ report, onBack, onProcessed }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   const handleSuspend = async () => {
     setActionLoading('suspend');
@@ -13,7 +14,8 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
         { method: 'PATCH' }
       );
       if (response.ok) {
-        onProcessed(report.reportID);
+        setSuccessMsg('Account suspended successfully for 2 weeks. The user has been notified.');
+        setTimeout(() => onProcessed(report.reportID), 2000);
       } else {
         setError('Failed to suspend the account. Please try again.');
       }
@@ -34,12 +36,39 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
         { method: 'DELETE' }
       );
       if (response.ok) {
-        onProcessed(report.reportID);
+        setSuccessMsg('Report deleted successfully. The reported user\'s account remains unaffected.');
+        setTimeout(() => onProcessed(report.reportID), 2000);
       } else {
         setError('Failed to delete the report. Please try again.');
       }
     } catch (err) {
       console.error('Error deleting report:', err);
+      setError('A network error occurred. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleBan = async () => {
+    if (!window.confirm('Are you sure you want to permanently ban this user? This action cannot be undone.')) {
+      return;
+    }
+    setActionLoading('ban');
+    setError(null);
+    try {
+      const response = await fetch(
+        `http://localhost:5200/api/admin/reported-accounts/${report.reportID}/ban`,
+        { method: 'PATCH' }
+      );
+      if (response.ok) {
+        setSuccessMsg('User has been permanently banned. They will no longer be able to access the platform.');
+        setTimeout(() => onProcessed(report.reportID), 2000);
+      } else {
+        const data = await response.text();
+        setError(data || 'Failed to ban the user. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error banning user:', err);
       setError('A network error occurred. Please try again.');
     } finally {
       setActionLoading(null);
@@ -91,24 +120,34 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
           </div>
         </div>
 
+        {successMsg && <div className="detail-success">{successMsg}</div>}
         {error && <div className="detail-error">{error}</div>}
 
-        <div className="detail-card-footer">
-          <button
-            className="btn-reject-large"
-            onClick={handleDelete}
-            disabled={actionLoading !== null}
-          >
-            {actionLoading === 'delete' ? 'Deleting...' : 'Delete Report'}
-          </button>
-          <button
-            className="btn-suspend-large"
-            onClick={handleSuspend}
-            disabled={actionLoading !== null}
-          >
-            {actionLoading === 'suspend' ? 'Suspending...' : 'Suspend (2 Weeks)'}
-          </button>
-        </div>
+        {!successMsg && (
+          <div className="detail-card-footer">
+            <button
+              className="btn-reject-large"
+              onClick={handleDelete}
+              disabled={actionLoading !== null}
+            >
+              {actionLoading === 'delete' ? 'Deleting...' : 'Delete Report'}
+            </button>
+            <button
+              className="btn-suspend-large"
+              onClick={handleSuspend}
+              disabled={actionLoading !== null}
+            >
+              {actionLoading === 'suspend' ? 'Suspending...' : 'Suspend (2 Weeks)'}
+            </button>
+            <button
+              className="btn-ban-large"
+              onClick={handleBan}
+              disabled={actionLoading !== null}
+            >
+              {actionLoading === 'ban' ? 'Banning...' : 'Ban Permanently'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
