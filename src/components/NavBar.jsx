@@ -3,19 +3,23 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/nav.css';
 import logo from '../assets/images/logo.png';
+import { getActiveMode, MODE_GUIDE } from '../utils/session';
 
 export default function NavBar() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [userRole, setUserRole] = useState('');
+  // Nav is driven by the mode the user logged in as, not by the account role,
+  // so a guide browsing as an explorer sees the explorer nav.
+  const [activeMode, setActiveModeState] = useState(getActiveMode);
+  const isGuideView = activeMode === MODE_GUIDE;
   const dropdownRef = useRef(null);
 
   const fetchNotifications = async () => {
     const userJson = localStorage.getItem('user');
     if (userJson) {
       const user = JSON.parse(userJson);
-      setUserRole((user.role || '').toLowerCase());
+      setActiveModeState(getActiveMode());
       const userId = user.id || user.userID;
       if (userId) {
         try {
@@ -64,7 +68,8 @@ export default function NavBar() {
     } else if (notif.type === "BookingReminder" || notif.type === "BookingDeclined") {
       navigate('/profile'); 
     } else if (notif.type === "NewBooking") {
-      navigate('/dashboard');
+      // /dashboard is guide-only; explorers get sent somewhere they can actually go.
+      navigate(isGuideView ? '/dashboard' : '/profile');
     }
   };
 
@@ -82,7 +87,7 @@ export default function NavBar() {
         <li><NavLink to="/explore" className={navLinkClass}>Explore</NavLink></li>
         <li><NavLink to="/match" className={navLinkClass}>Match</NavLink></li>
         <li><NavLink to="/messages" className={navLinkClass}>Messages</NavLink></li>
-        {userRole.includes('guide') && (
+        {isGuideView && (
           <li><NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink></li>
         )}
         <li><NavLink to="/profile" className={navLinkClass}>Profile</NavLink></li>

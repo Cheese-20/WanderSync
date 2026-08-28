@@ -684,3 +684,20 @@
   flex-direction: column;
   align-items: center;
 }
+
+/* My Experiences - empty state and success feedback */
+.exp-empty-message {
+  color: #6b7280;
+  font-size: 0.95rem;
+  padding: 16px 0;
+  margin: 0;
+}
+
+.exp-success-message {
+  background-color: #ecfdf5;
+  color: #047857;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+}

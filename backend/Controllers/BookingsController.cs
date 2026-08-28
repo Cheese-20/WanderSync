@@ -13,6 +13,9 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class BookingsController : ControllerBase
     {
+        /// <summary>A private session is for a small party, not a group tour.</summary>
+        private const int MaxOneOnOneGuests = 4;
+
         private readonly WanderSyncDbContext _context;
 
         public BookingsController(WanderSyncDbContext context)
@@ -138,6 +141,141 @@ namespace backend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Failed to create booking. Please try again." });
+            }
+        }
+
+        /// <summary>
+        /// POST: api/bookings/one-on-one
+        /// Requests a private one-on-one experience with a specific guide.
+        ///
+        /// There is no group tour to join here, so the request creates a private Tour row
+        /// (capped at the requested party size and tagged <see cref="TourTypes.OneOnOne"/>)
+        /// and books it. That keeps the guide dashboard, accept/decline, notifications,
+        /// matching and the explorer's booking list working without schema changes.
+        /// </summary>
+        [HttpPost("one-on-one")]
+        public async Task<IActionResult> CreateOneOnOneBooking([FromBody] CreateOneOnOneBookingRequest request)
+        {
+            if (request == null)
+                return BadRequest(new { message = "Request body is required." });
+            if (request.UserID <= 0)
+                return BadRequest(new { message = "Valid userID is required." });
+            if (request.GuideID <= 0)
+                return BadRequest(new { message = "Valid guideID is required." });
+            if (request.UserID == request.GuideID)
+                return BadRequest(new { message = "You cannot book a one-on-one experience with yourself." });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            var guide = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.GuideID);
+            if (guide == null || !string.Equals(guide.Role, "Guide", StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { message = "Local guide not found." });
+
+            if (request.Date == default)
+                return BadRequest(new { message = "Please choose a date for your experience." });
+            if (request.Date.Date < DateTime.UtcNow.Date)
+                return BadRequest(new { message = "Please choose a date that is not in the past." });
+
+            var time = (request.TimeOfBooking ?? string.Empty).Trim();
+            if (!TimeSpan.TryParse(time, out var startTime) || startTime < TimeSpan.Zero || startTime >= TimeSpan.FromDays(1))
+                return BadRequest(new { message = "Please choose a start time." });
+
+            var guests = request.NumberOfGuests <= 0 ? 1 : request.NumberOfGuests;
+            if (guests > MaxOneOnOneGuests)
+                return BadRequest(new { message = $"A one-on-one experience is for up to {MaxOneOnOneGuests} people. Book a group tour for a larger party." });
+
+            // Guard against firing off the same request repeatedly while the guide decides.
+            var alreadyRequested = await (from b in _context.Bookings
+                                          join t in _context.Tours on b.tourID equals t.TourId
+                                          where b.userID == request.UserID
+                                             && t.GuideId == request.GuideID
+                                             && t.Type == TourTypes.OneOnOne
+                                             && b.status == "Pending"
+                                             && b.bookingDate.Date == request.Date.Date
+                                          select b.bookingID).AnyAsync();
+
+            if (alreadyRequested)
+                return Conflict(new { message = "You already have a pending one-on-one request with this guide for that date." });
+
+            var focus = (request.Focus ?? string.Empty).Trim();
+            if (focus.Length > 500) focus = focus.Substring(0, 500);
+
+            // Use the guide's own area so the booking shows a sensible location.
+            var guideProfile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserID == request.GuideID);
+
+            var startsAt = request.Date.Date.Add(startTime);
+            var title = $"1-on-1 with {guide.FirstName} {guide.LastName}";
+            if (title.Length > 100) title = title.Substring(0, 100);
+
+            var tour = new Tour
+            {
+                GuideId = request.GuideID,
+                Title = title,
+                Type = TourTypes.OneOnOne,
+                Description = focus.Length > 0
+                    ? focus
+                    : "Private one-on-one experience requested by an explorer.",
+                Date = startsAt,
+                MaxPeople = guests,
+                // No published rate exists for a private session: the guide agrees it in chat.
+                Price = 0m,
+                Location = string.IsNullOrWhiteSpace(guideProfile?.Location) ? null : guideProfile!.Location,
+                PictureURL = null
+            };
+
+            // The tour only exists to carry this booking, so don't leave it behind if the
+            // booking insert fails.
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.Tours.Add(tour);
+                await _context.SaveChangesAsync();
+
+                var booking = new Booking
+                {
+                    userID = request.UserID,
+                    tourID = tour.TourId,
+                    curatedSpotID = 0,
+                    bookingType = BookingTypes.OneOnOne,
+                    status = "Pending",
+                    bookingDate = startsAt,
+                    timeOfBooking = time,
+                    numberOfGuests = guests
+                };
+                _context.Bookings.Add(booking);
+                await _context.SaveChangesAsync();
+
+                var notification = new Notification
+                {
+                    UserID = request.GuideID,
+                    Type = "NewBooking",
+                    Message = $"{user.FirstName} {user.LastName} requested a 1-on-1 experience with you on {startsAt:dd MMM yyyy} at {time}.",
+                    RelatedEntityID = booking.bookingID,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    message = "Your one-on-one request has been sent! The guide will confirm shortly.",
+                    bookingId = booking.bookingID,
+                    tourId = tour.TourId,
+                    guideName = $"{guide.FirstName} {guide.LastName}",
+                    date = startsAt,
+                    timeOfBooking = time,
+                    numberOfGuests = guests
+                });
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Failed to send your request. Please try again." });
             }
         }
 
@@ -299,5 +437,18 @@ namespace backend.Controllers
         public string TimeOfBooking { get; set; }
         public int NumberOfGuests { get; set; }
         public string BookingType { get; set; }
+    }
+
+    /// <summary>Request for a private experience with a specific guide (no existing tour).</summary>
+    public class CreateOneOnOneBookingRequest
+    {
+        public int UserID { get; set; }
+        public int GuideID { get; set; }
+        public DateTime Date { get; set; }
+        public string? TimeOfBooking { get; set; }
+        public int NumberOfGuests { get; set; }
+
+        /// <summary>What the explorer wants to do. Becomes the private tour's description.</summary>
+        public string? Focus { get; set; }
     }
 }

@@ -17,10 +17,69 @@ namespace backend.Controllers
         private readonly ILogger<LocalGuideController> _logger;
         private readonly WanderSyncDbContext _context;
 
+        private const int MinGuideAge = 16;
+        private const int IdNumberLength = 13;
+
         public LocalGuideController(ILogger<LocalGuideController> logger, WanderSyncDbContext context)
         {
             _logger = logger;
             _context = context;
+        }
+
+        /// <summary>
+        /// A South African ID encodes the date of birth in its first six digits (YYMMDD).
+        /// Returns null when those digits aren't a real calendar date.
+        /// </summary>
+        private static DateTime? ParseIdDateOfBirth(string digits, DateTime today)
+        {
+            if (digits.Length != IdNumberLength) return null;
+            if (!int.TryParse(digits.Substring(0, 2), out var yy)) return null;
+            if (!int.TryParse(digits.Substring(2, 2), out var month)) return null;
+            if (!int.TryParse(digits.Substring(4, 2), out var day)) return null;
+            if (month < 1 || month > 12 || day < 1) return null;
+
+            // Two digit years are ambiguous: resolve them into the most recent past century.
+            var currentTwoDigitYear = today.Year % 100;
+            var year = yy > currentTwoDigitYear ? 1900 + yy : 2000 + yy;
+
+            if (day > DateTime.DaysInMonth(year, month)) return null;
+            return new DateTime(year, month, day);
+        }
+
+        private static int CalculateAge(DateTime dateOfBirth, DateTime today)
+        {
+            var age = today.Year - dateOfBirth.Year;
+            if (today.Month < dateOfBirth.Month ||
+                (today.Month == dateOfBirth.Month && today.Day < dateOfBirth.Day))
+            {
+                age--;
+            }
+            return age;
+        }
+
+        /// <summary>
+        /// Returns null when the ID number is acceptable, otherwise the reason it isn't.
+        /// Mirrors the client-side check in src/utils/saId.js, which is bypassable.
+        /// </summary>
+        private static string? DescribeInvalidIdNumber(string? idNumber, DateTime today)
+        {
+            var digits = (idNumber ?? string.Empty).Trim();
+
+            if (digits.Length == 0)
+                return "ID number is required.";
+            if (!digits.All(char.IsDigit))
+                return "ID number must contain digits only.";
+            if (digits.Length != IdNumberLength)
+                return $"ID number must be exactly {IdNumberLength} digits.";
+
+            var dateOfBirth = ParseIdDateOfBirth(digits, today);
+            if (dateOfBirth == null)
+                return "That is not a valid ID number. The first 6 digits must be a real date of birth (YYMMDD).";
+
+            if (CalculateAge(dateOfBirth.Value, today) < MinGuideAge)
+                return $"You must be older than {MinGuideAge} to become a Local Guide.";
+
+            return null;
         }
 
         /// <summary>
@@ -35,10 +94,21 @@ namespace backend.Controllers
             if (request.UserID <= 0)
                 return BadRequest(new { message = "Valid userID is required." });
 
+            // ID number must be exactly 13 digits and belong to someone old enough to guide.
+            var idProblem = DescribeInvalidIdNumber(request.IDno, DateTime.Today);
+            if (idProblem != null)
+            {
+                _logger.LogWarning("Local guide application rejected for userId={UserId}: {Reason}", request.UserID, idProblem);
+                return BadRequest(new { message = idProblem });
+            }
+
             // Check user exists
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
             if (user == null)
                 return NotFound(new { message = "User not found." });
+
+            if (string.Equals(user.Role, "Guide", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = "You are already a verified Local Guide." });
 
             // Check for duplicate application
             var existing = await _context.LocalGuideApplications
@@ -48,7 +118,9 @@ namespace backend.Controllers
 
             var application = new LocalGuideApplication
             {
-                IDno = request.IDno,
+                // Stored as a number because the column is a bigint; a leading zero is
+                // restored on read (see AdminController.GetGuideApplications).
+                IDno = long.Parse(request.IDno!.Trim()),
                 Reason = request.Reason ?? string.Empty,
                 Location = request.Location ?? string.Empty,
                 Bio = string.IsNullOrEmpty(request.Bio) ? string.Empty : request.Bio.Length > 250 ? request.Bio.Substring(0, 250) : request.Bio,
@@ -71,6 +143,75 @@ namespace backend.Controllers
             {
                 _logger.LogError(ex, "Error saving local guide application.");
                 return StatusCode(500, new { message = "Failed to save application. Please try again." });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/local-guide/application/status/{userId}
+        /// Reports the account's current role and whether an application is still awaiting review.
+        /// Lets the client refresh a role that changed after login (e.g. an admin approval).
+        /// </summary>
+        [HttpGet("application/status/{userId:int}")]
+        public async Task<IActionResult> GetApplicationStatus(int userId)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.UserID == userId);
+
+                if (user == null)
+                    return NotFound(new { message = "User not found." });
+
+                var hasPendingApplication = await _context.LocalGuideApplications
+                    .AnyAsync(a => a.UserID == userId);
+
+                return Ok(new { role = user.Role, hasPendingApplication });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching application status for userId={UserId}", userId);
+                return StatusCode(500, new { message = "Failed to load application status." });
+            }
+        }
+
+        /// <summary>
+        /// DELETE /api/local-guide/application/{userId}
+        /// Withdraws an application that an admin hasn't approved yet and returns the
+        /// account to Explorer. Approved guides cannot use this.
+        /// </summary>
+        [HttpDelete("application/{userId:int}")]
+        public async Task<IActionResult> WithdrawApplication(int userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            // An approval deletes the application row and sets the role to Guide, so this
+            // is what "already validated by the admin" looks like.
+            if (string.Equals(user.Role, "Guide", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { message = "Your application has already been approved, so it can no longer be cancelled." });
+
+            var application = await _context.LocalGuideApplications
+                .FirstOrDefaultAsync(a => a.UserID == userId);
+
+            if (application == null)
+                return NotFound(new { message = "You do not have an application awaiting review." });
+
+            try
+            {
+                _context.LocalGuideApplications.Remove(application);
+                user.Role = "Explorer";
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Guide application withdrawn for userId={UserId}", userId);
+                return Ok(new { message = "Application cancelled.", role = user.Role });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error withdrawing guide application for userId={UserId}", userId);
+                return StatusCode(500, new { message = "Failed to cancel your application. Please try again." });
             }
         }
 
@@ -203,8 +344,10 @@ namespace backend.Controllers
 
                 var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserID == guideId);
 
+                // Only the guide's published tours: private one-on-one rows and custom
+                // itineraries belong to a single explorer and aren't open for booking.
                 var tours = await _context.Tours
-                    .Where(t => t.GuideId == guideId)
+                    .Where(t => t.GuideId == guideId && !TourTypes.Private.Contains(t.Type))
                     .Select(t => new
                     {
                         tourId = t.TourId,
@@ -614,7 +757,11 @@ namespace backend.Controllers
     public class GuideApplicationRequest
     {
         public int UserID { get; set; }
-        public long IDno { get; set; }
+
+        // Received as a string so a leading zero survives validation: IDs for anyone born
+        // in the 2000s start with 0, which a numeric type would silently drop to 12 digits.
+        public string? IDno { get; set; }
+
         public string? Reason { get; set; }
         public string? Location { get; set; }
         public string? Bio { get; set; }

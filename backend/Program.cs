@@ -182,6 +182,10 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `Tours` ADD COLUMN `location` longtext NULL;",
             "ALTER TABLE `Tours` ADD COLUMN `price` decimal(18,2) NOT NULL DEFAULT 0;",
             "ALTER TABLE `Tours` ADD COLUMN `pictureURL` longtext NULL;",
+            // ADD COLUMN above is a no-op once the column exists, so it never corrects an
+            // older narrow type. Widen it explicitly - cover photos are stored as base64 data URLs.
+            "ALTER TABLE `Tours` MODIFY COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `Tours` MODIFY COLUMN `location` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `interests` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",
@@ -318,12 +322,28 @@ using (var scope = app.Services.CreateScope())
                 `userID` int NOT NULL,
                 `tourID` int NOT NULL,
                 `curatedSpotID` int NOT NULL DEFAULT 0,
+                `numberOfGuests` int NOT NULL DEFAULT 1,
                 `bookingType` longtext NOT NULL,
                 `status` longtext NOT NULL,
                 `bookingDate` datetime(6) NOT NULL,
+                `timeOfBooking` longtext NULL,
                 PRIMARY KEY (`bookingID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
+
+        // The Booking model has always read numberOfGuests/timeOfBooking, but the CREATE
+        // TABLE above never declared them, so a fresh database was missing both.
+        string[] bookingColumnSqls = new[]
+        {
+            "ALTER TABLE `Bookings` ADD COLUMN `numberOfGuests` int NOT NULL DEFAULT 1;",
+            "ALTER TABLE `Bookings` ADD COLUMN `timeOfBooking` longtext NULL;",
+            "ALTER TABLE `Bookings` ADD COLUMN `curatedSpotID` int NOT NULL DEFAULT 0;"
+        };
+
+        foreach (var sql in bookingColumnSqls)
+        {
+            try { context.Database.ExecuteSqlRaw(sql); } catch { }
+        }
     }
     catch (Exception ex)
     {

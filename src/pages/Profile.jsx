@@ -5,6 +5,17 @@ import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 import '../styles/discover.css';
+import {
+  clearSession,
+  getActiveMode,
+  getStoredUser,
+  roleOf,
+  setActiveMode,
+  setStoredRole,
+  MODE_EXPLORER,
+  MODE_GUIDE
+} from '../utils/session';
+import { withdrawGuideApplication, messageFromError } from '../utils/guideApplication';
 
 export default function Profile() {
   const locationHook = useLocation();
@@ -29,6 +40,35 @@ export default function Profile() {
   const [statusModal, setStatusModal] = useState({ open: false, success: false, message: '' });
   const fileRef = useRef(null);
   const navigate = useNavigate();
+
+  // Role is kept in state so an admin decision made after login can be picked up below.
+  const [accountRole, setAccountRole] = useState(roleOf());
+  const [activeMode, setActiveModeState] = useState(getActiveMode);
+  const [guideActionError, setGuideActionError] = useState('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const isGuideAccount = accountRole === MODE_GUIDE;
+  const isAwaitingGuideApproval = accountRole === 'pendingguide';
+
+  // The cached role goes stale the moment an admin approves or rejects an application,
+  // so confirm it against the server on every visit.
+  useEffect(() => {
+    const user = getStoredUser();
+    const uid = user?.id || user?.userID;
+    if (!uid) return;
+
+    let cancelled = false;
+    axios.get(`/api/local-guide/application/status/${uid}`)
+      .then(res => {
+        if (cancelled || !res.data?.role) return;
+        setStoredRole(res.data.role);
+        setAccountRole((res.data.role || '').toLowerCase());
+        setActiveModeState(getActiveMode());
+      })
+      .catch(() => { /* offline or endpoint unavailable: fall back to the cached role */ });
+
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     // set createdAt once when component mounts
@@ -145,9 +185,36 @@ export default function Profile() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    clearSession();
     navigate('/login');
+  };
+
+  // Switch this session between explorer and guide. Same account, no re-authentication
+  // needed: the backend already verified the Guide role at login.
+  const handleSwitchMode = (mode) => {
+    setActiveMode(mode);
+    setActiveModeState(mode);
+    navigate('/home');
+  };
+
+  const handleWithdrawApplication = async () => {
+    if (!window.confirm('Cancel your Local Guide application? You can apply again later.')) {
+      return;
+    }
+
+    setGuideActionError('');
+    setIsWithdrawing(true);
+
+    try {
+      const user = getStoredUser();
+      await withdrawGuideApplication(user?.id || user?.userID);
+      setAccountRole('explorer');
+      setStatusModal({ open: true, success: true, message: 'Your Local Guide application has been cancelled.' });
+    } catch (error) {
+      setGuideActionError(messageFromError(error, 'Failed to cancel your application. Please try again.'));
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const handleSubmit = async e => {
@@ -305,14 +372,71 @@ export default function Profile() {
               </div>
             </form>
 
+            {/* Verified guides don't see the application button at all: they choose which
+                experience to use instead. Pending applicants can withdraw. Everyone else
+                gets the call to action. */}
             <div className="apply-guide-section">
-              <button
-                type="button"
-                className="apply-guide-button"
-                onClick={() => navigate('/apply-guide')}
-              >
-                Apply to be a Local Guide
-              </button>
+              {guideActionError && <p className="guide-action-error">{guideActionError}</p>}
+
+              {isGuideAccount ? (
+                <>
+                  <p className="mode-switch-caption">
+                    You are a verified Local Guide. Choose how you want to use WanderSync.
+                  </p>
+                  <div className="mode-switch" role="group" aria-label="Choose how to use WanderSync">
+                    <button
+                      type="button"
+                      className={`mode-switch-option ${activeMode === MODE_EXPLORER ? 'active' : ''}`}
+                      onClick={() => handleSwitchMode(MODE_EXPLORER)}
+                      aria-pressed={activeMode === MODE_EXPLORER}
+                    >
+                      Login as Explorer
+                    </button>
+                    <button
+                      type="button"
+                      className={`mode-switch-option ${activeMode === MODE_GUIDE ? 'active' : ''}`}
+                      onClick={() => handleSwitchMode(MODE_GUIDE)}
+                      aria-pressed={activeMode === MODE_GUIDE}
+                    >
+                      Login as Guide
+                    </button>
+                  </div>
+                  <p className="mode-switch-hint">
+                    Currently browsing as {activeMode === MODE_GUIDE ? 'a Local Guide' : 'an Explorer'}.
+                  </p>
+                </>
+              ) : isAwaitingGuideApproval ? (
+                <>
+                  <p className="mode-switch-caption">
+                    Your Local Guide application is awaiting review by an admin.
+                  </p>
+                  <div className="guide-pending-actions">
+                    <button
+                      type="button"
+                      className="apply-guide-button"
+                      onClick={() => navigate('/apply-guide')}
+                    >
+                      View Application
+                    </button>
+                    <button
+                      type="button"
+                      className="cancel-application-button"
+                      onClick={handleWithdrawApplication}
+                      disabled={isWithdrawing}
+                    >
+                      {isWithdrawing ? 'Cancelling...' : 'Cancel Application'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="apply-guide-button"
+                  onClick={() => navigate('/apply-guide')}
+                >
+                  Apply to be a Local Guide
+                </button>
+              )}
             </div>
           </div>
         )}
