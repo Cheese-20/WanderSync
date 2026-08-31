@@ -381,7 +381,7 @@
 }
 
 .apply-guide-button {
-    background: linear-gradient(135deg, #1a8f66 0%, #157a57 100%);
+    background: #a6d8b6;
     color: #ffffff;
     border: none;
     padding: 14px 32px;
@@ -389,13 +389,13 @@
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     letter-spacing: 0.02em;
 }
 
 .apply-guide-button:hover {
+    background-color: #92c5a2;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(26, 143, 102, 0.3);
 }
 
 /* Pending application actions */

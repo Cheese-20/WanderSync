@@ -1,3 +1,11 @@
+# Last Edited - Apply to be a Local Guide Button Color
+
+## [2026-08-31]
+- **Enhancement (Frontend UI)**: Updated the color of the "Apply to be a Local Guide" button to match the "Create a post" button styling.
+  - **Files modified**: `src/styles/profile.css`
+  - **Why it changed**: The user requested that the "Apply to be a Local Guide" button also match the mint green color of the "Create a post" button.
+  - **How it works**: Updated the `.apply-guide-button` CSS rule to use the background color `#a6d8b6` instead of a linear dark green gradient, and adjusted its hover color for a smooth transition.
+
 # Last Edited - Button Colors Update
 
 ## [2026-08-31]
