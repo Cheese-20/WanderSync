@@ -1,3 +1,11 @@
+# Last Edited - Button Colors Update
+
+## [2026-08-31]
+- **Enhancement (Frontend UI)**: Updated the colors of various action buttons to match the "Create a post" button styling.
+  - **Files modified**: `src/pages/GuideDetail.jsx`, `src/styles/explorer.css`
+  - **Why it changed**: The user requested that the "Request 1-on-1 Experience" button and the other booking/join buttons match the color of the "Create a post" button.
+  - **How it works**: Switched the "Request 1-on-1 Experience" button to use the `mint-btn` class instead of the dark green `btn-book-tour` class. Also adjusted the `.mint-btn` background color in `explorer.css` from `#a4ddbc` to `#a6d8b6` to precisely match the "Create a post" button. The `WanderSync` nav text was verified to already match this `#a6d8b6` color in `nav.css`.
+
 # Last Edited - Guide Detail Book Tour Logic
 
 ## [2026-08-31]

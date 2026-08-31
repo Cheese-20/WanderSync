@@ -362,7 +362,7 @@ export default function GuideDetail() {
             {oneOnOneError && <p className="booking-error">{oneOnOneError}</p>}
             {oneOnOneMessage && <p className="booking-success">{oneOnOneMessage}</p>}
 
-            <button type="submit" className="btn-book-tour btn-request-one-on-one" disabled={isRequesting}>
+            <button type="submit" className="mint-btn btn-request-one-on-one" disabled={isRequesting} style={{ width: '100%', padding: '12px', fontSize: '1rem' }}>
               {isRequesting ? 'Sending request...' : 'Request 1-on-1 Experience'}
             </button>
           </form>
