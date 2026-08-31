@@ -364,5 +364,101 @@ namespace backend.Controllers
                 return StatusCode(500, "Internal server error while fetching pending requests.");
             }
         }
+
+        // ── Edit Profile (Update User table) ──────────────────────────────
+
+        public class EditUserRequest
+        {
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public string? Email { get; set; }
+            public string? CellNumber { get; set; }
+            public int? Age { get; set; }
+        }
+
+        [HttpPut("user/{userId}")]
+        public async Task<IActionResult> EditUser(int userId, [FromBody] EditUserRequest request)
+        {
+            if (userId <= 0)
+            {
+                return BadRequest("Valid userID is required.");
+            }
+
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.FirstName))
+                    user.FirstName = request.FirstName.Trim();
+
+                if (!string.IsNullOrWhiteSpace(request.LastName))
+                    user.LastName = request.LastName.Trim();
+
+                if (!string.IsNullOrWhiteSpace(request.Email))
+                    user.Email = request.Email.Trim();
+
+                if (!string.IsNullOrWhiteSpace(request.CellNumber))
+                    user.CellNumber = request.CellNumber.Trim();
+
+                if (request.Age.HasValue && request.Age.Value > 0)
+                    user.Age = request.Age.Value;
+
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "User profile updated successfully.",
+                    userID = user.UserID,
+                    firstName = user.FirstName,
+                    lastName = user.LastName,
+                    email = user.Email,
+                    cellNumber = user.CellNumber,
+                    age = user.Age
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user {userId}", userId);
+                return StatusCode(500, "Internal server error while updating user profile.");
+            }
+        }
+
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetUser(int userId)
+        {
+            if (userId <= 0)
+            {
+                return BadRequest("Valid userID is required.");
+            }
+
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                return Ok(new
+                {
+                    userID = user.UserID,
+                    firstName = user.FirstName,
+                    lastName = user.LastName,
+                    email = user.Email,
+                    cellNumber = user.CellNumber,
+                    age = user.Age
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching user {userId}", userId);
+                return StatusCode(500, "Internal server error while fetching user.");
+            }
+        }
     }
 }

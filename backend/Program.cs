@@ -318,12 +318,41 @@ using (var scope = app.Services.CreateScope())
                 `userID` int NOT NULL,
                 `tourID` int NOT NULL,
                 `curatedSpotID` int NOT NULL DEFAULT 0,
+                `numberOfGuests` int NOT NULL DEFAULT 1,
                 `bookingType` longtext NOT NULL,
                 `status` longtext NOT NULL,
                 `bookingDate` datetime(6) NOT NULL,
+                `timeOfBooking` longtext NOT NULL,
                 PRIMARY KEY (`bookingID`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
+
+        // Backfill Bookings columns on databases created before they were added.
+        // Both are required by backend.Models.Booking and selected by BookingsController,
+        // so a missing column breaks the bookings queries (and the Rate Guide UI that depends on them).
+        string[] bookingsColumnSqls = new[]
+        {
+            "ALTER TABLE `Bookings` ADD COLUMN `numberOfGuests` int NOT NULL DEFAULT 1;",
+            "ALTER TABLE `Bookings` ADD COLUMN `curatedSpotID` int NOT NULL DEFAULT 0;",
+            // Added nullable first so it succeeds on tables with existing rows,
+            // then filled and tightened to match the non-nullable model property.
+            "ALTER TABLE `Bookings` ADD COLUMN `timeOfBooking` longtext NULL;",
+            "UPDATE `Bookings` SET `timeOfBooking` = '' WHERE `timeOfBooking` IS NULL;",
+            "ALTER TABLE `Bookings` MODIFY COLUMN `timeOfBooking` longtext NOT NULL;"
+        };
+
+        foreach (var sql in bookingsColumnSqls)
+        {
+            try
+            {
+                context.Database.ExecuteSqlRaw(sql);
+                Console.WriteLine("SUCCESS: " + sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("SKIP: " + sql + " REASON: " + ex.Message);
+            }
+        }
     }
     catch (Exception ex)
     {
