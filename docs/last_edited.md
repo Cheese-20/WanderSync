@@ -1,3 +1,11 @@
+# Last Edited - NavBar Brand Color
+
+## [2026-08-31]
+- **UI Tweaks (NavBar)**: Updated the "WanderSync" brand text in the top navigation bar to match the mint green color (`#a6d8b6`).
+  - **Files modified**: `src/styles/nav.css`
+  - **Why it changed**: The user requested that the navigation text color perfectly match the "Create a post" button's background color.
+  - **How it works**: Altered the `.ws-brand` CSS class color property from `#1a8f66` to `#a6d8b6`.
+
 # Last Edited - Carousel Button Colors
 
 ## [2026-08-31]
