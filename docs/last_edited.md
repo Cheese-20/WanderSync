@@ -1,5 +1,12 @@
 # Last Edited - Restored Manage Itinerary UI in GuideHome
 
+## [2026-08-31]
+- **Merge (LocalGuide and Admin-2)**: Resolved merge conflicts when integrating `LocalGuide` and `Admin-2` branches into `main`.
+  - **Program.cs**: Reconciled database migrations for `Bookings`. Enforced `timeOfBooking` as `NOT NULL` and maintained the robust backfilling logic from `LocalGuide` branch.
+  - **GuideDetail.jsx**: Preserved both the "Submit Review" form (from `LocalGuide`) and the "One-on-One Request" form (from `Admin-2`) so users can utilize both features.
+  - **dist/index.html**: Resolved build asset conflict by taking our current version and performing a fresh production build (`npm run build`).
+  - **Why**: Both branches implemented features touching the same files. We need both the guide rating capabilities and the one-on-one booking/admin approval features without losing functionality.
+
 ## [2026-08-19]
 - **UI Redesign (Manage Itinerary)**: Full redesign of `ManageItinerary.jsx` and `manage-itinerary.css`.
   - **Overview tab**: Read-only summary of all activities in order, showing type badge (colour-coded), location, time range, duration, and notes. Empty state guides the user to the builder.

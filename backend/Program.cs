@@ -182,6 +182,10 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `Tours` ADD COLUMN `location` longtext NULL;",
             "ALTER TABLE `Tours` ADD COLUMN `price` decimal(18,2) NOT NULL DEFAULT 0;",
             "ALTER TABLE `Tours` ADD COLUMN `pictureURL` longtext NULL;",
+            // ADD COLUMN above is a no-op once the column exists, so it never corrects an
+            // older narrow type. Widen it explicitly - cover photos are stored as base64 data URLs.
+            "ALTER TABLE `Tours` MODIFY COLUMN `pictureURL` longtext NULL;",
+            "ALTER TABLE `Tours` MODIFY COLUMN `location` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `profilePictureLink` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `interests` longtext NULL;",
             "ALTER TABLE `Profile` ADD COLUMN `createdAt` datetime(6) NULL;",

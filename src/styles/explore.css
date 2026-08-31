@@ -114,6 +114,17 @@
   color: #6b7280;
 }
 
+/* Search result summary */
+.explore-search-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0 0 16px;
+}
+
 .loading-spinner {
   width: 36px;
   height: 36px;

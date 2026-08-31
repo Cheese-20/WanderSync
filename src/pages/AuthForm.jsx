@@ -2,6 +2,42 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
+import { setActiveMode, resolveLoginMode } from '../utils/session';
+
+const MIN_AGE = 12;
+const MAX_AGE = 150;
+
+// Each rule doubles as the advice shown when it isn't met.
+const PASSWORD_RULES = [
+  { label: 'at least 8 characters', isMet: value => value.length >= 8 },
+  { label: 'one uppercase letter', isMet: value => /[A-Z]/.test(value) },
+  { label: 'one special character', isMet: value => /[^A-Za-z0-9]/.test(value) }
+];
+
+const PASSWORD_ADVICE =
+  'Please use a strong password with at least 8 characters, one uppercase letter and one special character.';
+
+function validateAge(value) {
+  const raw = String(value ?? '').trim();
+  if (!/^\d+$/.test(raw)) {
+    return 'Please enter your age as a whole number.';
+  }
+  const age = parseInt(raw, 10);
+  if (age < MIN_AGE) {
+    return `You must be at least ${MIN_AGE} years old to create an account.`;
+  }
+  if (age > MAX_AGE) {
+    return `Please enter a valid age between ${MIN_AGE} and ${MAX_AGE}.`;
+  }
+  return '';
+}
+
+function validatePassword(value) {
+  const password = String(value ?? '');
+  const missing = PASSWORD_RULES.filter(rule => !rule.isMet(password)).map(rule => rule.label);
+  if (missing.length === 0) return '';
+  return `${PASSWORD_ADVICE} Yours is missing: ${missing.join(', ')}.`;
+}
 
 function AuthForm() {
   const [isSignUpActive, setIsSignUpActive] = useState(false);
@@ -56,7 +92,12 @@ function AuthForm() {
       localStorage.setItem('authToken', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      // Navigate to app home (role-based routing in App.jsx)
+      // Remember what they chose to log in as. A verified guide who picked Explorer
+      // gets the explorer experience; picking Guide only works if the account really is one
+      // (the backend rejects the request otherwise).
+      setActiveMode(resolveLoginMode(user, loginValues.role));
+
+      // Navigate to app home (mode-based routing in App.jsx)
       navigate('/home');
     } catch (error) {
       let errorMsg = 'Login failed. Please check your credentials.';
@@ -76,6 +117,18 @@ function AuthForm() {
   // forwards this request to the ASP.NET backend during development.
   const submitSignup = async event => {
     event.preventDefault();
+
+    const ageError = validateAge(signupValues.age);
+    if (ageError) {
+      setSignupStatus({ message: ageError, type: 'error' });
+      return;
+    }
+
+    const passwordError = validatePassword(signupValues.password);
+    if (passwordError) {
+      setSignupStatus({ message: passwordError, type: 'error' });
+      return;
+    }
 
     if (signupValues.password !== signupValues.confirmPassword) {
       setSignupStatus({ message: 'Passwords do not match.', type: 'error' });
@@ -102,10 +155,16 @@ function AuthForm() {
       }, 1500);
 
     } catch (error) {
-      setSignupStatus({
-        message: error.response?.data || 'An error occurred during registration.',
-        type: 'error'
-      });
+      // The API returns plain strings for registration errors, but guard against
+      // an object body so we never try to render one.
+      const data = error.response?.data;
+      let errorMsg = 'An error occurred during registration.';
+      if (typeof data === 'string' && data.trim()) {
+        errorMsg = data;
+      } else if (data?.message) {
+        errorMsg = data.message;
+      }
+      setSignupStatus({ message: errorMsg, type: 'error' });
     }
   };
 
@@ -221,10 +280,12 @@ function AuthForm() {
                 id="signup-age"
                 name="age"
                 type="number"
-                min="12"
+                min={MIN_AGE}
+                max={MAX_AGE}
+                step="1"
                 value={signupValues.age}
                 onChange={handleSignupChange}
-                placeholder="Age"
+                placeholder={`Age (${MIN_AGE}-${MAX_AGE})`}
                 required
               />
               <input
@@ -234,8 +295,12 @@ function AuthForm() {
                 value={signupValues.password}
                 onChange={handleSignupChange}
                 placeholder="Password"
+                aria-describedby="signup-password-hint"
                 required
               />
+              <p id="signup-password-hint" className="field-hint">
+                Use at least 8 characters, one uppercase letter and one special character.
+              </p>
               <input
                 id="signup-confirm-password"
                 name="confirmPassword"

@@ -14,8 +14,31 @@ namespace backend.Controllers
     [Route("api/[controller]")] // Added "api/" prefix which is standard for separating frontend from backend routes
     public class AuthController : ControllerBase 
     {
+        private const int MinAge = 12;
+        private const int MaxAge = 150;
+        private const int MinPasswordLength = 8;
+
         private readonly ILogger<AuthController> _logger;
         private readonly WanderSyncDbContext _context;
+
+        /// <summary>
+        /// Returns null when the password is strong enough, otherwise advice naming
+        /// the requirements it fails to meet.
+        /// </summary>
+        private static string? DescribeWeakPassword(string? password)
+        {
+            var value = password ?? string.Empty;
+            var missing = new List<string>();
+
+            if (value.Length < MinPasswordLength) missing.Add($"at least {MinPasswordLength} characters");
+            if (!value.Any(char.IsUpper)) missing.Add("one uppercase letter");
+            if (!value.Any(c => !char.IsLetterOrDigit(c))) missing.Add("one special character");
+
+            if (missing.Count == 0) return null;
+
+            return $"Please use a strong password with at least {MinPasswordLength} characters, "
+                 + $"one uppercase letter and one special character. Yours is missing: {string.Join(", ", missing)}.";
+        }
 
         // Inject BOTH the logger and your database context here
         public AuthController(ILogger<AuthController> logger, WanderSyncDbContext context)
@@ -34,6 +57,23 @@ namespace backend.Controllers
             {
                 _logger.LogWarning("Registration failed: Passwords do not match.");
                 return BadRequest("Passwords do not match.");
+            }
+
+            // 1a. Validate age range (mirrors the client-side check, which is bypassable)
+            if (model.Age < MinAge || model.Age > MaxAge)
+            {
+                _logger.LogWarning($"Registration failed: age {model.Age} outside {MinAge}-{MaxAge}.");
+                return BadRequest(model.Age < MinAge
+                    ? $"You must be at least {MinAge} years old to create an account."
+                    : $"Please enter a valid age between {MinAge} and {MaxAge}.");
+            }
+
+            // 1b. Validate password strength
+            var passwordProblem = DescribeWeakPassword(model.Password);
+            if (passwordProblem != null)
+            {
+                _logger.LogWarning("Registration failed: password does not meet strength requirements.");
+                return BadRequest(passwordProblem);
             }
 
             // 2. Check for existing email in MySQL

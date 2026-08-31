@@ -18,7 +18,9 @@ import AdminHome from './pages/AdminHome.jsx';
 import ReportForm from './pages/ReportForm.jsx';
 import LocalGuideApplication from './pages/LocalGuideApplication.jsx';
 import ManageItinerary from './pages/ManageItinerary.jsx';
+import MyActivities from './pages/MyActivities.jsx';
 import SetupProfileModal from './components/SetupProfileModal.jsx';
+import { getActiveMode, isLoggedIn, isVerifiedGuide, MODE_ADMIN, MODE_GUIDE } from './utils/session';
 
 function AuthWrapper({ children }) {
   const [needsSetup, setNeedsSetup] = useState(false);
@@ -60,14 +62,30 @@ function AuthWrapper({ children }) {
 }
 
 function HomeRouter() {
-  const userJson = localStorage.getItem('user');
-  if (!userJson) return <Navigate to="/login" />;
-  let user = {};
-  try { user = JSON.parse(userJson); } catch (e) { }
-  const role = (user.role || '').toLowerCase();
-  if (role.includes('admin')) return <Navigate to="/admin" />;
-  if (role.includes('guide')) return <GuideHome />;
+  if (!isLoggedIn()) return <Navigate to="/login" replace />;
+  const mode = getActiveMode();
+  if (mode === MODE_ADMIN) return <Navigate to="/admin" replace />;
+  if (mode === MODE_GUIDE) return <GuideHome />;
   return <ExplorerHome />;
+}
+
+/**
+ * Restricts a route to a single mode. A verified guide browsing in explorer mode is
+ * bounced off guide-only pages just like a plain explorer would be.
+ */
+function RequireMode({ mode, children }) {
+  if (!isLoggedIn()) return <Navigate to="/login" replace />;
+  const active = getActiveMode();
+  if (active === mode) return children;
+  if (active === MODE_ADMIN) return <Navigate to="/admin" replace />;
+  return <Navigate to="/home" replace />;
+}
+
+/** Already-approved guides have nothing to apply for. */
+function ApplyGuideRoute() {
+  if (!isLoggedIn()) return <Navigate to="/login" replace />;
+  if (isVerifiedGuide()) return <Navigate to="/profile" replace />;
+  return <LocalGuideApplication />;
 }
 
 function App() {
@@ -78,20 +96,29 @@ function App() {
         <Route path="/login" element={<AuthForm />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/home" element={<AuthWrapper><HomeRouter /></AuthWrapper>} />
-        <Route path="/dashboard" element={<AuthWrapper><Dashboard /></AuthWrapper>} />
-        <Route path="/discover" element={<AuthWrapper><Discover /></AuthWrapper>} />
-        <Route path="/match" element={<AuthWrapper><Match /></AuthWrapper>} />
-        <Route path="/explore" element={<AuthWrapper><ExplorePage /></AuthWrapper>} />
+
+        {/* Shared */}
         <Route path="/messages" element={<AuthWrapper><Messages /></AuthWrapper>} />
         <Route path="/profile" element={<AuthWrapper><Profile /></AuthWrapper>} />
-        <Route path="/activities" element={<AuthWrapper><Activities /></AuthWrapper>} />
-        <Route path="/edit-activity/:id" element={<AuthWrapper><EditActivity /></AuthWrapper>} />
-        <Route path="/admin" element={<AuthWrapper><AdminHome /></AuthWrapper>} />
+        <Route path="/match" element={<AuthWrapper><Match /></AuthWrapper>} />
         <Route path="/report" element={<AuthWrapper><ReportForm /></AuthWrapper>} />
+
+        {/* Explorer pages */}
+        <Route path="/discover" element={<AuthWrapper><Discover /></AuthWrapper>} />
+        <Route path="/explore" element={<AuthWrapper><ExplorePage /></AuthWrapper>} />
         <Route path="/guide/:guideId" element={<AuthWrapper><GuideDetail /></AuthWrapper>} />
-        <Route path="/local-guide-application" element={<AuthWrapper><LocalGuideApplication /></AuthWrapper>} />
-        <Route path="/apply-guide" element={<AuthWrapper><LocalGuideApplication /></AuthWrapper>} />
-        <Route path="/manage-itinerary/:touristId" element={<AuthWrapper><ManageItinerary /></AuthWrapper>} />
+        <Route path="/my-activities" element={<AuthWrapper><MyActivities /></AuthWrapper>} />
+        <Route path="/local-guide-application" element={<AuthWrapper><ApplyGuideRoute /></AuthWrapper>} />
+        <Route path="/apply-guide" element={<AuthWrapper><ApplyGuideRoute /></AuthWrapper>} />
+
+        {/* Guide-only pages: hidden from explorer mode */}
+        <Route path="/dashboard" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><Dashboard /></RequireMode></AuthWrapper>} />
+        <Route path="/activities" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><Activities /></RequireMode></AuthWrapper>} />
+        <Route path="/edit-activity/:id" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><EditActivity /></RequireMode></AuthWrapper>} />
+        <Route path="/manage-itinerary/:touristId" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><ManageItinerary /></RequireMode></AuthWrapper>} />
+
+        {/* Admin only */}
+        <Route path="/admin" element={<AuthWrapper><RequireMode mode={MODE_ADMIN}><AdminHome /></RequireMode></AuthWrapper>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

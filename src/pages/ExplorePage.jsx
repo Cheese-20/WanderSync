@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
@@ -17,6 +17,7 @@ const ACTIVITY_TYPES = [
 
 export default function ExplorePage() {
   const [query, setQuery] = useState('');
+  const [appliedQuery, setAppliedQuery] = useState('');
   const [guides, setGuides] = useState([]);
   const [tours, setTours] = useState([]);
   const [filteredGuides, setFilteredGuides] = useState([]);
@@ -98,33 +99,75 @@ export default function ExplorePage() {
     }
   };
 
+  // Scores how well a single field matches the search term.
+  // Exact match ranks highest, then prefix, then word-start, then anywhere in the text.
+  const scoreField = (value, term) => {
+    if (!value) return 0;
+    const text = String(value).toLowerCase();
+    const index = text.indexOf(term);
+    if (index === -1) return 0;
+
+    if (text === term) return 1;              // exact field match
+    if (index === 0) return 0.8;              // field starts with the term
+    if (/[\s,]/.test(text.charAt(index - 1))) return 0.6; // term starts a word
+    return 0.35;                              // term appears somewhere inside
+  };
+
+  // Field weights: a name hit is more relevant than a description hit.
+  const GUIDE_SEARCH_FIELDS = [
+    { get: (g) => `${g.firstName || ''} ${g.lastName || ''}`.trim(), weight: 110 },
+    { get: (g) => g.firstName, weight: 100 },
+    { get: (g) => g.lastName, weight: 100 },
+    { get: (g) => g.location, weight: 70 },
+    { get: (g) => g.interests, weight: 50 },
+    { get: (g) => g.job, weight: 40 },
+    { get: (g) => g.description, weight: 25 }
+  ];
+
+  const scoreGuide = (guide, term) =>
+    GUIDE_SEARCH_FIELDS.reduce(
+      (total, field) => total + field.weight * scoreField(field.get(guide), term),
+      0
+    );
+
+  // The tours endpoint returns `guideID`; tolerate either casing.
+  const getTourGuideId = (tour) => tour.guideID ?? tour.guideId;
+
+  // While a search is active, only show experiences that belong to a matching guide.
+  // Guides are already ranked, so experiences follow that same order.
+  const visibleTours = useMemo(() => {
+    if (!appliedQuery) return tours;
+    const rank = new Map(filteredGuides.map((g, i) => [g.guideId, i]));
+    return tours
+      .filter(t => rank.has(getTourGuideId(t)))
+      .sort((a, b) => rank.get(getTourGuideId(a)) - rank.get(getTourGuideId(b)));
+  }, [tours, filteredGuides, appliedQuery]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     const term = query.trim().toLowerCase();
+    setAppliedQuery(query.trim());
+    setShowAllTours(false);
+
     if (!term) {
       setFilteredGuides(guides);
       return;
     }
-    const matches = [];
-    const rest = [];
-    guides.forEach(g => {
-      const isMatch =
-        (g.firstName && g.firstName.toLowerCase().includes(term)) ||
-        (g.lastName && g.lastName.toLowerCase().includes(term)) ||
-        (g.location && g.location.toLowerCase().includes(term)) ||
-        (g.interests && g.interests.toLowerCase().includes(term)) ||
-        (g.description && g.description.toLowerCase().includes(term));
-      if (isMatch) {
-        matches.push(g);
-      } else {
-        rest.push(g);
-      }
-    });
-    setFilteredGuides([...matches, ...rest]);
+
+    // Keep only guides that match, ranked with the closest match first.
+    const ranked = guides
+      .map((guide, index) => ({ guide, index, score: scoreGuide(guide, term) }))
+      .filter(entry => entry.score > 0)
+      .sort((a, b) => (b.score - a.score) || (a.index - b.index))
+      .map(entry => entry.guide);
+
+    setFilteredGuides(ranked);
   };
 
   const handleClearSearch = () => {
     setQuery('');
+    setAppliedQuery('');
+    setShowAllTours(false);
     setFilteredGuides(guides);
   };
 
@@ -335,13 +378,20 @@ export default function ExplorePage() {
 
       {!loading && !error && (
         <>
+          {/* Hidden entirely when a search is active and no matching guide has experiences */}
+          {(!appliedQuery || visibleTours.length > 0) && (
           <section className="explore-experiences">
             <div className="explore-section-header"><h2>Available experiences</h2></div>
-            {tours.length > 0 ? (
+            {appliedQuery && (
+              <p className="explore-search-summary">
+                Experiences by guides matching "{appliedQuery}"
+              </p>
+            )}
+            {visibleTours.length > 0 ? (
               <>
                 <div className="experiences-grid">
-                  {(showAllTours ? tours : tours.slice(0, 3)).map((tour) => (
-                    <div key={tour.tourId} className="experience-card" onClick={() => handleViewGuide(tour.guideId)}>
+                  {(showAllTours ? visibleTours : visibleTours.slice(0, 3)).map((tour) => (
+                    <div key={tour.tourId} className="experience-card" onClick={() => handleViewGuide(getTourGuideId(tour))}>
                       <div className="experience-card-image">
                         <div className="experience-image-placeholder"><span>{tour.type || 'Tour'}</span></div>
                         <span className="experience-verified-badge">Verified</span>
@@ -356,16 +406,25 @@ export default function ExplorePage() {
                     </div>
                   ))}
                 </div>
-                {!showAllTours && tours.length > 3 && (
-                  <div className="view-all-container"><button className="btn-view-all" onClick={() => setShowAllTours(true)}>View All ({tours.length})</button></div>
+                {!showAllTours && visibleTours.length > 3 && (
+                  <div className="view-all-container"><button className="btn-view-all" onClick={() => setShowAllTours(true)}>View All ({visibleTours.length})</button></div>
                 )}
               </>
             ) : (<div className="explore-empty"><p>No activities available yet. Check back soon!</p></div>)}
           </section>
+          )}
 
           <section className="explore-verified-guides">
             <div className="verified-badge-header"><span className="verified-check-icon">&#10003;</span><span className="verified-label">Verified</span></div>
             <h2>Verified Guides</h2>
+            {appliedQuery && (
+              <p className="explore-search-summary">
+                {filteredGuides.length} {filteredGuides.length === 1 ? 'guide' : 'guides'} matching "{appliedQuery}"
+                <button type="button" className="btn-view-all" style={{ marginLeft: '12px' }} onClick={handleClearSearch}>
+                  Show all
+                </button>
+              </p>
+            )}
             {filteredGuides.length > 0 ? (
               <div className="verified-guides-grid">
                 {filteredGuides.map((guide) => (
@@ -381,7 +440,7 @@ export default function ExplorePage() {
                   </div>
                 ))}
               </div>
-            ) : (<div className="explore-empty">{query ? <p>No guides found for "{query}".</p> : <p>No verified guides available yet.</p>}</div>)}
+            ) : (<div className="explore-empty">{appliedQuery ? <p>No guides found for "{appliedQuery}".</p> : <p>No verified guides available yet.</p>}</div>)}
           </section>
 
           <section className="explore-trust-section">

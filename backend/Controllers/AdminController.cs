@@ -122,7 +122,7 @@ namespace backend.Controllers
         [HttpGet("applications")]
         public async Task<IActionResult> GetGuideApplications()
         {
-            var applications = await _context.LocalGuideApplications
+            var rows = await _context.LocalGuideApplications
                 .Include(a => a.User)
                 .OrderByDescending(a => a.ApplicationID)
                 .Select(a => new
@@ -137,6 +137,20 @@ namespace backend.Controllers
                     a.Bio
                 })
                 .ToListAsync();
+
+            // The IDno column is a bigint, so IDs starting with 0 (anyone born in the 2000s)
+            // lose that digit in storage. Pad it back so admins always see all 13 digits.
+            var applications = rows.Select(a => new
+            {
+                a.ApplicationID,
+                a.UserID,
+                a.userName,
+                a.email,
+                IDno = a.IDno.ToString().PadLeft(13, '0'),
+                a.Reason,
+                a.Location,
+                a.Bio
+            }).ToList();
 
             return Ok(applications);
         }

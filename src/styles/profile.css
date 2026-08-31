@@ -397,3 +397,86 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(26, 143, 102, 0.3);
 }
+
+/* Pending application actions */
+.guide-pending-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cancel-application-button {
+    background: #ffffff;
+    color: #b91c1c;
+    border: 1.5px solid #fecaca;
+    padding: 13px 28px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.cancel-application-button:hover:not(:disabled) {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+.cancel-application-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.guide-action-error {
+    color: #b91c1c;
+    font-size: 0.88rem;
+    margin: 0 0 14px;
+}
+
+/* Explorer / Guide mode switch for verified guides */
+.mode-switch-caption {
+    color: #374151;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 14px;
+}
+
+.mode-switch {
+    display: inline-flex;
+    gap: 6px;
+    padding: 6px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+}
+
+.mode-switch-option {
+    background: transparent;
+    border: none;
+    color: #4b5563;
+    padding: 11px 26px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mode-switch-option:hover:not(.active) {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+.mode-switch-option.active {
+    background: linear-gradient(135deg, #1a8f66 0%, #157a57 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(26, 143, 102, 0.25);
+}
+
+.mode-switch-hint {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin: 12px 0 0;
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/dashboard.css';
 import logo from '../assets/images/logo.png';
 import NavBar from '../components/NavBar';
+import CreateExperienceModal from '../components/CreateExperienceModal';
 
 // SVG Icons
 const UsersIcon = () => (
@@ -49,6 +50,12 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [tourTypeFilter, setTourTypeFilter] = useState('All');
 
+  // My Experiences state
+  const [experiences, setExperiences] = useState([]);
+  const [loadingExperiences, setLoadingExperiences] = useState(false);
+  const [showCreateExperience, setShowCreateExperience] = useState(false);
+  const [experienceMessage, setExperienceMessage] = useState('');
+
   // Fetch logged in user id
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const guideId = user?.id || user?.userID;
@@ -58,8 +65,31 @@ export default function Dashboard() {
       fetchPendingSpots();
     } else if (activeTab === 'Bookings' && guideId) {
       fetchGuideBookings();
+    } else if (activeTab === 'Overview' && guideId) {
+      fetchExperiences();
     }
   }, [activeTab, guideId]);
+
+  const fetchExperiences = async () => {
+    setLoadingExperiences(true);
+    try {
+      const response = await fetch(`/api/tours/guide/${guideId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setExperiences(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Error fetching experiences:', error);
+    } finally {
+      setLoadingExperiences(false);
+    }
+  };
+
+  const handleExperienceCreated = data => {
+    setExperienceMessage(data?.message || 'Activity added successfully!');
+    fetchExperiences();
+    setTimeout(() => setExperienceMessage(''), 4000);
+  };
 
   const fetchGuideBookings = async () => {
     setLoadingBookings(true);
@@ -142,6 +172,15 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Create Experience Modal */}
+      {showCreateExperience && (
+        <CreateExperienceModal
+          guideId={guideId}
+          onClose={() => setShowCreateExperience(false)}
+          onCreated={handleExperienceCreated}
+        />
+      )}
+
       {/* Decline Confirmation Modal */}
       {bookingToDecline && (
         <div className="global-loading-overlay" style={{ zIndex: 1000 }}>
@@ -220,40 +259,57 @@ export default function Dashboard() {
             <div className="dashboard-section">
               <div className="section-header">
                 <h3>My Experiences</h3>
-                <button className="btn-create">+ Create Experience</button>
+                <button
+                  className="btn-create"
+                  onClick={() => setShowCreateExperience(true)}
+                >
+                  + Create Experience
+                </button>
               </div>
+
+              {experienceMessage && (
+                <p className="exp-success-message" role="status">{experienceMessage}</p>
+              )}
+
               <div className="experience-list">
+                {loadingExperiences && <p className="exp-empty-message">Loading your experiences...</p>}
 
-                <div className="experience-item">
-                  <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Sunrise Photo Walk" className="exp-image" />
-                  <div className="exp-details">
-                    <div className="exp-title-row">
-                      <h4 className="exp-title">Sunrise Photo Walk</h4>
-                      <span className="badge active">active</span>
+                {!loadingExperiences && experiences.length === 0 && (
+                  <p className="exp-empty-message">
+                    You have no experiences yet. Click "+ Create Experience" to add your first activity.
+                  </p>
+                )}
+
+                {!loadingExperiences && experiences.map(exp => {
+                  const fallbackImage = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80';
+                  const tourId = exp.tourId ?? exp.tourID;
+                  const isUpcoming = exp.date ? new Date(exp.date) >= new Date(new Date().toDateString()) : false;
+
+                  return (
+                    <div className="experience-item" key={tourId}>
+                      <img
+                        src={exp.pictureURL || fallbackImage}
+                        alt={exp.title}
+                        className="exp-image"
+                      />
+                      <div className="exp-details">
+                        <div className="exp-title-row">
+                          <h4 className="exp-title">{exp.title}</h4>
+                          <span className={`badge ${isUpcoming ? 'active' : 'draft'}`}>
+                            {isUpcoming ? 'active' : 'past'}
+                          </span>
+                        </div>
+                        <p className="exp-subtitle">
+                          {exp.type}
+                          {exp.location ? ` \u00b7 ${exp.location}` : ''}
+                          {exp.date ? ` \u00b7 ${new Date(exp.date).toLocaleDateString()}` : ''}
+                          {` \u00b7 R ${exp.price ?? 0}`}
+                          {` \u00b7 max ${exp.maxPeople ?? 0}`}
+                        </p>
+                      </div>
                     </div>
-                    <p className="exp-subtitle">3 bookings</p>
-                  </div>
-                  <div className="exp-actions">
-                    <button className="btn-small btn-edit">Edit</button>
-                    <button className="btn-small btn-view">View</button>
-                  </div>
-                </div>
-
-                <div className="experience-item">
-                  <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt="Street Art & Coffee" className="exp-image" />
-                  <div className="exp-details">
-                    <div className="exp-title-row">
-                      <h4 className="exp-title">Street Art &amp; Coffee</h4>
-                      <span className="badge draft">draft</span>
-                    </div>
-                    <p className="exp-subtitle">0 bookings</p>
-                  </div>
-                  <div className="exp-actions">
-                    <button className="btn-small btn-edit">Edit</button>
-                    <button className="btn-small btn-view">View</button>
-                  </div>
-                </div>
-
+                  );
+                })}
               </div>
             </div>
 
