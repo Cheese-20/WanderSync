@@ -1,3 +1,11 @@
+# Last Edited - Messages Loading Spinner
+
+## [2026-08-31]
+- **UI Enhancement (Messages)**: Added a loading spinner when a user selects a contact and messages are being fetched.
+  - **Files modified**: `src/pages/Messages.jsx`
+  - **Why it changed**: Fetching messages takes a moment, and without an indicator, it looks like the chat history is empty during the delay. The user requested we bring this visual feedback in.
+  - **How it works**: Added `loadingMessages` state, toggled exclusively during the *initial* chat load (ignoring background polling) to display a pulsing WanderSync logo.
+
 # Last Edited - Optimize Match Page Fetching
 
 ## [2026-08-31]

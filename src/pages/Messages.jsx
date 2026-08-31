@@ -10,6 +10,7 @@ export default function Messages() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [loadingContacts, setLoadingContacts] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [activeContact, setActiveContact] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -45,7 +46,8 @@ export default function Messages() {
     }
   };
 
-  const fetchMessages = async (matchID, lastMsgID = null) => {
+  const fetchMessages = async (matchID, lastMsgID = null, isInitial = false) => {
+    if (isInitial) setLoadingMessages(true);
     try {
       const url = lastMsgID 
         ? `/api/message/chat/${matchID}?afterId=${lastMsgID}` 
@@ -61,15 +63,20 @@ export default function Messages() {
         } else {
           setMessages(res.data);
         }
+      } else if (isInitial) {
+        setMessages([]);
       }
     } catch (err) {
       console.error("Error fetching messages", err);
+    } finally {
+      if (isInitial) setLoadingMessages(false);
     }
   };
 
   const selectContact = (contact) => {
     setActiveContact(contact);
-    fetchMessages(contact.matchID);
+    setMessages([]);
+    fetchMessages(contact.matchID, null, true);
   };
 
   // Polling mechanism for "faster" real-time updates
@@ -217,16 +224,25 @@ export default function Messages() {
               </div>
               
               <div className="messages-list">
-                <div className="messages-spacer-auto"></div>
-                {messages.map(msg => {
-                  const isSentByMe = msg.senderID === currentUserId;
-                  return (
-                    <div key={msg.mID} className={`message-bubble ${isSentByMe ? 'message-sent' : 'message-received'}`}>
-                      {msg.textMessage}
-                      <span className="message-time">{formatTime(msg.sentAt)}</span>
-                    </div>
-                  );
-                })}
+                {loadingMessages ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    <img src={logo} alt="Loading" style={{ width: '45px', height: 'auto', animation: 'pulse 1.5s infinite', marginBottom: '12px' }} />
+                    <span style={{ color: '#10b981', fontSize: '0.95rem', fontWeight: '500' }}>Loading messages...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="messages-spacer-auto"></div>
+                    {messages.map(msg => {
+                      const isSentByMe = msg.senderID === currentUserId;
+                      return (
+                        <div key={msg.mID} className={`message-bubble ${isSentByMe ? 'message-sent' : 'message-received'}`}>
+                          {msg.textMessage}
+                          <span className="message-time">{formatTime(msg.sentAt)}</span>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
                 <div ref={messagesEndRef} />
               </div>
               
