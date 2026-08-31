@@ -1,3 +1,11 @@
+# Last Edited - Global Image Placeholder Fallback
+
+## [2026-08-31]
+- **Enhancement (Frontend Core)**: Implemented a global image error fallback to automatically handle broken or missing photos.
+  - **Files modified**: `src/main.jsx`
+  - **Why it changed**: The user requested that a placeholder be displayed whenever photos (tours, spots, profiles, etc.) fail to load.
+  - **How it works**: Added a global capture-phase `error` event listener to `window`. When an `<img>` tag fails to load its source, this script intercepts the error and dynamically replaces the broken `src` with a generic WanderSync placeholder. This completely eliminates "broken image" browser icons globally across the entire app without needing to manually edit every single image component.
+
 # Last Edited - Apply to be a Local Guide Button Color
 
 ## [2026-08-31]
