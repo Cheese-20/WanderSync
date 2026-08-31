@@ -95,7 +95,7 @@ namespace backend.Controllers
 
             // Check capacity - sum active bookings guests for this tour
             var currentBookings = await _context.Bookings
-                .Where(b => b.tourID == request.TourID && b.status != "Cancelled")
+                .Where(b => b.tourID == request.TourID && b.status.ToLower() == "accepted")
                 .SumAsync(b => (int?)b.numberOfGuests) ?? 0;
             if (currentBookings + request.NumberOfGuests > tour.MaxPeople)
                 return BadRequest(new { message = "Not enough spots remaining on this tour." });
@@ -337,10 +337,20 @@ namespace backend.Controllers
             var booking = await _context.Bookings.FindAsync(id);
             if (booking == null) return NotFound(new { message = "Booking not found." });
 
+            var tour = await _context.Tours.FindAsync(booking.tourID);
+            if (tour == null) return NotFound(new { message = "Tour not found." });
+
+            var currentAcceptedBookings = await _context.Bookings
+                .Where(b => b.tourID == booking.tourID && b.status.ToLower() == "accepted")
+                .SumAsync(b => (int?)b.numberOfGuests) ?? 0;
+
+            if (currentAcceptedBookings + booking.numberOfGuests > tour.MaxPeople)
+            {
+                return BadRequest(new { message = "Cannot accept this booking. The tour is at maximum capacity." });
+            }
+
             booking.status = "Accepted";
             _context.Entry(booking).State = EntityState.Modified;
-
-            var tour = await _context.Tours.FindAsync(booking.tourID);
             
             // Notify the tourist
             var notification = new Notification

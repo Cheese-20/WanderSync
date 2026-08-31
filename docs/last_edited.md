@@ -1,3 +1,11 @@
+# Last Edited - Tour Capacity Logic Fix
+
+## [2026-08-31]
+- **Bug Fix (Backend Capacity Check)**: Fixed an issue where the system was reserving spots on a tour as soon as a user submitted a request, blocking other users.
+  - **Files modified**: `backend/Controllers/BookingsController.cs`
+  - **Why it changed**: The user noticed that pending requests were incorrectly updating the tour's capacity limit before the guide had a chance to approve them.
+  - **How it works**: Updated the `POST /api/bookings` capacity check to strictly sum `b.status.ToLower() == "accepted"` instead of `b.status != "Cancelled"`. Also added a matching capacity check to the `PUT /api/bookings/{id}/accept` endpoint so that the guide cannot approve a request if it would cause the tour to exceed its maximum capacity.
+
 # Last Edited - Spot Voting Bug Fix (Reverted to Typo)
 
 ## [2026-08-31]
