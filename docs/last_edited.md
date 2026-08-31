@@ -322,3 +322,19 @@ The user requested its removal.
 ## How It Works
 
 Deleted the `<section className="explore-trust-section">...</section>` block from `ExplorePage.jsx`.
+
+## What Changed
+
+Updated the `SetupProfileModal` component to make it wider, layout the input fields in a two-column grid, highlight missing required fields in red, and styled the "Continue" button to match the "Create a post" button's styling.
+
+## Why It Changed
+
+To allow more fields to fit gracefully on the screen, enforce required validation with clear visual feedback (red borders and labels), and ensure consistent branding for the submit buttons across the app.
+
+## How It Works
+
+1. In `SetupProfileModal.jsx`, added a `missingFields` state to track which required fields are missing on "Continue" click.
+2. Updated the layout markup with a new `.setup-form-grid` wrapper for the inputs and assigned `.error-label` and `.error-border` CSS classes dynamically based on `missingFields`.
+3. In `SetupProfileModal.css`, increased `.setup-modal-container` width to `650px` and configured the `.setup-form-grid` grid layout.
+4. Added styles for `.error-label` (red text) and `.error-border` (red border).
+5. Adjusted `.setup-continue-btn` to match `.mint-btn` with a mint green background (`#a6d8b6`), pill border-radius (`20px`), and white bold text.

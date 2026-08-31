@@ -12,6 +12,7 @@ export default function SetupProfileModal({ userId, onComplete }) {
     createdAt: new Date().toISOString().slice(0, 10)
   });
   const [error, setError] = useState('');
+  const [missingFields, setMissingFields] = useState([]);
   const [loading, setLoading] = useState(false);
   const fileRef = useRef(null);
 
@@ -57,21 +58,17 @@ export default function SetupProfileModal({ userId, onComplete }) {
 
   const handleSubmit = async () => {
     setError('');
+    setMissingFields([]);
     
-    if (!form.profilePictureLink) {
-      setError('Profile Picture is required.');
-      return;
-    }
-    if (!form.interests.trim()) {
-      setError('Interests are required.');
-      return;
-    }
-    if (!form.description.trim()) {
-      setError('Description is required.');
-      return;
-    }
-    if (!form.location.trim()) {
-      setError('Location is required.');
+    const missing = [];
+    if (!form.profilePictureLink) missing.push('profilePictureLink');
+    if (!form.interests.trim()) missing.push('interests');
+    if (!form.description.trim()) missing.push('description');
+    if (!form.location.trim()) missing.push('location');
+
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setError('Please fill out all required fields.');
       return;
     }
 
@@ -105,8 +102,8 @@ export default function SetupProfileModal({ userId, onComplete }) {
 
         <div className="setup-modal-form">
           <div className="setup-photo-section">
-            <span className="setup-photo-label">Profile Photo</span>
-            <div className="setup-photo-circle" onClick={() => fileRef.current?.click()}>
+            <span className={`setup-photo-label ${missingFields.includes('profilePictureLink') ? 'error-label' : ''}`}>Profile Photo</span>
+            <div className={`setup-photo-circle ${missingFields.includes('profilePictureLink') ? 'error-border' : ''}`} onClick={() => fileRef.current?.click()}>
               {form.profilePictureLink ? (
                 <img src={form.profilePictureLink} alt="Profile" className="setup-photo-img" />
               ) : (
@@ -133,59 +130,61 @@ export default function SetupProfileModal({ userId, onComplete }) {
             />
           </div>
 
-          <div className="setup-input-group">
-            <label>Interests *</label>
-            <div className="setup-input-wrapper no-icon">
-              <input 
-                name="interests" 
-                value={form.interests} 
-                onChange={handleInput} 
-                placeholder="e.g. hiking, food, surfing" 
-              />
+          <div className="setup-form-grid">
+            <div className="setup-input-group">
+              <label className={missingFields.includes('interests') ? 'error-label' : ''}>Interests *</label>
+              <div className={`setup-input-wrapper no-icon ${missingFields.includes('interests') ? 'error-border' : ''}`}>
+                <input 
+                  name="interests" 
+                  value={form.interests} 
+                  onChange={handleInput} 
+                  placeholder="e.g. hiking, food, surfing" 
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="setup-input-group">
-            <label>Description *</label>
-            <div className="setup-input-wrapper no-icon">
-              <textarea 
-                name="description" 
-                value={form.description} 
-                onChange={handleInput} 
-                placeholder="Tell us about yourself..." 
-                rows="3"
-                className="setup-textarea"
-              />
+            <div className="setup-input-group">
+              <label>Job Title</label>
+              <div className="setup-input-wrapper no-icon">
+                <input 
+                  name="job" 
+                  value={form.job} 
+                  onChange={handleInput} 
+                  placeholder="e.g. Digital Nomad" 
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="setup-input-group">
-            <label>Job Title</label>
-            <div className="setup-input-wrapper no-icon">
-              <input 
-                name="job" 
-                value={form.job} 
-                onChange={handleInput} 
-                placeholder="e.g. Digital Nomad" 
-              />
+            <div className="setup-input-group full-width">
+              <label className={missingFields.includes('description') ? 'error-label' : ''}>Description *</label>
+              <div className={`setup-input-wrapper no-icon ${missingFields.includes('description') ? 'error-border' : ''}`}>
+                <textarea 
+                  name="description" 
+                  value={form.description} 
+                  onChange={handleInput} 
+                  placeholder="Tell us about yourself..." 
+                  rows="3"
+                  className="setup-textarea"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="setup-input-group">
-            <label>Location *</label>
-            <div className="setup-input-wrapper">
-              <span className="setup-input-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-              </span>
-              <input 
-                name="location" 
-                value={form.location} 
-                onChange={handleInput} 
-                placeholder="City, Country" 
-              />
+            <div className="setup-input-group full-width">
+              <label className={missingFields.includes('location') ? 'error-label' : ''}>Location *</label>
+              <div className={`setup-input-wrapper ${missingFields.includes('location') ? 'error-border' : ''}`}>
+                <span className="setup-input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </span>
+                <input 
+                  name="location" 
+                  value={form.location} 
+                  onChange={handleInput} 
+                  placeholder="City, Country" 
+                />
+              </div>
             </div>
           </div>
 
