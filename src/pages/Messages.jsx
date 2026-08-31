@@ -14,8 +14,13 @@ export default function Messages() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
+  const messagesRef = useRef(messages);
   const navigate = useNavigate();
   
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   useEffect(() => {
     const userJson = localStorage.getItem('user');
     if (userJson) {
@@ -40,11 +45,22 @@ export default function Messages() {
     }
   };
 
-  const fetchMessages = async (matchID) => {
+  const fetchMessages = async (matchID, lastMsgID = null) => {
     try {
-      const res = await axios.get(`/api/message/chat/${matchID}`);
-      if (res.data) {
-        setMessages(res.data);
+      const url = lastMsgID 
+        ? `/api/message/chat/${matchID}?afterId=${lastMsgID}` 
+        : `/api/message/chat/${matchID}`;
+      const res = await axios.get(url);
+      if (res.data && res.data.length > 0) {
+        if (lastMsgID) {
+          setMessages(prev => {
+            const existingIds = new Set(prev.map(m => m.mID));
+            const newMessages = res.data.filter(m => !existingIds.has(m.mID));
+            return [...prev, ...newMessages];
+          });
+        } else {
+          setMessages(res.data);
+        }
       }
     } catch (err) {
       console.error("Error fetching messages", err);
@@ -61,7 +77,11 @@ export default function Messages() {
     let interval;
     if (activeContact) {
       interval = setInterval(() => {
-        fetchMessages(activeContact.matchID);
+        const msgs = messagesRef.current;
+        // Temporary optimistic messages have a huge mID (Date.now()), so filter them out to get the last real mID from the server
+        const realMsgs = msgs.filter(m => m.mID < 1000000000000);
+        const lastId = realMsgs.length > 0 ? Math.max(...realMsgs.map(m => m.mID)) : null;
+        fetchMessages(activeContact.matchID, lastId);
       }, 5000); // poll every 5 seconds
     }
     return () => {

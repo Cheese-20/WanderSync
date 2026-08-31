@@ -1,3 +1,17 @@
+# Last Edited - Optimize Message and Contact Fetching
+
+## [2026-08-31]
+- **Performance Fix (Messages)**: Optimized contacts loading and chat polling to significantly reduce payload size and backend load.
+  - **Files modified**: `backend/Controllers/ProfileController.cs`, `backend/Controllers/MessageController.cs`, `src/pages/Messages.jsx`
+  - **Why it changed**: 
+    - `GetContacts` was returning full Base64 image strings in the JSON array, causing massive payloads and latency.
+    - Chat polling was fetching the entire chat history every 5 seconds, resulting in O(N^2) data transfer for long chats.
+  - **How it works**:
+    - Added `GET /api/profile/{userId}/picture` to dynamically decode Base64 profile pictures and serve them as standard image files (or redirect if URL).
+    - Updated `GetContacts` SQL query to construct and return the picture endpoint URL instead of the raw Base64 data.
+    - Added an `afterId` parameter to `GetChat` for incremental polling.
+    - Modified `Messages.jsx` to pass the highest `mID` during polling, appending only new messages to the existing list.
+
 # Last Edited - Refine Explore Page Styles
 
 ## [2026-08-31]

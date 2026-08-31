@@ -21,6 +21,45 @@ namespace backend.Controllers
             _context = context;
         }
 
+        [HttpGet("{userId}/picture")]
+        [ResponseCache(Duration = 86400)]
+        public async Task<IActionResult> GetProfilePicture(int userId)
+        {
+            var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserID == userId);
+            if (profile == null || string.IsNullOrEmpty(profile.ProfilePictureLink))
+            {
+                return Redirect("https://via.placeholder.com/150");
+            }
+
+            var picLink = profile.ProfilePictureLink;
+            if (picLink.StartsWith("data:image/"))
+            {
+                var parts = picLink.Split(',');
+                if (parts.Length == 2)
+                {
+                    var header = parts[0];
+                    var base64 = parts[1];
+                    var mimeType = header.Replace("data:", "").Replace(";base64", "");
+                    try
+                    {
+                        var imageBytes = Convert.FromBase64String(base64);
+                        return File(imageBytes, mimeType);
+                    }
+                    catch
+                    {
+                        return Redirect("https://via.placeholder.com/150");
+                    }
+                }
+            }
+
+            if (picLink.StartsWith("http"))
+            {
+                return Redirect(picLink);
+            }
+
+            return Redirect("https://via.placeholder.com/150");
+        }
+
         public class ProfileRequest
         {
             public int UserID { get; set; }
