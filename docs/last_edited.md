@@ -1,3 +1,11 @@
+# Last Edited - Optimize Match Page Fetching
+
+## [2026-08-31]
+- **Performance Fix (Match Page)**: Optimized fetching for profiles, matches, and pending requests to reduce payload size.
+  - **Files modified**: `backend/Controllers/ProfileController.cs`
+  - **Why it changed**: The Match page ("Find Your Travel Buddy") was experiencing the same performance issue as messages—fetching massive Base64 profile pictures natively in JSON arrays.
+  - **How it works**: Updated `GetMatches`, `GetPendingRequests`, `GetProfile`, and `GetPublicProfile` in the backend to return the lightweight `/api/profile/{userId}/picture` endpoint URL instead of the heavy raw Base64 image data.
+
 # Last Edited - Remove Hardcoded Bookings
 
 ## [2026-08-31]
