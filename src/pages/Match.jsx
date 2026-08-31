@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import logo from '../assets/images/logo.png';
 
 import '../styles/match.css';
 
@@ -198,7 +199,7 @@ export default function Match() {
               {currentMatch ? (
                 <div className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}>
                   <div className="card-image-section">
-                    <img className="card-image-bg" src={currentMatch.profilePictureLink || 'https://via.placeholder.com/400x500'} alt="Match Background" />
+                    <img className="card-image-bg" src={currentMatch.profilePictureLink || logo} alt="Match Background" />
                     <div className="shared-interests-badge">
                       {sharedInterestsCount} Shared interests
                     </div>

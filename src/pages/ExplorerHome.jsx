@@ -289,7 +289,7 @@ export default function ExplorerHome() {
           {tours.slice(0, visibleToursCount).map(tour => (
             <article key={tour.tourId || tour.tourID} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
-                <img src={tour.pictureURL || 'https://via.placeholder.com/260x140'} alt="Tour" />
+                <img src={tour.pictureURL || logo} alt="Tour" />
               </div>
               <div className="tour-card-body">
                 <h3 className="tour-title" style={{ marginBottom: '4px' }}>{tour.title}</h3>
@@ -366,7 +366,7 @@ export default function ExplorerHome() {
           {spots.slice(0, visibleSpotsCount).map(spot => (
             <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
-                <img src={spot.pictureURL || 'https://via.placeholder.com/260x140'} alt="Spot" />
+                <img src={spot.pictureURL || logo} alt="Spot" />
               </div>
               <div className="tour-card-body">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
