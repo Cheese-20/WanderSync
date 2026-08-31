@@ -26,7 +26,7 @@ namespace backend.Models
         [MaxLength(100)]
         public string? SpotName { get; set; }
 
-        [Column("spotLoaction")]
+        [Column("spotLocation")]
         [MaxLength(100)]
         public string? SpotLocation { get; set; }
 

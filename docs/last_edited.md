@@ -1,3 +1,11 @@
+# Last Edited - Spot Voting Bug Fix
+
+## [2026-08-31]
+- **Bug Fix (Backend)**: Fixed a database schema error ("Unknown column 's.spotLoaction'") that was causing votes on local spots to fail with a 500 server error.
+  - **Files modified**: `backend/Models/SpotVote.cs`, `backend/Program.cs`
+  - **Why it changed**: An earlier update to the `SpotVote` model mapped a property to a misspelled column name (`spotLoaction`) and neglected to add the actual columns to the runtime database initialization in `Program.cs`. This caused Entity Framework to crash whenever it tried to read or write to `SpotVotes`.
+  - **How it works**: Corrected the column mapping attribute in the model to `spotLocation`, appended `ALTER TABLE` statements to `Program.cs` to safely add the missing columns to the `SpotVotes` table at startup, and restarted the backend.
+
 # Last Edited - NavBar Brand Color
 
 ## [2026-08-31]
