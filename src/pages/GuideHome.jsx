@@ -260,7 +260,7 @@ export default function GuideHome() {
                 }} 
                 style={{
                   width: '50px', height: '50px', borderRadius: '50%', 
-                  backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= pendingSpots.length) ? '#ccc' : '#007bff', 
+                  backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= pendingSpots.length) ? '#ccc' : '#a6d8b6', 
                   color: '#fff', border: 'none', fontSize: '1.5rem', 
                   cursor: (visibleSpotsCount >= 12 || visibleSpotsCount >= pendingSpots.length) ? 'default' : 'pointer', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -332,7 +332,7 @@ export default function GuideHome() {
                 }} 
                 style={{
                   width: '50px', height: '50px', borderRadius: '50%', 
-                  backgroundColor: (visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= spots.length) ? '#ccc' : '#007bff', 
+                  backgroundColor: (visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= spots.length) ? '#ccc' : '#a6d8b6', 
                   color: '#fff', border: 'none', fontSize: '1.5rem', 
                   cursor: (visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= spots.length) ? 'default' : 'pointer', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,

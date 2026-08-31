@@ -1,3 +1,11 @@
+# Last Edited - Carousel Button Colors
+
+## [2026-08-31]
+- **UI Tweaks**: Updated carousel navigation arrow buttons to match the "Create a post" mint green button color.
+  - **Files modified**: `src/pages/ExplorerHome.jsx`, `src/pages/GuideHome.jsx`
+  - **Why it changed**: The user requested that these buttons use the same cohesive mint green color theme (`#a6d8b6`) instead of the default blue (`#007bff`).
+  - **How it works**: Swapped out the `#007bff` background color string for `#a6d8b6` in the inline styles of the arrow buttons across the Explore and Guide home pages.
+
 # Last Edited - Messages Loading Spinner
 
 ## [2026-08-31]

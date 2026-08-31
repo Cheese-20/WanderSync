@@ -340,7 +340,7 @@ export default function ExplorerHome() {
                 }} 
                 style={{
                   width: '50px', height: '50px', borderRadius: '50%', 
-                  backgroundColor: (visibleToursCount >= 12 || visibleToursCount >= tours.length) ? '#ccc' : '#007bff', 
+                  backgroundColor: (visibleToursCount >= 12 || visibleToursCount >= tours.length) ? '#ccc' : '#a6d8b6', 
                   color: '#fff', border: 'none', fontSize: '1.5rem', 
                   cursor: (visibleToursCount >= 12 || visibleToursCount >= tours.length) ? 'default' : 'pointer', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -421,7 +421,7 @@ export default function ExplorerHome() {
                 }} 
                 style={{
                   width: '50px', height: '50px', borderRadius: '50%', 
-                  backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length) ? '#ccc' : '#007bff', 
+                  backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length) ? '#ccc' : '#a6d8b6', 
                   color: '#fff', border: 'none', fontSize: '1.5rem', 
                   cursor: (visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length) ? 'default' : 'pointer', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
