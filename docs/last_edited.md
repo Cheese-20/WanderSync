@@ -1,3 +1,11 @@
+# Last Edited - Dummy Reviews Added
+
+## [2026-08-31]
+- **Enhancement (Seed Data)**: Added dummy reviews for the test guide.
+  - **Files modified**: `backend/Program.cs`
+  - **Why it changed**: The user requested some dummy reviews to test the reviews display on the frontend.
+  - **How it works**: Added an `INSERT IGNORE INTO` SQL command for the `Reviews` table in `Program.cs` that inserts 3 dummy reviews targeting the test guide (guideID: 21).
+
 # Last Edited - Tour Capacity Logic Fix
 
 ## [2026-08-31]

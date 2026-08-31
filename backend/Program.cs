@@ -322,6 +322,19 @@ using (var scope = app.Services.CreateScope())
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ");
 
+        try {
+            string insertDummyReviewsSql = @"
+                INSERT IGNORE INTO `Reviews` (`reviewID`, `reviewerID`, `guideID`, `rating`, `comment`, `sentAt`) VALUES
+                (9001, 1, 21, 5, 'An absolute legend! The best local guide in town.', '2026-08-01 10:00:00'),
+                (9002, 2, 21, 4, 'Very knowledgeable and friendly, though we started a bit late.', '2026-08-15 14:30:00'),
+                (9003, 3, 21, 5, 'Incredible experience, showed us spots we never would have found.', '2026-08-20 09:15:00');
+            ";
+            context.Database.ExecuteSqlRaw(insertDummyReviewsSql);
+            Console.WriteLine("SUCCESS: Inserted 3 dummy reviews (or skipped if already exist)");
+        } catch (Exception e) {
+            Console.WriteLine("FAIL: Could not insert dummy reviews. ERROR: " + e.Message);
+        }
+
         // Ensure Bookings table exists
         context.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS `Bookings` (
