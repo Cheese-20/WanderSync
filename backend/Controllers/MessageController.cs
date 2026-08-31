@@ -50,7 +50,7 @@ namespace backend.Controllers
                         u.userID, 
                         u.firstName, 
                         u.lastName, 
-                        IFNULL(p.profilePictureLink, 'https://via.placeholder.com/150') as profilePictureLink,
+                        CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
                         p.job,
                         m.matchID,
                         u.role
@@ -65,7 +65,7 @@ namespace backend.Controllers
                         u.userID, 
                         u.firstName, 
                         u.lastName, 
-                        IFNULL(p.profilePictureLink, 'https://via.placeholder.com/150') as profilePictureLink,
+                        CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
                         p.job,
                         m.matchID,
                         u.role
@@ -105,14 +105,21 @@ namespace backend.Controllers
         }
 
         [HttpGet("chat/{matchId}")]
-        public async Task<IActionResult> GetChat(int matchId)
+        public async Task<IActionResult> GetChat(int matchId, [FromQuery] int? afterId)
         {
             try
             {
                 // Get messages directly, ordered by newest first (bypass Match validation for speed)
-                var messages = await _context.Messages
+                var query = _context.Messages
                     .AsNoTracking()
-                    .Where(m => m.MatchID == matchId)
+                    .Where(m => m.MatchID == matchId);
+                
+                if (afterId.HasValue)
+                {
+                    query = query.Where(m => m.MID > afterId.Value);
+                }
+
+                var messages = await query
                     .OrderBy(m => m.SentAt)
                     .Select(m => new {
                         mID = m.MID,

@@ -21,6 +21,45 @@ namespace backend.Controllers
             _context = context;
         }
 
+        [HttpGet("{userId}/picture")]
+        [ResponseCache(Duration = 86400)]
+        public async Task<IActionResult> GetProfilePicture(int userId)
+        {
+            var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserID == userId);
+            if (profile == null || string.IsNullOrEmpty(profile.ProfilePictureLink))
+            {
+                return Redirect("https://via.placeholder.com/150");
+            }
+
+            var picLink = profile.ProfilePictureLink;
+            if (picLink.StartsWith("data:image/"))
+            {
+                var parts = picLink.Split(',');
+                if (parts.Length == 2)
+                {
+                    var header = parts[0];
+                    var base64 = parts[1];
+                    var mimeType = header.Replace("data:", "").Replace(";base64", "");
+                    try
+                    {
+                        var imageBytes = Convert.FromBase64String(base64);
+                        return File(imageBytes, mimeType);
+                    }
+                    catch
+                    {
+                        return Redirect("https://via.placeholder.com/150");
+                    }
+                }
+            }
+
+            if (picLink.StartsWith("http"))
+            {
+                return Redirect(picLink);
+            }
+
+            return Redirect("https://via.placeholder.com/150");
+        }
+
         public class ProfileRequest
         {
             public int UserID { get; set; }
@@ -141,7 +180,7 @@ namespace backend.Controllers
                 {
                     pID = profile.PID,
                     userID = profile.UserID,
-                    profilePictureLink = profile.ProfilePictureLink,
+                    profilePictureLink = "http://localhost:5200/api/profile/" + profile.UserID + "/picture",
                     interests = profile.Interests,
                     description = profile.Description,
                     location = profile.Location,
@@ -170,7 +209,7 @@ namespace backend.Controllers
                         u.firstName, 
                         u.lastName, 
                         u.age, 
-                        IFNULL(p.profilePictureLink, 'https://via.placeholder.com/150'), 
+                        CONCAT('http://localhost:5200/api/profile/', p.userID, '/picture'), 
                         p.interests, 
                         p.description, 
                         p.location, 
@@ -325,7 +364,7 @@ namespace backend.Controllers
                     lastName = user.LastName,
                     email = user.Email,
                     age = user.Age,
-                    profilePictureLink = profile?.ProfilePictureLink,
+                    profilePictureLink = "http://localhost:5200/api/profile/" + user.UserID + "/picture",
                     interests = profile?.Interests,
                     description = profile?.Description,
                     location = profile?.Location,
@@ -353,7 +392,7 @@ namespace backend.Controllers
                                      select new {
                                          id = m.RequesterID,
                                          name = u.FirstName,
-                                         image = p != null && p.ProfilePictureLink != null ? p.ProfilePictureLink : "https://via.placeholder.com/150",
+                                         image = "http://localhost:5200/api/profile/" + u.UserID + "/picture",
                                          commonInterests = m.CommonInterests
                                      }).ToListAsync();
                 return Ok(pending);

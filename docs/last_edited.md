@@ -1,3 +1,41 @@
+# Last Edited - Optimize Match Page Fetching
+
+## [2026-08-31]
+- **Performance Fix (Match Page)**: Optimized fetching for profiles, matches, and pending requests to reduce payload size.
+  - **Files modified**: `backend/Controllers/ProfileController.cs`
+  - **Why it changed**: The Match page ("Find Your Travel Buddy") was experiencing the same performance issue as messages—fetching massive Base64 profile pictures natively in JSON arrays.
+  - **How it works**: Updated `GetMatches`, `GetPendingRequests`, `GetProfile`, and `GetPublicProfile` in the backend to return the lightweight `/api/profile/{userId}/picture` endpoint URL instead of the heavy raw Base64 image data.
+
+# Last Edited - Remove Hardcoded Bookings
+
+## [2026-08-31]
+- **UI Cleanup (Dashboard)**: Removed the hardcoded bookings placeholder section from the Local Guide dashboard overview.
+  - **Files modified**: `src/pages/Dashboard.jsx`
+  - **Why it changed**: The user requested the removal of the dummy "Sunrise photo walk" booking cards since real bookings are handled in the "Bookings" tab.
+  - **How it works**: Simply deleted the JSX block rendering the hardcoded `.booking-item` elements under the Overview tab section.
+
+# Last Edited - Optimize Message and Contact Fetching
+
+## [2026-08-31]
+- **Performance Fix (Messages)**: Optimized contacts loading and chat polling to significantly reduce payload size and backend load.
+  - **Files modified**: `backend/Controllers/ProfileController.cs`, `backend/Controllers/MessageController.cs`, `src/pages/Messages.jsx`
+  - **Why it changed**: 
+    - `GetContacts` was returning full Base64 image strings in the JSON array, causing massive payloads and latency.
+    - Chat polling was fetching the entire chat history every 5 seconds, resulting in O(N^2) data transfer for long chats.
+  - **How it works**:
+    - Added `GET /api/profile/{userId}/picture` to dynamically decode Base64 profile pictures and serve them as standard image files (or redirect if URL).
+    - Updated `GetContacts` SQL query to construct and return the picture endpoint URL instead of the raw Base64 data.
+    - Added an `afterId` parameter to `GetChat` for incremental polling.
+    - Modified `Messages.jsx` to pass the highest `mID` during polling, appending only new messages to the existing list.
+
+# Last Edited - Refine Explore Page Styles
+
+## [2026-08-31]
+- **Style Fix (Explore Page)**: Reverted the animated gradient background on the Explore Page back to its original static background.
+  - **Files modified**: `src/styles/explorer.css`
+  - **Why it changed**: The user requested that the animated background colour be reverted because it was distracting, and to limit the new glassmorphic hover animations specifically to the "Live from Community" cards and "Manage Itineraries".
+  - **How it works**: Removed the `.explorer-page` background gradient animation and restricted the hover/transition effects in `explorer.css` exclusively to the `.community-post-card` class, ensuring the tour and spot cards remain unchanged.
+
 # Last Edited - Restored Manage Itinerary UI in GuideHome
 
 ## [2026-08-31]
