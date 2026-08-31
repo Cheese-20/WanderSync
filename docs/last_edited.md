@@ -1,3 +1,11 @@
+# Last Edited - Guide Detail Book Tour Logic
+
+## [2026-08-31]
+- **Enhancement (Frontend UI)**: Replaced the instant booking logic on the Guide Detail page with the same interactive booking modal used on the Explorer Home page.
+  - **Files modified**: `src/pages/GuideDetail.jsx`
+  - **Why it changed**: The user requested that the "Book Tour" buttons under a local guide's "Available Tours & Itineraries" use the exact same logic as the "Join" button on the home page.
+  - **How it works**: Added state variables for the booking modal (`isBookingModalOpen`, `selectedTour`, `guestCount`, `bookingStatus`). Fetches the user's `requestedTourIds` on load so that already requested tours are disabled with a "Requested" label. Clicking a tour now opens a modal asking for the number of guests before submitting the booking request.
+
 # Last Edited - Dummy Reviews Added
 
 ## [2026-08-31]

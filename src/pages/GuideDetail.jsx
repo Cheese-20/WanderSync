@@ -12,10 +12,7 @@ export default function GuideDetail() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [bookingTourId, setBookingTourId] = useState(null);
-  const [bookingMessage, setBookingMessage] = useState('');
-  const [bookingError, setBookingError] = useState('');
-  const [isBooking, setIsBooking] = useState(false);
+
 
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewScore, setReviewScore] = useState(5);
@@ -25,6 +22,13 @@ export default function GuideDetail() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [canReview, setCanReview] = useState(false);
   const [showIneligiblePopup, setShowIneligiblePopup] = useState(false);
+
+  // Tour Booking Modal States
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [guestCount, setGuestCount] = useState(1);
+  const [bookingStatus, setBookingStatus] = useState('idle');
+  const [requestedTourIds, setRequestedTourIds] = useState([]);
 
   // One-on-one request form
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -70,6 +74,7 @@ export default function GuideDetail() {
       const bookings = res.data || [];
       const hasBooking = bookings.some(b => b.guideId === Number(guideId));
       setCanReview(hasBooking);
+      setRequestedTourIds(bookings.map(b => b.tourId || b.tourID));
     } catch (err) {
       console.error('Error checking user bookings:', err);
       setCanReview(false);
@@ -94,33 +99,16 @@ export default function GuideDetail() {
     }
   };
 
-  const handleBookTour = async (tourId) => {
+  const handleBookTourClick = (tour) => {
     const userJson = localStorage.getItem('user');
     if (!userJson) {
       navigate('/login', { state: { message: 'Please login to book a tour' } });
       return;
     }
-
-    const user = JSON.parse(userJson);
-    const userId = user.id || user.userID;
-
-    setIsBooking(true);
-    setBookingTourId(tourId);
-    setBookingMessage('');
-    setBookingError('');
-
-    try {
-      const res = await axios.post('/api/bookings', {
-        userID: userId,
-        tourID: tourId,
-        bookingDate: new Date().toISOString()
-      });
-      setBookingMessage(res.data.message || 'Booking request submitted successfully!');
-    } catch (err) {
-      setBookingError(err.response?.data?.message || 'Failed to book tour');
-    } finally {
-      setIsBooking(false);
-    }
+    setSelectedTour(tour);
+    setGuestCount(1);
+    setBookingStatus('idle');
+    setIsBookingModalOpen(true);
   };
 
   const submitReview = async (e) => {
@@ -401,18 +389,18 @@ export default function GuideDetail() {
                   </div>
                   <div className="tour-card-actions">
                     <button
-                      className="btn-book-tour"
-                      onClick={() => handleBookTour(tour.tourId)}
-                      disabled={isBooking && bookingTourId === tour.tourId}
+                      className="mint-btn"
+                      onClick={() => handleBookTourClick(tour)}
+                      disabled={requestedTourIds.includes(tour.tourId || tour.tourID)}
+                      style={{ 
+                        width: '100%',
+                        backgroundColor: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#d3d3d3' : '',
+                        color: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#888' : '',
+                        cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' 
+                      }}
                     >
-                      {isBooking && bookingTourId === tour.tourId ? 'Booking...' : 'Book Tour'}
+                      {requestedTourIds.includes(tour.tourId || tour.tourID) ? 'Requested' : 'Book Tour'}
                     </button>
-                    {bookingTourId === tour.tourId && bookingMessage && (
-                      <p className="booking-success">{bookingMessage}</p>
-                    )}
-                    {bookingTourId === tour.tourId && bookingError && (
-                      <p className="booking-error">{bookingError}</p>
-                    )}
                   </div>
                 </div>
               ))}
@@ -520,6 +508,66 @@ export default function GuideDetail() {
             <button className="ineligible-modal-close" onClick={() => setShowIneligiblePopup(false)}>
               Got it
             </button>
+          </div>
+        </div>
+      )}
+
+      {isBookingModalOpen && selectedTour && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', position: 'relative' }}>
+            <button className="close-btn" onClick={() => setIsBookingModalOpen(false)}>&times;</button>
+            <div style={{ marginBottom: '20px' }}>
+              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
+              <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+            </div>
+
+            {bookingStatus === 'idle' ? (
+              <>
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedTour.maxPeople - (selectedTour.confirmedBookingsCount || 0)}
+                    value={guestCount}
+                    onChange={(e) => setGuestCount(Number(e.target.value))}
+                    style={{ width: '100%', padding: '14px', border: '2px solid #e0e0e0', borderRadius: '16px', fontSize: '1.1rem', textAlign: 'center', backgroundColor: '#fff', color: '#000', outline: 'none' }}
+                  />
+                </div>
+
+                <div className="modal-actions" style={{ display: 'flex', gap: '12px' }}>
+                  <button className="btn-secondary" onClick={() => setIsBookingModalOpen(false)} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>Cancel</button>
+                  <button className="btn-primary" style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }} onClick={async () => {
+                    try {
+                      const userJson = localStorage.getItem('user');
+                      const loggedInUserId = userJson ? (JSON.parse(userJson).id || JSON.parse(userJson).userID) : null;
+                      
+                      await axios.post('http://localhost:5200/api/bookings', {
+                        userID: loggedInUserId,
+                        tourID: selectedTour.tourId || selectedTour.tourID,
+                        bookingDate: selectedTour.date,
+                        timeOfBooking: new Date(selectedTour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        numberOfGuests: guestCount,
+                        bookingType: "Standard"
+                      });
+                      setRequestedTourIds([...requestedTourIds, selectedTour.tourId || selectedTour.tourID]);
+                      setBookingStatus('success');
+                    } catch (e) {
+                      console.error(e);
+                      alert('Error creating booking');
+                    }
+                  }}>Submit Request</button>
+                </div>
+              </>
+            ) : (
+              <div>
+                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1a8f66', marginBottom: '20px' }}>
+                  Success, sending request to guide
+                </p>
+                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%' }}>OK</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
