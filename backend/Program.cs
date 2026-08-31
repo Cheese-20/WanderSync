@@ -199,7 +199,7 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `Posts` MODIFY COLUMN `pictureURL` longtext NULL;",
             "ALTER TABLE `Posts` ADD COLUMN `experienceType` varchar(50) NOT NULL DEFAULT 'Individual';",
             "ALTER TABLE `SpotVotes` ADD COLUMN `spotName` varchar(100) NULL;",
-            "ALTER TABLE `SpotVotes` ADD COLUMN `spotLocation` varchar(100) NULL;",
+            "ALTER TABLE `SpotVotes` ADD COLUMN `spotLoaction` varchar(100) NULL;",
             "ALTER TABLE `SpotVotes` ADD COLUMN `guideName` varchar(100) NULL;",
             "ALTER TABLE `SpotVotes` ADD COLUMN `guideSurname` varchar(100) NULL;"
         };

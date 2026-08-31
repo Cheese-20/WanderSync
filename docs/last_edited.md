@@ -1,3 +1,11 @@
+# Last Edited - Spot Voting Bug Fix (Reverted to Typo)
+
+## [2026-08-31]
+- **Bug Fix (Backend)**: Re-added the missing database columns to the `SpotVotes` table in `Program.cs`, but kept the `spotLoaction` column name as requested by the user.
+  - **Files modified**: `backend/Models/SpotVote.cs`, `backend/Program.cs`
+  - **Why it changed**: The user requested that the column remain spelled as `spotLoaction` to match how it is officially registered in their database.
+  - **How it works**: Reverted the spelling in `SpotVote.cs` to `[Column("spotLoaction")]` and used `spotLoaction` in the `ALTER TABLE` statement in `Program.cs`.
+
 # Last Edited - Spot Voting Bug Fix
 
 ## [2026-08-31]
