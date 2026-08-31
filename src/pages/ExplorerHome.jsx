@@ -30,6 +30,9 @@ export default function ExplorerHome() {
   const [reportReason, setReportReason] = useState('Inaccurate Information');
   const [reportComment, setReportComment] = useState('');
   const [reportStatus, setReportStatus] = useState('idle');
+  const [ratingScore, setRatingScore] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [ratingStatus, setRatingStatus] = useState('idle'); // idle, success, error
   const scrollRef = useRef(null);
   const spotsScrollRef = useRef(null);
   const navigate = useNavigate();
@@ -52,6 +55,44 @@ export default function ExplorerHome() {
     setReportComment('');
     setReportStatus('idle');
     setIsReportSpotModalOpen(true);
+  };
+
+  const handleSubmitRating = async () => {
+    if (ratingScore < 1 || ratingScore > 5) return;
+    try {
+      const res = await axios.post(`http://localhost:5200/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/rate`, {
+        userId: loggedInUserId,
+        ratingScore: ratingScore,
+        reviewText: reviewText
+      });
+      
+      setRatingStatus('success');
+      
+      // Update local spots state
+      setSpots(spots.map(s => {
+        if ((s.spotID || s.spotId) === (selectedLocalSpot.spotID || selectedLocalSpot.spotId)) {
+          return {
+            ...s,
+            hasRated: true,
+            averageRating: res.data.averageRating,
+            totalRatings: res.data.totalRatings
+          };
+        }
+        return s;
+      }));
+      
+      // Also update selected spot so the modal reflects the change immediately
+      setSelectedLocalSpot({
+        ...selectedLocalSpot,
+        hasRated: true,
+        averageRating: res.data.averageRating,
+        totalRatings: res.data.totalRatings
+      });
+      
+    } catch (e) {
+      console.error(e);
+      setRatingStatus('error');
+    }
   };
 
   const handleSubmitReport = async () => {
@@ -328,8 +369,18 @@ export default function ExplorerHome() {
                 <img src={spot.pictureURL || 'https://via.placeholder.com/260x140'} alt="Spot" />
               </div>
               <div className="tour-card-body">
-                <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
-                <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
+                    <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
+                  </div>
+                  {spot.averageRating > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#fef3c7', padding: '4px 8px', borderRadius: '12px' }}>
+                      <span style={{ color: '#d97706', fontSize: '0.9rem', marginRight: '4px' }}>★</span>
+                      <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#92400e' }}>{spot.averageRating.toFixed(1)}</span>
+                    </div>
+                  )}
+                </div>
                 <div className="tour-meta">
                   <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -588,6 +639,58 @@ export default function ExplorerHome() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #e0e0e0', paddingTop: '10px' }}>
                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#d4c28c', backgroundImage: `url(${selectedLocalSpot.submitterAvatar || ''})`, backgroundSize: 'cover' }}></div>
                   <span style={{ fontSize: '0.85rem', color: '#555' }}>Submitted by {selectedLocalSpot.submitterName || 'Explorer'}</span>
+                </div>
+                
+                <div style={{ marginTop: '20px', borderTop: '1px solid #e0e0e0', paddingTop: '15px' }}>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>Rate this Spot</h4>
+                  
+                  {selectedLocalSpot.hasRated || ratingStatus === 'success' ? (
+                    <div style={{ backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '8px', color: '#065f46', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                      Thanks for rating this spot!
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', justifyContent: 'center' }}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span 
+                            key={star}
+                            onClick={() => setRatingScore(star)}
+                            style={{ 
+                              cursor: 'pointer', 
+                              fontSize: '2rem', 
+                              color: star <= ratingScore ? '#fbbf24' : '#e5e7eb',
+                              transition: 'color 0.2s'
+                            }}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      
+                      {ratingScore > 0 && (
+                        <div style={{ marginTop: '10px', animation: 'fadeIn 0.3s ease' }}>
+                          <textarea 
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            placeholder="Add a short review (optional)..."
+                            rows="2"
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', resize: 'vertical', marginBottom: '10px' }}
+                          ></textarea>
+                          <button 
+                            className="mint-btn"
+                            onClick={handleSubmitRating}
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', fontWeight: 'bold' }}
+                          >
+                            Submit Rating
+                          </button>
+                        </div>
+                      )}
+                      {ratingStatus === 'error' && (
+                        <p style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '8px' }}>Failed to submit rating. Please try again.</p>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
