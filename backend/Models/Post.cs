@@ -28,5 +28,13 @@ namespace backend.Models
 
         [Column("experienceType")]
         public string ExperienceType { get; set; }
+
+        [Column("userName")]
+        [MaxLength(100)]
+        public string? UserName { get; set; }
+
+        [Column("userSurname")]
+        [MaxLength(100)]
+        public string? UserSurname { get; set; }
     }
 }

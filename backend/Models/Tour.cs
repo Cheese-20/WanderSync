@@ -38,6 +38,14 @@ namespace backend.Models
 
         [Column("location")]
         public string? Location { get; set; }
+
+        [Column("guideName")]
+        [MaxLength(100)]
+        public string? GuideName { get; set; }
+
+        [Column("guideSurname")]
+        [MaxLength(100)]
+        public string? GuideSurname { get; set; }
     }
 }
 

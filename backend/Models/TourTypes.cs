@@ -16,7 +16,7 @@ namespace backend.Models
         public const string CustomItinerary = "CustomItinerary";
 
         /// <summary>Types that back a single explorer and are not open for anyone to book.</summary>
-        public static readonly string[] Private = { OneOnOne, CustomItinerary };
+        public static readonly System.Collections.Generic.List<string> Private = new System.Collections.Generic.List<string> { OneOnOne, CustomItinerary };
     }
 
     /// <summary>Values used for Booking.bookingType.</summary>

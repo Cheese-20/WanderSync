@@ -26,5 +26,25 @@ namespace backend.Models
 
         [Column("sentAt")]
         public DateTime SentAt { get; set; }
+
+        [Column("senderName")]
+        [MaxLength(100)]
+        public string? SenderName { get; set; }
+
+        [Column("senderSurname")]
+        [MaxLength(100)]
+        public string? SenderSurname { get; set; }
+
+        [Column("recieverName")]
+        [MaxLength(100)]
+        public string? ReceiverName { get; set; }
+
+        [Column("recieverSurname")]
+        [MaxLength(100)]
+        public string? ReceiverSurname { get; set; }
+
+        [Column("statusMatch")]
+        [MaxLength(100)]
+        public string? StatusMatch { get; set; }
     }
 }

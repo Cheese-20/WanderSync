@@ -41,7 +41,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<WanderSyncDbContext>(options =>
     // Use Pomelo MySQL provider with explicit server version
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)),
-        mySqlOptions => mySqlOptions.CommandTimeout(120))
+        mySqlOptions => {
+            mySqlOptions.CommandTimeout(120);
+            mySqlOptions.EnableRetryOnFailure();
+        })
 );
 
 builder.Services.AddControllers();

@@ -1,6 +1,13 @@
 # Last Edited - Restored Manage Itinerary UI in GuideHome
 
 ## [2026-08-31]
+- **Feature (Denormalization & Data Backfill)**: Updated all Entity Framework models to map directly to the newly added denormalized "foreign key" columns in the database, and created a backfill script.
+  - **Models Updated**: `Booking`, `LocalGuideApplication`, `UserMatch`, `Message`, `Notification`, `Post`, `Profile`, `SpotVote`, and `Tour`.
+  - **Backfill Script**: Created `DatabaseBackfillController.cs` featuring a `POST /api/backfill/populate-all` endpoint. When triggered, it scans the entire database, looks up related users/tours/spots by ID, and auto-populates all the new string columns (e.g. `UserName`, `UserSurname`, `SpotLocation`, etc.) for every record.
+  - **Why**: The user manually modified the MySQL schema to add these fields for faster data retrieval (without SQL JOINs). We needed to map the C# Entity Framework to these columns exactly (including keeping typos like `location` vs `loaction` accounted for) and provide a way to inject data into all the existing empty records.
+- **Bug Fix (Database Connection)**: Added `EnableRetryOnFailure()` to the Entity Framework `UseMySql` configuration in `backend/Program.cs`.
+  - **Why**: The application occasionally threw transient connection errors during startup or heavy load ("Login Failed: An exception has been raised that is likely due to a transient failure").
+  - **How it works**: By adding `EnableRetryOnFailure()`, Entity Framework Core will automatically retry failed database operations (like opening connections or executing commands) before throwing an exception, improving the application's resilience against temporary database unreachability or network blips.
 - **Merge (LocalGuide and Admin-2)**: Resolved merge conflicts when integrating `LocalGuide` and `Admin-2` branches into `main`.
   - **Program.cs**: Reconciled database migrations for `Bookings`. Enforced `timeOfBooking` as `NOT NULL` and maintained the robust backfilling logic from `LocalGuide` branch.
   - **GuideDetail.jsx**: Preserved both the "Submit Review" form (from `LocalGuide`) and the "One-on-One Request" form (from `Admin-2`) so users can utilize both features.
@@ -129,3 +136,62 @@ This happened because the backend's `CreateBookingRequest` model was completely 
 1. Added `public int NumberOfGuests { get; set; }` to the `CreateBookingRequest` class.
 2. Updated the `Booking` creation logic to map `numberOfGuests = request.NumberOfGuests`.
 3. Improved the capacity check (`currentBookings`) to use `.SumAsync(b => b.numberOfGuests)` instead of `.CountAsync()`, preventing tours from being overbooked if multiple users book with several guests each!
+
+## What Changed
+
+Added dynamic statistics (Bookings this month and Average Rating) to the Local Guide Dashboard, replacing hardcoded values.
+
+## Why It Changed
+
+The user requested that the "18 bookings" and "4.9 rating" displayed on the Local Guide dashboard be calculated dynamically from the database. The previous implementation simply hardcoded these numbers into the UI.
+
+## How It Works
+
+1. Created a new API endpoint `GET /api/local-guide/{guideId}/stats` in `LocalGuideController.cs`.
+2. The endpoint calculates:
+   - **Bookings this month**: Joins the `Bookings` and `Tours` tables to count how many "Accepted" bookings belong to the specific guide's tours in the current month.
+   - **Average Rating**: Queries the `GuideRatings` (mapped to the `Reviews` table) to average the `Score` for the specific guide, rounded to 1 decimal place.
+3. Updated the frontend `Dashboard.jsx` to fetch from this endpoint and render `{stats.bookingsThisMonth}` and `{stats.averageRating}` dynamically instead of hardcoded numbers.
+
+## What Changed
+
+Added a strict rule to the Guide rating API endpoint that requires users to have a confirmed booking that occurred more than 30 minutes in the past before they are allowed to leave a review.
+
+## Why It Changed
+
+The user requested that reviewers must actually have experienced the tour they are reviewing (i.e. the booking is confirmed and time has passed) to prevent fraudulent or premature reviews. 
+
+## How It Works
+
+1. Modified the `POST /api/local-guide/{guideId}/rate` endpoint in `LocalGuideController.cs`.
+2. Changed the `hasBooking` query to join `Bookings` and `Tours`.
+3. Added the conditions `(b.status == "Confirmed" || b.status == "Accepted")` to ensure the booking was not declined or pending.
+4. Added the condition `t.Date <= DateTime.UtcNow.AddMinutes(-30)` to ensure that at least 30 minutes have elapsed since the start time of the booked tour/experience.
+
+## What Changed
+
+On the Guide Profile page, the "Add Review" button is now greyed out and disabled if the user has no bookings with the specific guide.
+
+## Why It Changed
+
+To improve user experience and provide immediate feedback, the button is visually disabled so users don't have to fill out the review form only to be rejected by the backend rule implemented previously.
+
+## How It Works
+
+1. Added `checkReviewEligibility` function to `GuideDetail.jsx` which runs on component mount.
+2. The function queries `GET /api/bookings/user/{userId}/with-details` and checks if the user has any bookings that match the current `guideId`.
+3. Based on the result, it updates the `canReview` state.
+4. If `canReview` is false, the "Add Review" button is styled grey with a `not-allowed` cursor, but is kept clickable (the `disabled` attribute was removed).
+5. The `onClick` handler checks `canReview` and shows a custom popup modal centered on the screen (with the logo and centered text) if the user is ineligible, stopping the form from opening. Styles were added to `discover.css`.
+
+## What Changed
+
+Removed the "Every Guide is Verified" banner/section from the Explore page.
+
+## Why It Changed
+
+The user requested its removal.
+
+## How It Works
+
+Deleted the `<section className="explore-trust-section">...</section>` block from `ExplorePage.jsx`.

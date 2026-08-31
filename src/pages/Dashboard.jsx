@@ -3,6 +3,7 @@ import '../styles/dashboard.css';
 import logo from '../assets/images/logo.png';
 import NavBar from '../components/NavBar';
 import CreateExperienceModal from '../components/CreateExperienceModal';
+import ConfirmationPopup from '../components/admin/ConfirmationPopup';
 
 // SVG Icons
 const UsersIcon = () => (
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [isUpdatingBooking, setIsUpdatingBooking] = useState(false);
+  const [popup, setPopup] = useState(null);
   const [bookingToDecline, setBookingToDecline] = useState(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [tourTypeFilter, setTourTypeFilter] = useState('All');
@@ -55,6 +57,9 @@ export default function Dashboard() {
   const [loadingExperiences, setLoadingExperiences] = useState(false);
   const [showCreateExperience, setShowCreateExperience] = useState(false);
   const [experienceMessage, setExperienceMessage] = useState('');
+
+  // Stats state
+  const [stats, setStats] = useState({ bookingsThisMonth: 0, averageRating: 0.0 });
 
   // Fetch logged in user id
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -67,6 +72,7 @@ export default function Dashboard() {
       fetchGuideBookings();
     } else if (activeTab === 'Overview' && guideId) {
       fetchExperiences();
+      fetchStats();
     }
   }, [activeTab, guideId]);
 
@@ -82,6 +88,18 @@ export default function Dashboard() {
       console.error('Error fetching experiences:', error);
     } finally {
       setLoadingExperiences(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`/api/local-guide/${guideId}/stats`);
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     }
   };
 
@@ -113,10 +131,11 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' }
       });
       if (response.ok) {
+        setPopup({ type: 'success', message: `Successfully ${action}ed the booking!` });
         // Refresh bookings
         fetchGuideBookings();
       } else {
-        alert(`Failed to ${action} booking.`);
+        setPopup({ type: 'error', message: `Failed to ${action} booking.` });
       }
     } catch (error) {
       console.error(`Error updating booking: ${action}`, error);
@@ -243,14 +262,14 @@ export default function Dashboard() {
                 <div className="card-icon icon-blue">
                   <UsersIcon />
                 </div>
-                <h2>18</h2>
+                <h2>{stats.bookingsThisMonth}</h2>
                 <p>Bookings this month</p>
               </div>
               <div className="summary-card">
                 <div className="card-icon icon-green">
                   <StarIcon />
                 </div>
-                <h2>4.9</h2>
+                <h2>{stats.averageRating.toFixed(1)}</h2>
                 <p>Average Rating</p>
               </div>
             </div>
@@ -312,30 +331,9 @@ export default function Dashboard() {
                 })}
               </div>
             </div>
-
-            {/* Bookings Section */}
-            <div className="dashboard-section">
-
-              <div className="booking-item highlight">
-                <div className="booking-details">
-                  <p className="bk-title">Sunrise photo walk</p>
-                  <p className="bk-time">Tomorrow, 10:00 AM</p>
-                  <p className="bk-count">3 booked</p>
-                </div>
-                <span className="badge accepted" style={{ backgroundColor: '#ecfdf5', color: '#10b981', borderColor: 'transparent', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem' }}>Accepted</span>
-              </div>
-
-              <div className="booking-item">
-                <div className="booking-details">
-                  <p className="bk-title">Sunrise photo walk</p>
-                  <p className="bk-time">Tomorrow, 10:00 AM</p>
-                  <p className="bk-count">5 booked</p>
-                </div>
-                <span className="badge pending">Pending</span>
-              </div>
-
-            </div>
           </>
+
+
         )}
 
         {activeTab === 'Bookings' && (
@@ -538,6 +536,13 @@ export default function Dashboard() {
         )}
 
       </div>
+      {popup && (
+        <ConfirmationPopup
+          type={popup.type}
+          message={popup.message}
+          onClose={() => setPopup(null)}
+        />
+      )}
     </>
   );
 }

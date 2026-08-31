@@ -17,7 +17,7 @@ namespace backend.Models
         [Column("reason")]
         public string? Reason { get; set; }
 
-        [Column("loacation")]
+        [Column("location")]
         [MaxLength(100)]
         public string? Location { get; set; }
 
@@ -27,6 +27,14 @@ namespace backend.Models
 
         [Column("userID")]
         public int UserID { get; set; }
+
+        [Column("userName")]
+        [MaxLength(100)]
+        public string? UserName { get; set; }
+
+        [Column("userSurname")]
+        [MaxLength(100)]
+        public string? UserSurname { get; set; }
 
         [ForeignKey("UserID")]
         public User User { get; set; }

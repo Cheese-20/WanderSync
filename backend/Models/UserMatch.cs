@@ -27,6 +27,22 @@ namespace backend.Models
         [Column("dateMatched")]
         public DateTime DateMatched { get; set; }
 
+        [Column("requesterName")] // In DB this was requester or similar, I'll keep it as requesterName for now unless it errors. Wait, the error was "m.receiverName", meaning receiverName definitely failed. I will change it to recieverN.
+        [MaxLength(100)]
+        public string? RequesterName { get; set; }
+
+        [Column("requesterSurname")]
+        [MaxLength(100)]
+        public string? RequesterSurname { get; set; }
+
+        [Column("recieverName")]
+        [MaxLength(100)]
+        public string? ReceiverName { get; set; }
+
+        [Column("recieverSurname")]
+        [MaxLength(100)]
+        public string? ReceiverSurname { get; set; }
+
         // Navigation properties
         [ForeignKey("RequesterID")]
         public User? Requester { get; set; }

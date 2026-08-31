@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import logo from '../assets/images/logo.png';
 import '../styles/discover.css';
 
 export default function GuideDetail() {
@@ -22,6 +23,8 @@ export default function GuideDetail() {
   const [reviewError, setReviewError] = useState('');
   const [reviewSuccess, setReviewSuccess] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [canReview, setCanReview] = useState(false);
+  const [showIneligiblePopup, setShowIneligiblePopup] = useState(false);
 
   // One-on-one request form
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -34,6 +37,7 @@ export default function GuideDetail() {
     fetchGuideDetails();
     fetchGuideRatings();
     fetchGuideReviews();
+    checkReviewEligibility();
   }, [guideId]);
 
   const fetchGuideDetails = async () => {
@@ -49,6 +53,26 @@ export default function GuideDetail() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkReviewEligibility = async () => {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) {
+      setCanReview(false);
+      return;
+    }
+    const user = JSON.parse(userJson);
+    const userId = user.id || user.userID;
+
+    try {
+      const res = await axios.get(`/api/bookings/user/${userId}/with-details`);
+      const bookings = res.data || [];
+      const hasBooking = bookings.some(b => b.guideId === Number(guideId));
+      setCanReview(hasBooking);
+    } catch (err) {
+      console.error('Error checking user bookings:', err);
+      setCanReview(false);
     }
   };
 
@@ -402,8 +426,16 @@ export default function GuideDetail() {
           <div className="reviews-header-container">
             <h2>Reviews</h2>
             <button 
-              className="btn-add-review"
-              onClick={() => setShowReviewForm(!showReviewForm)}
+              className={`btn-add-review ${!canReview ? 'disabled' : ''}`}
+              onClick={() => {
+                if (!canReview) {
+                  setShowIneligiblePopup(true);
+                  return;
+                }
+                setShowReviewForm(!showReviewForm);
+              }}
+              style={!canReview ? { backgroundColor: 'grey', cursor: 'not-allowed' } : {}}
+              title={!canReview ? "You must book a tour with this guide to leave a review." : ""}
             >
               {showReviewForm ? 'Cancel Review' : 'Add Review'}
             </button>
@@ -477,6 +509,20 @@ export default function GuideDetail() {
 
 
       </section>
+
+      {showIneligiblePopup && (
+        <div className="ineligible-modal-overlay" onClick={() => setShowIneligiblePopup(false)}>
+          <div className="ineligible-modal-content" onClick={(e) => e.stopPropagation()}>
+            <img src={logo} alt="WanderSync Logo" className="ineligible-modal-logo" />
+            <p className="ineligible-modal-text">
+              You must have a confirmed booking that occurred more than 30 minutes ago to leave a review for this guide.
+            </p>
+            <button className="ineligible-modal-close" onClick={() => setShowIneligiblePopup(false)}>
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

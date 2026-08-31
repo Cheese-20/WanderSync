@@ -27,6 +27,14 @@ namespace backend.Models
         [Column("userID")]
         public int UserID { get; set; }
 
+        [Column("userName")]
+        [StringLength(100)]
+        public string? UserName { get; set; }
+
+        [Column("userSurname")]
+        [StringLength(100)]
+        public string? UserSurname { get; set; }
+
         [ForeignKey("UserID")]
         public User? User { get; set; }
     }

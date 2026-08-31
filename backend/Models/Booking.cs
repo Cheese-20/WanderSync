@@ -11,5 +11,16 @@ namespace backend.Models
         public string status { get; set; } = "Pending";
         public DateTime bookingDate { get; set; }
         public string timeOfBooking { get; set; } = string.Empty;
+
+        // Denormalized fields
+        [System.ComponentModel.DataAnnotations.Schema.Column("userName")]
+        public string? userName { get; set; }
+        
+        public string? userSurname { get; set; }
+        
+        [System.ComponentModel.DataAnnotations.Schema.Column("tourName")]
+        public string? tourName { get; set; }
+        
+        public string? tourLocation { get; set; }
     }
 }

@@ -21,5 +21,21 @@ namespace backend.Models
         
         [Column("votedAt")]
         public DateTime VotedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("spotName")]
+        [MaxLength(100)]
+        public string? SpotName { get; set; }
+
+        [Column("spotLoaction")]
+        [MaxLength(100)]
+        public string? SpotLocation { get; set; }
+
+        [Column("guideName")]
+        [MaxLength(100)]
+        public string? GuideName { get; set; }
+
+        [Column("guideSurname")]
+        [MaxLength(100)]
+        public string? GuideSurname { get; set; }
     }
 }

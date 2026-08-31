@@ -414,7 +414,8 @@ namespace backend.Controllers
             if (reviewer == null)
                 return NotFound(new { message = "Reviewer not found." });
 
-            // Verify user has booked a tour with this guide
+            // Verify user has a confirmed booking with this guide that occurred more than 30 minutes ago
+            var thirtyMinsAgo = DateTime.UtcNow.AddMinutes(-30);
             var hasBooking = await _context.Bookings
                 .Join(
                     _context.Tours,
@@ -422,10 +423,13 @@ namespace backend.Controllers
                     t => t.TourId,
                     (b, t) => new { b, t }
                 )
-                .AnyAsync(bt => bt.b.userID == request.UserID && bt.t.GuideId == guideId);
+                .AnyAsync(bt => bt.b.userID == request.UserID 
+                             && bt.t.GuideId == guideId 
+                             && (bt.b.status == "Confirmed" || bt.b.status == "Accepted")
+                             && bt.t.Date <= thirtyMinsAgo);
 
             if (!hasBooking)
-                return BadRequest(new { message = "You must have booked a tour with this guide before rating." });
+                return BadRequest(new { message = "You can only review a guide if you have a confirmed booking that occurred more than 30 minutes ago." });
 
             // Check if user already rated this guide
             var existingRating = await _context.GuideRatings
@@ -783,6 +787,48 @@ namespace backend.Controllers
             {
                 _logger.LogError(ex, "Error updating itinerary tourId={TourId}", tourId);
                 return StatusCode(500, new { message = "Failed to update itinerary." });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/local-guide/{guideId}/stats
+        /// Returns stats for the guide (confirmed bookings this month and average rating).
+        /// </summary>
+        [HttpGet("{guideId}/stats")]
+        public async Task<IActionResult> GetGuideStats(int guideId)
+        {
+            try
+            {
+                // 1. Confirmed bookings this month
+                var now = DateTime.UtcNow;
+                var startOfMonth = new DateTime(now.Year, now.Month, 1);
+                
+                var bookingsCount = await _context.Bookings
+                    .Join(_context.Tours,
+                        b => b.tourID,
+                        t => t.TourId,
+                        (b, t) => new { Booking = b, Tour = t })
+                    .Where(x => x.Tour.GuideId == guideId && x.Booking.status == "Accepted" && x.Booking.bookingDate >= startOfMonth)
+                    .CountAsync();
+
+                // 2. Average rating
+                var ratings = await _context.GuideRatings
+                    .Where(r => r.GuideId == guideId)
+                    .Select(r => r.Score)
+                    .ToListAsync();
+                
+                double averageRating = ratings.Any() ? Math.Round(ratings.Average(r => (double)r), 1) : 0.0;
+
+                return Ok(new
+                {
+                    bookingsThisMonth = bookingsCount,
+                    averageRating = averageRating
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching stats for guide {GuideId}", guideId);
+                return StatusCode(500, "An error occurred while fetching guide stats.");
             }
         }
     }

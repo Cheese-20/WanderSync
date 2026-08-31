@@ -443,10 +443,7 @@ export default function ExplorePage() {
             ) : (<div className="explore-empty">{appliedQuery ? <p>No guides found for "{appliedQuery}".</p> : <p>No verified guides available yet.</p>}</div>)}
           </section>
 
-          <section className="explore-trust-section">
-            <h2>Every Guide is Verified</h2>
-            <p>We verify every guide's identity, check their local knowledge, and review their first experiences to ensure quality.</p>
-          </section>
+
 
           <section className="explore-my-activities-link">
             <p>Already booked a tour?</p>

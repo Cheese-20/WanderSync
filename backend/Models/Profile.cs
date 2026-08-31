@@ -34,6 +34,18 @@ namespace backend.Models
         [Column("job")]
         public string? Job { get; set; }
 
+        [Column("userName")]
+        [MaxLength(100)]
+        public string? UserName { get; set; }
+
+        [Column("userSurname")]
+        [MaxLength(100)]
+        public string? UserSurname { get; set; }
+
+        [Column("userEmail")]
+        [MaxLength(100)]
+        public string? UserEmail { get; set; }
+
         [ForeignKey("UserID")]
         public User User { get; set; }
     }
