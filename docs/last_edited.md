@@ -1,3 +1,11 @@
+# Last Edited - Refine Explore Page Styles
+
+## [2026-08-31]
+- **Style Fix (Explore Page)**: Reverted the animated gradient background on the Explore Page back to its original static background.
+  - **Files modified**: `src/styles/explorer.css`
+  - **Why it changed**: The user requested that the animated background colour be reverted because it was distracting, and to limit the new glassmorphic hover animations specifically to the "Live from Community" cards and "Manage Itineraries".
+  - **How it works**: Removed the `.explorer-page` background gradient animation and restricted the hover/transition effects in `explorer.css` exclusively to the `.community-post-card` class, ensuring the tour and spot cards remain unchanged.
+
 # Last Edited - Restored Manage Itinerary UI in GuideHome
 
 ## [2026-08-19]
