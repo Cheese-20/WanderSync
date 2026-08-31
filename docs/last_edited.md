@@ -1,3 +1,11 @@
+# Last Edited - Remove Hardcoded Bookings
+
+## [2026-08-31]
+- **UI Cleanup (Dashboard)**: Removed the hardcoded bookings placeholder section from the Local Guide dashboard overview.
+  - **Files modified**: `src/pages/Dashboard.jsx`
+  - **Why it changed**: The user requested the removal of the dummy "Sunrise photo walk" booking cards since real bookings are handled in the "Bookings" tab.
+  - **How it works**: Simply deleted the JSX block rendering the hardcoded `.booking-item` elements under the Overview tab section.
+
 # Last Edited - Optimize Message and Contact Fetching
 
 ## [2026-08-31]

@@ -257,28 +257,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Bookings Section */}
-            <div className="dashboard-section">
-
-              <div className="booking-item highlight">
-                <div className="booking-details">
-                  <p className="bk-title">Sunrise photo walk</p>
-                  <p className="bk-time">Tomorrow, 10:00 AM</p>
-                  <p className="bk-count">3 booked</p>
-                </div>
-                <span className="badge accepted" style={{ backgroundColor: '#ecfdf5', color: '#10b981', borderColor: 'transparent', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem' }}>Accepted</span>
-              </div>
-
-              <div className="booking-item">
-                <div className="booking-details">
-                  <p className="bk-title">Sunrise photo walk</p>
-                  <p className="bk-time">Tomorrow, 10:00 AM</p>
-                  <p className="bk-count">5 booked</p>
-                </div>
-                <span className="badge pending">Pending</span>
-              </div>
-
-            </div>
           </>
         )}
 
