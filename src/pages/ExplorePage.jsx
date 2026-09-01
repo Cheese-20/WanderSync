@@ -173,17 +173,23 @@ export default function ExplorePage() {
 
   const handleViewGuide = (guideId) => navigate(`/guide/${guideId}`);
 
-  const handleBookTour = async (tourId, e) => {
+  const handleBookTour = async (tour, e) => {
     e.stopPropagation();
     if (!loggedInUserId) {
       navigate('/login', { state: { message: 'Please login to book a tour' } });
       return;
     }
     try {
+      const userJson = localStorage.getItem('user');
+      const userObj = userJson ? JSON.parse(userJson) : {};
       const res = await axios.post('/api/bookings', {
         userID: loggedInUserId,
-        tourID: tourId,
-        bookingDate: new Date().toISOString()
+        tourID: tour.tourId || tour.tourID,
+        bookingDate: new Date().toISOString(),
+        userName: userObj.name || '',
+        userSurname: userObj.surname || '',
+        tourName: tour.title || tour.name || '',
+        tourLocation: tour.location || ''
       });
       alert(res.data.message || 'Booking request submitted successfully!');
     } catch (err) {
@@ -401,7 +407,7 @@ export default function ExplorePage() {
                         <p className="experience-description">{tour.description}</p>
                         <p className="experience-guide-name"><span className="guide-dot"></span> {tour.guideName}</p>
                         <div className="experience-meta"><span>{new Date(tour.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span><span>Max {tour.maxPeople} people</span></div>
-                        <div className="experience-card-footer"><span className="experience-price">R--/person</span><button className="experience-book-btn" onClick={(e) => handleBookTour(tour.tourId, e)}>Book</button></div>
+                        <div className="experience-card-footer"><span className="experience-price">R--/person</span><button className="experience-book-btn" onClick={(e) => handleBookTour(tour, e)}>Book</button></div>
                       </div>
                     </div>
                   ))}

@@ -318,7 +318,7 @@ export default function ExplorerHome() {
                       color: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#888' : '',
                       cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' 
                     }}
-                    onClick={() => { setSelectedTour(tour); setIsBookingModalOpen(true); }}
+                    onClick={() => { setSelectedTour(tour); setBookingStatus('idle'); setGuestCount(1); setIsBookingModalOpen(true); }}
                   >
                     {requestedTourIds.includes(tour.tourId || tour.tourID) ? 'Requested' : 'Join'}
                   </button>
@@ -575,23 +575,33 @@ export default function ExplorerHome() {
 
                 <div className="modal-actions" style={{ display: 'flex', gap: '12px' }}>
                   <button className="btn-secondary" onClick={() => setIsBookingModalOpen(false)} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>Cancel</button>
-                  <button className="btn-primary" style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }} onClick={async () => {
+                  <button className="btn-primary" disabled={bookingStatus === 'submitting'} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }} onClick={async () => {
                     try {
+                      setBookingStatus('submitting');
+                      const userStr = localStorage.getItem('user');
+                      const userObj = userStr ? JSON.parse(userStr) : {};
                       await axios.post('http://localhost:5200/api/bookings', {
                         userID: loggedInUserId,
                         tourID: selectedTour.tourId || selectedTour.tourID,
                         bookingDate: selectedTour.date,
                         timeOfBooking: new Date(selectedTour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         numberOfGuests: guestCount,
-                        bookingType: "Standard"
+                        bookingType: "Standard",
+                        userName: userObj.name || '',
+                        userSurname: userObj.surname || '',
+                        tourName: selectedTour.title || selectedTour.name || '',
+                        tourLocation: selectedTour.location || selectedTour.city || ''
                       });
                       setRequestedTourIds([...requestedTourIds, selectedTour.tourId || selectedTour.tourID]);
                       setBookingStatus('success');
                     } catch (e) {
                       console.error(e);
                       alert('Error creating booking');
+                      setBookingStatus('idle');
                     }
-                  }}>Submit Request</button>
+                  }}>
+                    {bookingStatus === 'submitting' ? 'Submitting...' : 'Submit Request'}
+                  </button>
                 </div>
               </>
             ) : (

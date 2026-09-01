@@ -539,7 +539,8 @@ export default function GuideDetail() {
                   <button className="btn-primary" style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }} onClick={async () => {
                     try {
                       const userJson = localStorage.getItem('user');
-                      const loggedInUserId = userJson ? (JSON.parse(userJson).id || JSON.parse(userJson).userID) : null;
+                      const userObj = userJson ? JSON.parse(userJson) : {};
+                      const loggedInUserId = userObj.id || userObj.userID || null;
                       
                       await axios.post('http://localhost:5200/api/bookings', {
                         userID: loggedInUserId,
@@ -547,7 +548,11 @@ export default function GuideDetail() {
                         bookingDate: selectedTour.date,
                         timeOfBooking: new Date(selectedTour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         numberOfGuests: guestCount,
-                        bookingType: "Standard"
+                        bookingType: "Standard",
+                        userName: userObj.name || '',
+                        userSurname: userObj.surname || '',
+                        tourName: selectedTour.title || selectedTour.name || '',
+                        tourLocation: selectedTour.location || selectedTour.city || ''
                       });
                       setRequestedTourIds([...requestedTourIds, selectedTour.tourId || selectedTour.tourID]);
                       setBookingStatus('success');

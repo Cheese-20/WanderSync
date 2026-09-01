@@ -338,3 +338,33 @@ To allow more fields to fit gracefully on the screen, enforce required validatio
 3. In `SetupProfileModal.css`, increased `.setup-modal-container` width to `650px` and configured the `.setup-form-grid` grid layout.
 4. Added styles for `.error-label` (red text) and `.error-border` (red border).
 5. Adjusted `.setup-continue-btn` to match `.mint-btn` with a mint green background (`#a6d8b6`), pill border-radius (`20px`), and white bold text.
+
+## What Changed
+
+Added a loading state to the "Submit Request" button in the local guide booking modal.
+
+## Why It Changed
+
+To prevent users from clicking the submit button multiple times while the booking request is being processed.
+
+## How It Works
+
+In `ExplorerHome.jsx`:
+1. Updated the booking submission logic to update `bookingStatus` state to `'submitting'` right before the API call.
+2. If the API request succeeds, `bookingStatus` transitions to `'success'` (which shows the success message). If it fails, it resets to `'idle'`.
+3. The "Submit Request" button is now disabled when `bookingStatus === 'submitting'` and changes its label to "Submitting...".
+
+## What Changed
+
+Added denormalized fields (`userName`, `userSurname`, `tourName`, `tourLocation`) to all booking API requests in the frontend.
+
+## Why It Changed
+
+The backend database schema for the `Bookings` table was updated to include these fields so that bookings can be queried and displayed more efficiently without relying on extensive table joins.
+
+## How It Works
+
+Updated `axios.post('/api/bookings')` calls across the application:
+1. **ExplorePage.jsx**: Added fields to the `handleBookTour` function, modifying it to accept the `tour` object and extracting user data from `localStorage`.
+2. **ExplorerHome.jsx**: Added fields to the booking modal submit handler by fetching user information from `localStorage` and retrieving tour details from `selectedTour`.
+3. **GuideDetail.jsx**: Added fields to the standard booking modal using user data from `localStorage` and `selectedTour` properties.
