@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SpotDetail from './SpotDetail';
+import { MapPinIcon } from '../icons/AdminIcons.jsx';
 
 export default function ReportedSpots() {
   const [spots, setSpots] = useState([]);
@@ -60,7 +61,7 @@ export default function ReportedSpots() {
   if (spots.length === 0) {
     return (
       <div className="admin-empty-state">
-        <span className="empty-icon">📍</span>
+        <span className="empty-icon"><MapPinIcon size={44} /></span>
         <p>No reported spots.</p>
       </div>
     );

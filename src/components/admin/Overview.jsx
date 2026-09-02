@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import {
+  UserIcon,
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  StarIcon,
+  TrophyIcon,
+} from '../icons/AdminIcons.jsx';
 
 export default function Overview() {
   const [newProfiles, setNewProfiles] = useState(null);
@@ -41,12 +48,15 @@ export default function Overview() {
     }
   };
 
+  // `accent` tints the icon via CSS `color`, which the SVG picks up through
+  // `currentColor`. Muted tones keep the cards scannable without clashing with
+  // the green project palette.
   const reportCards = [
-    { key: 'new-profiles', title: 'Number of New Profiles Created', icon: '👤' },
-    { key: 'reported-accounts', title: 'Reported Accounts', icon: '⚠️' },
-    { key: 'active-users', title: 'Number of Active Users', icon: '✅' },
-    { key: 'top-experiences', title: 'Top Rated Experiences', icon: '⭐' },
-    { key: 'top-guides', title: 'Top Rated Local Guides', icon: '🏆' },
+    { key: 'new-profiles', title: 'Number of New Profiles Created', Icon: UserIcon, accent: '#3d5a3e' },
+    { key: 'reported-accounts', title: 'Reported Accounts', Icon: AlertTriangleIcon, accent: '#b06f1a' },
+    { key: 'active-users', title: 'Number of Active Users', Icon: CheckCircleIcon, accent: '#2e7d32' },
+    { key: 'top-experiences', title: 'Top Rated Experiences', Icon: StarIcon, accent: '#a67c1a' },
+    { key: 'top-guides', title: 'Top Rated Local Guides', Icon: TrophyIcon, accent: '#8a6a34' },
   ];
 
   const renderReportResult = () => {
@@ -148,7 +158,9 @@ export default function Overview() {
             className={`report-card ${activeReport === card.key ? 'active' : ''}`}
             onClick={() => generateReport(card.key)}
           >
-            <span className="report-card-icon">{card.icon}</span>
+            <span className="report-card-icon" style={{ color: card.accent }}>
+              <card.Icon size={28} />
+            </span>
             <span className="report-card-title">{card.title}</span>
           </button>
         ))}
