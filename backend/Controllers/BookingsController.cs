@@ -17,10 +17,12 @@ namespace backend.Controllers
         private const int MaxOneOnOneGuests = 4;
 
         private readonly WanderSyncDbContext _context;
+        private readonly ILogger<BookingsController> _logger;
 
-        public BookingsController(WanderSyncDbContext context)
+        public BookingsController(WanderSyncDbContext context, ILogger<BookingsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/bookings/user/5
@@ -94,10 +96,15 @@ namespace backend.Controllers
                 return Conflict(new { message = "You have already booked this tour." });
 
             // Check capacity - sum active bookings guests for this tour
+            // Guest count defaults to 1, so the capacity check has to use the same
+            // effective value that gets saved — otherwise an omitted numberOfGuests
+            // is counted as 0 here and lets a full tour take one more booking.
+            var guests = request.NumberOfGuests > 0 ? request.NumberOfGuests : 1;
+
             var currentBookings = await _context.Bookings
                 .Where(b => b.tourID == request.TourID && b.status.ToLower() == "accepted")
                 .SumAsync(b => (int?)b.numberOfGuests) ?? 0;
-            if (currentBookings + request.NumberOfGuests > tour.MaxPeople)
+            if (currentBookings + guests > tour.MaxPeople)
                 return BadRequest(new { message = "Not enough spots remaining on this tour." });
 
             var booking = new Booking
@@ -105,19 +112,29 @@ namespace backend.Controllers
                 userID = request.UserID,
                 tourID = request.TourID,
                 curatedSpotID = 0,
-                bookingType = string.IsNullOrEmpty(request.BookingType) ? "Tour" : request.BookingType,
+                bookingType = string.IsNullOrEmpty(request.BookingType) ? BookingTypes.Tour : request.BookingType,
                 status = "Pending", // Pending for guide approval
                 bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow,
                 timeOfBooking = request.TimeOfBooking ?? string.Empty,
-                numberOfGuests = request.NumberOfGuests > 0 ? request.NumberOfGuests : 1
+                numberOfGuests = guests
             };
 
             try
             {
                 _context.Bookings.Add(booking);
                 await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save booking for user {UserID} on tour {TourID}.", request.UserID, request.TourID);
+                return StatusCode(500, new { message = "Failed to create booking. Please try again." });
+            }
 
-                // Notify the guide
+            // The booking is committed at this point, so a notification problem must not be
+            // reported back as a failed booking — the explorer would retry and hit the
+            // "already booked" conflict on a booking that actually went through.
+            try
+            {
                 var notification = new Notification
                 {
                     UserID = tour.GuideId,
@@ -129,19 +146,19 @@ namespace backend.Controllers
                 };
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
-
-                return Ok(new
-                {
-                    message = "Booking requested successfully! Waiting for guide to confirm.",
-                    bookingId = booking.bookingID,
-                    tourTitle = tour.Title,
-                    date = booking.bookingDate
-                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Failed to create booking. Please try again." });
+                _logger.LogError(ex, "Booking {BookingID} was created but notifying guide {GuideID} failed.", booking.bookingID, tour.GuideId);
             }
+
+            return Ok(new
+            {
+                message = "Booking requested successfully! Waiting for guide to confirm.",
+                bookingId = booking.bookingID,
+                tourTitle = tour.Title,
+                date = booking.bookingDate
+            });
         }
 
         /// <summary>
@@ -444,9 +461,20 @@ namespace backend.Controllers
         public int UserID { get; set; }
         public int TourID { get; set; }
         public DateTime BookingDate { get; set; }
-        public string TimeOfBooking { get; set; }
+
+        /// <summary>
+        /// Optional start time. Must stay nullable: a non-nullable string is treated as
+        /// implicitly required by [ApiController] model validation, which would reject
+        /// callers that leave the time to the tour's own schedule with a 400 before
+        /// <see cref="BookingsController.CreateBooking"/> can apply its default.
+        /// </summary>
+        public string? TimeOfBooking { get; set; }
+
+        /// <summary>Optional party size. Defaults to 1 guest.</summary>
         public int NumberOfGuests { get; set; }
-        public string BookingType { get; set; }
+
+        /// <summary>Optional. Defaults to <see cref="BookingTypes.Tour"/>. Nullable for the same reason as <see cref="TimeOfBooking"/>.</summary>
+        public string? BookingType { get; set; }
     }
 
     /// <summary>Request for a private experience with a specific guide (no existing tour).</summary>

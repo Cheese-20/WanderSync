@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
@@ -14,6 +14,25 @@ const ACTIVITY_TYPES = [
   { label: '🏨 Accommodation', value: 'Accommodation' },
   { label: '📸 Photo Stop', value: 'Photo Stop' },
 ];
+
+// Glyphs for the booking result dialog, one per tone.
+const BOOKING_FEEDBACK_ICONS = {
+  success: <polyline points="20 6 9 17 4 12"></polyline>,
+  notice: (
+    <>
+      <circle cx="12" cy="12" r="9"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </>
+  ),
+  error: (
+    <>
+      <circle cx="12" cy="12" r="9"></circle>
+      <line x1="15" y1="9" x2="9" y2="15"></line>
+      <line x1="9" y1="9" x2="15" y2="15"></line>
+    </>
+  )
+};
 
 export default function ExplorePage() {
   const [query, setQuery] = useState('');
@@ -38,6 +57,15 @@ export default function ExplorePage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   
+  // Booking feedback replaces window.alert so the outcome is shown in the app's own
+  // styling. Shape: { tone: 'success' | 'notice' | 'error', title, message, tourTitle }.
+  const [bookingFeedback, setBookingFeedback] = useState(null);
+  const [bookingTourId, setBookingTourId] = useState(null);
+  const bookingFeedbackBtnRef = useRef(null);
+
+  // Tour IDs whose cover photo failed to load, so the card can fall back to the label.
+  const [brokenImages, setBrokenImages] = useState({});
+
   const [userRole, setUserRole] = useState('');
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const navigate = useNavigate();
@@ -51,6 +79,20 @@ export default function ExplorePage() {
       setLoggedInUserId(user.id || user.userID);
     }
   }, []);
+
+  // Move focus into the dialog and allow Escape to dismiss it, so the replacement
+  // behaves like the native alert it took over from.
+  useEffect(() => {
+    if (!bookingFeedback) return;
+
+    bookingFeedbackBtnRef.current?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setBookingFeedback(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [bookingFeedback]);
 
   const handleSpotSubmit = async (e) => {
     e.preventDefault();
@@ -133,6 +175,21 @@ export default function ExplorePage() {
   // The tours endpoint returns `guideID`; tolerate either casing.
   const getTourGuideId = (tour) => tour.guideID ?? tour.guideId;
 
+  // Cover photo for a tour card. A pictureURL is either a single URL, a base64 data
+  // URL from the create-experience upload, or a JSON array (the shape posts use) —
+  // handle all three, matching how Profile/MyActivities read the same field.
+  const getTourImage = (tour) => {
+    const raw = tour.pictureURL || tour.imageURL;
+    if (!raw) return null;
+    if (!raw.startsWith('[')) return raw;
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed[0] || null : raw;
+    } catch {
+      return raw;
+    }
+  };
+
   // While a search is active, only show experiences that belong to a matching guide.
   // Guides are already ranked, so experiences follow that same order.
   const visibleTours = useMemo(() => {
@@ -173,27 +230,74 @@ export default function ExplorePage() {
 
   const handleViewGuide = (guideId) => navigate(`/guide/${guideId}`);
 
+  // The API reports its own failures as { message }, but ASP.NET model-validation
+  // failures come back as { title, errors } instead. Reading only `message` turned
+  // those into a generic "Failed to book", which hid the real reason.
+  const getBookingErrorMessage = (err) => {
+    const data = err.response?.data;
+    if (!data) return 'Failed to book. Please try again.';
+    if (data.message) return data.message;
+    if (data.errors) {
+      const details = Object.values(data.errors).flat().join(' ');
+      if (details) return details;
+    }
+    return data.title || 'Failed to book. Please try again.';
+  };
+
+  // A 409/400 is a normal outcome the explorer can act on ("already booked", "tour is
+  // full"), so it is shown as a notice rather than styled like a system failure.
+  const getBookingFeedbackTone = (status) => {
+    if (status === 409) return 'notice';
+    if (status === 400 || status === 404) return 'notice';
+    return 'error';
+  };
+
   const handleBookTour = async (tour, e) => {
     e.stopPropagation();
     if (!loggedInUserId) {
       navigate('/login', { state: { message: 'Please login to book a tour' } });
       return;
     }
+
+    const tourId = tour.tourId || tour.tourID;
+    if (bookingTourId) return; // a request is already in flight
+
+    setBookingTourId(tourId);
     try {
       const userJson = localStorage.getItem('user');
       const userObj = userJson ? JSON.parse(userJson) : {};
+      const tourDate = tour.date ? new Date(tour.date) : null;
       const res = await axios.post('/api/bookings', {
         userID: loggedInUserId,
-        tourID: tour.tourId || tour.tourID,
-        bookingDate: new Date().toISOString(),
+        tourID: tourId,
+        // A booking is for the tour's scheduled slot, not for the moment the button was clicked.
+        bookingDate: tour.date || new Date().toISOString(),
+        timeOfBooking: tourDate
+          ? tourDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : '',
+        numberOfGuests: 1,
+        bookingType: 'Standard',
         userName: userObj.name || '',
         userSurname: userObj.surname || '',
         tourName: tour.title || tour.name || '',
         tourLocation: tour.location || ''
       });
-      alert(res.data.message || 'Booking request submitted successfully!');
+      setBookingFeedback({
+        tone: 'success',
+        title: 'Request sent',
+        message: res.data?.message || 'Booking request submitted successfully!',
+        tourTitle: tour.title || tour.name || ''
+      });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to book. Please try again.');
+      const tone = getBookingFeedbackTone(err.response?.status);
+      setBookingFeedback({
+        tone,
+        title: tone === 'notice' ? 'Not so fast' : 'Booking failed',
+        message: getBookingErrorMessage(err),
+        tourTitle: tour.title || tour.name || ''
+      });
+    } finally {
+      setBookingTourId(null);
     }
   };
 
@@ -216,6 +320,52 @@ export default function ExplorePage() {
   return (
     <>
       <NavBar />
+
+      {bookingFeedback && (
+        <div className="booking-feedback-overlay" onClick={() => setBookingFeedback(null)}>
+          <div
+            className={`booking-feedback-card booking-feedback-${bookingFeedback.tone}`}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="booking-feedback-title"
+            aria-describedby="booking-feedback-message"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="booking-feedback-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                {BOOKING_FEEDBACK_ICONS[bookingFeedback.tone]}
+              </svg>
+            </div>
+
+            <h3 className="booking-feedback-title" id="booking-feedback-title">{bookingFeedback.title}</h3>
+            {bookingFeedback.tourTitle && (
+              <p className="booking-feedback-tour">{bookingFeedback.tourTitle}</p>
+            )}
+            <p className="booking-feedback-message" id="booking-feedback-message">{bookingFeedback.message}</p>
+
+            <div className="booking-feedback-actions">
+              {bookingFeedback.tone === 'success' && (
+                <button
+                  type="button"
+                  className="booking-feedback-btn-secondary"
+                  onClick={() => { setBookingFeedback(null); navigate('/my-activities'); }}
+                >
+                  View my activities
+                </button>
+              )}
+              <button
+                type="button"
+                className="booking-feedback-btn"
+                ref={bookingFeedbackBtnRef}
+                onClick={() => setBookingFeedback(null)}
+              >
+                {bookingFeedback.tone === 'success' ? 'Done' : 'Got it'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="explore-page">
       <section className="explore-search-section">
         <form className="explore-search-form" onSubmit={handleSearch}>
@@ -399,7 +549,19 @@ export default function ExplorePage() {
                   {(showAllTours ? visibleTours : visibleTours.slice(0, 3)).map((tour) => (
                     <div key={tour.tourId} className="experience-card" onClick={() => handleViewGuide(getTourGuideId(tour))}>
                       <div className="experience-card-image">
-                        <div className="experience-image-placeholder"><span>{tour.type || 'Tour'}</span></div>
+                        {getTourImage(tour) && !brokenImages[tour.tourId] ? (
+                          <img
+                            className="experience-image"
+                            src={getTourImage(tour)}
+                            alt={tour.title || 'Experience'}
+                            loading="lazy"
+                            // Some stored values are page links rather than direct image
+                            // URLs, so fall back to the type label if the load fails.
+                            onError={() => setBrokenImages(prev => ({ ...prev, [tour.tourId]: true }))}
+                          />
+                        ) : (
+                          <div className="experience-image-placeholder"><span>{tour.type || 'Tour'}</span></div>
+                        )}
                         <span className="experience-verified-badge">Verified</span>
                       </div>
                       <div className="experience-card-body">
@@ -407,7 +569,16 @@ export default function ExplorePage() {
                         <p className="experience-description">{tour.description}</p>
                         <p className="experience-guide-name"><span className="guide-dot"></span> {tour.guideName}</p>
                         <div className="experience-meta"><span>{new Date(tour.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span><span>Max {tour.maxPeople} people</span></div>
-                        <div className="experience-card-footer"><span className="experience-price">R--/person</span><button className="experience-book-btn" onClick={(e) => handleBookTour(tour, e)}>Book</button></div>
+                        <div className="experience-card-footer">
+                          <span className="experience-price">R--/person</span>
+                          <button
+                            className="experience-book-btn"
+                            onClick={(e) => handleBookTour(tour, e)}
+                            disabled={bookingTourId !== null}
+                          >
+                            {bookingTourId === (tour.tourId || tour.tourID) ? 'Booking...' : 'Book'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
