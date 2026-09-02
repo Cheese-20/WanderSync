@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -115,6 +115,178 @@ namespace backend.Controllers
                 .ToListAsync();
 
             return Ok(new { reportType = "Top Rated Local Guides", data = topGuides });
+        }
+
+        // ========== ANALYTICS REPORTS ==========
+        //
+        // The three reports below are written as raw SQL rather than LINQ because they rely
+        // on window functions (RANK, LAG, DENSE_RANK, running totals), which EF Core cannot
+        // translate. They are deliberately kept in this controller instead of being
+        // registered as keyless entity types on WanderSyncDbContext, so that a merge which
+        // rewrites the DbContext cannot silently break them.
+        //
+        // No user-supplied string ever reaches these queries. The only inputs are integers,
+        // which are parsed and clamped in C# before being interpolated. MySQL drivers are
+        // inconsistent about accepting placeholders inside LIMIT and INTERVAL, so clamped
+        // integers are substituted directly.
+
+        /// <summary>
+        /// Guide performance leaderboard.
+        ///
+        /// Replaces the previous "top guides" report, which returned an arbitrary ten guides
+        /// with no ordering and never read the Reviews table despite being labelled
+        /// "Top Rated".
+        ///
+        /// Ranking uses a Bayesian (shrunk) mean rather than a raw average. A guide with a
+        /// single five star review would otherwise outrank a guide averaging 4.6 over thirty
+        /// reviews. Each guide's average is pulled toward the platform mean in proportion to
+        /// how few reviews they have, using a confidence constant of 3.
+        /// </summary>
+        [HttpGet("reports/guide-leaderboard")]
+        public async Task<IActionResult> GetGuideLeaderboard([FromQuery] int limit = 20)
+        {
+            var take = Math.Clamp(limit, 1, 100);
+            const decimal confidence = 3m; // reviews needed before a guide's own average dominates
+
+            var sql = $@"
+WITH review_stats AS (
+    SELECT guideID,
+           COUNT(*)                                     AS reviewCount,
+           AVG(rating)                                  AS avgRating,
+           SUM(CASE WHEN rating >= 4 THEN 1 ELSE 0 END) AS positiveReviews,
+           MAX(sentAt)                                  AS lastReviewAt
+    FROM Reviews
+    GROUP BY guideID
+),
+tour_stats AS (
+    SELECT guideID,
+           COUNT(*)       AS tourCount,
+           AVG(price)     AS avgPrice,
+           SUM(maxPeople) AS totalCapacity
+    FROM Tours
+    GROUP BY guideID
+),
+booking_stats AS (
+    SELECT t.guideID,
+           COUNT(b.bookingID)                           AS bookingCount,
+           COUNT(DISTINCT b.userID)                     AS uniqueTravellers,
+           COALESCE(SUM(b.numberOfGuests), 0)           AS totalGuests,
+           COALESCE(SUM(b.numberOfGuests * t.price), 0) AS grossRevenue,
+           -- Real status values in this database are Accepted, Confirmed, Pending,
+           -- Declined and Cancelled. Declined and Cancelled both count as lost business.
+           SUM(CASE WHEN LOWER(b.status) IN ('accepted', 'confirmed')
+                    THEN 1 ELSE 0 END)                  AS acceptedBookings,
+           SUM(CASE WHEN LOWER(b.status) = 'pending'
+                    THEN 1 ELSE 0 END)                  AS pendingBookings,
+           SUM(CASE WHEN LOWER(b.status) IN ('cancelled', 'declined')
+                    THEN 1 ELSE 0 END)                  AS lostBookings,
+           -- Revenue actually realised, as opposed to gross demand.
+           COALESCE(SUM(CASE WHEN LOWER(b.status) IN ('accepted', 'confirmed')
+                             THEN b.numberOfGuests * t.price ELSE 0 END), 0)
+                                                        AS confirmedRevenue,
+           MAX(b.bookingDate)                           AS lastBookingAt
+    FROM Bookings b
+    JOIN Tours t ON t.tourID = b.tourID
+    GROUP BY t.guideID
+),
+global_mean AS (
+    SELECT COALESCE(AVG(rating), 0) AS meanRating FROM Reviews
+),
+metrics AS (
+    SELECT u.userID, u.firstName, u.lastName, u.email, u.accountStatus,
+           p.location,
+           COALESCE(ts.tourCount, 0)              AS tourCount,
+           ROUND(COALESCE(ts.avgPrice, 0), 2)     AS avgPrice,
+           COALESCE(ts.totalCapacity, 0)          AS totalCapacity,
+           COALESCE(bs.bookingCount, 0)           AS bookingCount,
+           COALESCE(bs.uniqueTravellers, 0)       AS uniqueTravellers,
+           COALESCE(bs.totalGuests, 0)            AS totalGuests,
+           ROUND(COALESCE(bs.grossRevenue, 0), 2) AS grossRevenue,
+           ROUND(COALESCE(bs.confirmedRevenue, 0), 2) AS confirmedRevenue,
+           COALESCE(bs.acceptedBookings, 0)       AS acceptedBookings,
+           COALESCE(bs.pendingBookings, 0)        AS pendingBookings,
+           COALESCE(bs.lostBookings, 0)           AS lostBookings,
+           ROUND(100.0 * COALESCE(bs.acceptedBookings, 0)
+                 / NULLIF(bs.bookingCount, 0), 1) AS acceptanceRate,
+           ROUND(100.0 * COALESCE(bs.lostBookings, 0)
+                 / NULLIF(bs.bookingCount, 0), 1) AS lostRate,
+           bs.lastBookingAt,
+           COALESCE(rs.reviewCount, 0)            AS reviewCount,
+           ROUND(rs.avgRating, 2)                 AS avgRating,
+           COALESCE(rs.positiveReviews, 0)        AS positiveReviews,
+           rs.lastReviewAt,
+           ROUND(
+                 (COALESCE(rs.reviewCount, 0) / (COALESCE(rs.reviewCount, 0) + {confidence}))
+                     * COALESCE(rs.avgRating, gm.meanRating)
+               + ({confidence} / (COALESCE(rs.reviewCount, 0) + {confidence}))
+                     * gm.meanRating
+           , 3)                                   AS weightedRating,
+           (SELECT COUNT(*) FROM Reports r
+             WHERE r.reportedUserID = u.userID
+               AND LOWER(r.status) = 'pending')    AS pendingReports
+    FROM User u
+    LEFT JOIN Profile      p  ON p.userID   = u.userID
+    LEFT JOIN review_stats  rs ON rs.guideID = u.userID
+    LEFT JOIN tour_stats    ts ON ts.guideID = u.userID
+    LEFT JOIN booking_stats bs ON bs.guideID = u.userID
+    CROSS JOIN global_mean gm
+    WHERE LOWER(u.role) = 'guide'
+)
+SELECT m.*,
+       RANK() OVER (ORDER BY m.weightedRating DESC,
+                             m.grossRevenue   DESC,
+                             m.totalGuests    DESC)                       AS rankPosition,
+       ROUND(100.0 * m.grossRevenue
+             / NULLIF(SUM(m.grossRevenue) OVER (), 0), 1)                 AS revenueSharePct,
+       ROUND(AVG(m.weightedRating) OVER (), 3)                            AS platformAvgRating,
+       SUM(m.bookingCount) OVER ()                                        AS platformBookings
+FROM metrics m
+ORDER BY rankPosition, m.lastName
+LIMIT {take};";
+
+            var data = await QueryRawAsync(sql);
+
+            return Ok(new
+            {
+                reportType = "Guide Performance Leaderboard",
+                method = "Bayesian weighted rating (confidence constant 3) ranked by RANK() window function",
+                count = data.Count,
+                data
+            });
+        }
+
+        /// <summary>
+        /// Executes a read-only query and returns rows as column name / value maps.
+        ///
+        /// The shape returned by the leaderboard query is wide and changes with the SQL, so
+        /// mapping it onto a fixed DTO would mean maintaining the column list in two places.
+        /// The connection belongs to the DbContext and so is deliberately not disposed here.
+        /// </summary>
+        private async Task<List<Dictionary<string, object?>>> QueryRawAsync(string sql)
+        {
+            var rows = new List<Dictionary<string, object?>>();
+            var connection = _context.Database.GetDbConnection();
+
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandTimeout = 120;
+
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var row = new Dictionary<string, object?>(reader.FieldCount);
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    var value = reader.GetValue(i);
+                    row[reader.GetName(i)] = value is DBNull ? null : value;
+                }
+                rows.Add(row);
+            }
+
+            return rows;
         }
 
         // ========== APPLICATIONS ==========

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ApplicationDetail from './ApplicationDetail';
+import { ClipboardIcon } from '../icons/AdminIcons.jsx';
 
 export default function Applications() {
   const [applications, setApplications] = useState([]);
@@ -50,7 +51,7 @@ export default function Applications() {
   if (applications.length === 0) {
     return (
       <div className="admin-empty-state">
-        <span className="empty-icon">📋</span>
+        <span className="empty-icon"><ClipboardIcon size={44} /></span>
         <p>No pending applications.</p>
       </div>
     );

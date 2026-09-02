@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReportDetail from './ReportDetail';
+import { ShieldIcon } from '../icons/AdminIcons.jsx';
 
 export default function ReportedAccounts() {
   const [reports, setReports] = useState([]);
@@ -50,7 +51,7 @@ export default function ReportedAccounts() {
   if (reports.length === 0) {
     return (
       <div className="admin-empty-state">
-        <span className="empty-icon">🛡️</span>
+        <span className="empty-icon"><ShieldIcon size={44} /></span>
         <p>No reported accounts.</p>
       </div>
     );
