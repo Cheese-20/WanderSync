@@ -168,6 +168,14 @@ namespace backend.Controllers
             // Update the user's role to Guide
             application.User.Role = "Guide";
 
+            // The Reviews table has a foreign key on guideID pointing at TravelGuide(userID),
+            // so the guide subtype row has to be created here or reviews for this guide
+            // will fail to insert later on.
+            var isAlreadyTravelGuide = await _context.TravelGuides
+                .AnyAsync(g => g.UserID == application.UserID);
+            if (!isAlreadyTravelGuide)
+                _context.TravelGuides.Add(new TravelGuide { UserID = application.UserID });
+
             // Create a notification for the applicant about their successful application
             var notification = new Notification
             {
