@@ -300,6 +300,105 @@
   margin-left: 8px;
 }
 
+/* ===== Data table =====
+   Used by the guide performance leaderboard, which returns far more columns than the
+   card and list layouts above can carry. */
+
+.report-method {
+  font-size: 0.82rem;
+  color: var(--faint);
+  font-style: italic;
+  margin: 0 0 12px 0;
+}
+
+.report-footnote {
+  margin: 14px 0 0 0;
+  padding: 12px 14px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+/* Scroll horizontally rather than squashing twelve columns on a narrow screen. */
+.admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.admin-table thead th {
+  background: var(--surface-alt);
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.3;
+}
+
+.admin-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+  vertical-align: top;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--admin-green-tint);
+}
+
+/* Tabular figures keep the numeric columns aligned as values change width. */
+.admin-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-table .rank-cell {
+  font-weight: 700;
+  color: var(--admin-green);
+}
+
+/* Secondary line inside a cell, e.g. an email beneath a name. */
+.cell-sub {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: normal;
+}
+
+/* Non-zero outstanding report count against a guide. */
+.cell-flag {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 7px;
+  background: var(--danger-tint);
+  border: 1px solid var(--danger-border);
+  border-radius: 999px;
+  color: var(--danger-dark);
+  font-weight: 700;
+}
+
 /* ========== APPLICATIONS & REPORTS LISTS ========== */
 .applications-list,
 .reports-list {
