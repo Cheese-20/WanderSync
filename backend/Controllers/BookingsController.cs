@@ -437,6 +437,51 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Booking declined successfully!" });
         }
+
+        /// <summary>
+        /// PUT: api/bookings/{id}/cancel
+        /// Allows an explorer to cancel their own booking (Pending or Accepted only).
+        /// </summary>
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelBooking(int id, [FromQuery] int userId)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
+                return NotFound(new { message = "Booking not found." });
+
+            // Ensure the booking belongs to the requesting user
+            if (booking.userID != userId)
+                return Forbid();
+
+            // Only allow cancellation of Pending or Accepted bookings
+            var cancellableStatuses = new[] { "Pending", "Accepted" };
+            if (!cancellableStatuses.Contains(booking.status, StringComparer.OrdinalIgnoreCase))
+                return BadRequest(new { message = $"Booking cannot be cancelled — current status is '{booking.status}'." });
+
+            booking.status = "Cancelled";
+            _context.Entry(booking).State = EntityState.Modified;
+
+            var tour = await _context.Tours.FindAsync(booking.tourID);
+
+            // Notify the guide that the explorer cancelled
+            if (tour != null)
+            {
+                var user = await _context.Users.FindAsync(userId);
+                var notification = new Notification
+                {
+                    UserID = tour.GuideId,
+                    Type = "BookingCancelled",
+                    Message = $"{user?.FirstName} {user?.LastName} has cancelled their booking for {tour.Title}.",
+                    RelatedEntityID = booking.bookingID,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Notifications.Add(notification);
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Booking cancelled successfully." });
+        }
     }
 
     public class CreateBookingRequest

@@ -22,6 +22,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState('info');
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -137,6 +138,25 @@ export default function Profile() {
       fetchBookings();
     }
   }, [activeTab]);
+
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    const userStr = localStorage.getItem('user');
+    const userId = userStr ? (JSON.parse(userStr).id || JSON.parse(userStr).userID) : null;
+    if (!userId) return;
+    setCancellingId(bookingId);
+    try {
+      await axios.put(`/api/bookings/${bookingId}/cancel?userId=${userId}`);
+      setBookings(prev =>
+        prev.map(b => b.bookingId === bookingId ? { ...b, status: 'Cancelled' } : b)
+      );
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to cancel booking. Please try again.';
+      alert(msg);
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const fetchProfile = async userId => {
     try {
@@ -534,9 +554,20 @@ export default function Profile() {
                             )}
                             <h4>{booking.tourTitle}</h4>
                           </div>
-                          <span className={`detailed-status status-${booking.status?.toLowerCase()}`}>
-                            {booking.status}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span className={`detailed-status status-${booking.status?.toLowerCase()}`}>
+                              {booking.status}
+                            </span>
+                            {['pending', 'accepted'].includes(booking.status?.toLowerCase()) && (
+                              <button
+                                className="btn-cancel-booking"
+                                onClick={() => handleCancelBooking(booking.bookingId)}
+                                disabled={cancellingId === booking.bookingId}
+                              >
+                                {cancellingId === booking.bookingId ? 'Cancelling...' : '✕ Cancel'}
+                              </button>
+                            )}
+                          </div>
                         </div>
                         
                         {booking.location && (

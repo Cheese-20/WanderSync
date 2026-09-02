@@ -93,6 +93,9 @@ export default function Discover() {
     <div className="discover-page">
 
       <header className="discover-hero">
+        <button className="discover-back-btn" onClick={() => navigate('/explore')}>
+          ← Back to Explore
+        </button>
         <h1>Discover Local Guides</h1>
         <p>Connect with experienced local guides who can show you the best of their area</p>
       </header>

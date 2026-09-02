@@ -1,3 +1,46 @@
+# Last Edited - Cancel Booking on Profile Page
+
+## [2026-09-01]
+- **Feature (Profile: Cancel Booking)**: Added the same cancel booking button to the Bookings tab on the Profile page.
+  - **Files modified**: `src/pages/Profile.jsx`
+  - **Why it changed**: Explorers can already cancel bookings from My Activities; the same action should be available from the Profile page Bookings tab for consistency.
+  - **How it works**: Added `cancellingId` state and `handleCancelBooking()` function (identical in behaviour to `MyActivities.jsx`) to `Profile.jsx`. The status `<span>` in each booking card is now wrapped alongside a red `✕ Cancel` pill button that appears only for `Pending` or `Accepted` bookings. Reuses the `.btn-cancel-booking` CSS class already defined in `discover.css` (which is imported by `Profile.jsx`).
+
+# Last Edited - Cancel Booking Feature
+
+## [2026-09-01]
+- **Feature (Explorer: Cancel Booking)**: Explorers can now cancel their own bookings directly from the My Activities page.
+  - **Files modified**: `backend/Controllers/BookingsController.cs`, `src/pages/MyActivities.jsx`, `src/styles/discover.css`
+  - **Why it changed**: Explorers previously had no way to withdraw from a tour or reservation they no longer wanted.
+  - **How it works**:
+    - **Backend**: Added `PUT /api/bookings/{id}/cancel?userId={userId}` endpoint in `BookingsController.cs`. It verifies the booking belongs to the requesting user, checks that the status is `Pending` or `Accepted` (already cancelled/declined bookings cannot be cancelled again), updates the status to `Cancelled`, and sends a notification to the guide.
+    - **Frontend**: Added `cancellingId` state and `handleCancelBooking()` async function to `MyActivities.jsx`. A red outlined `✕ Cancel` pill button appears next to the status badge on each Pending/Accepted booking card. Clicking triggers a browser `confirm()` dialog, then calls the API. On success, the booking status updates immediately in local state (no full page reload). The button is disabled while the request is in flight.
+    - **CSS**: Added `.btn-cancel-booking` styles to `discover.css` — a transparent pill with a red border that fills red on hover, consistent with the existing button design.
+
+# Last Edited - My Activities Back Button
+
+## [2026-09-01]
+- **UI Enhancement (My Activities Page)**: Added the same "← Back to Explore" button to the `My Activities` page header.
+  - **Files modified**: `src/pages/MyActivities.jsx`
+  - **Why it changed**: The user requested the same back-navigation button used on the Discover page to also appear on the My Activities page.
+  - **How it works**: Reused the existing `discover-back-btn` CSS class (already available via the imported `discover.css`) and the already-present `useNavigate` hook. The button calls `navigate('/explore')` on click.
+
+# Last Edited - Discover Page Back Button
+
+## [2026-09-01]
+- **UI Enhancement (Discover Page)**: Added a "← Back to Explore" button to the `Discover Local Guides` page header.
+  - **Files modified**: `src/pages/Discover.jsx`, `src/styles/discover.css`
+  - **Why it changed**: The user noticed there was no way to navigate back to the Explore page from the Discover Guides page.
+  - **How it works**: A `<button>` with the class `discover-back-btn` was added inside the `.discover-hero` header in `Discover.jsx`. It calls `navigate('/explore')` via the already-available `useNavigate` hook on click. The button is styled in `discover.css` with the WanderSync mint green brand color (`#a6d8b6`), a pill border-radius, and a hover lift animation for a premium, consistent feel.
+
+# Last Edited - Pulled Latest from Main
+
+## [2026-09-01]
+- **Repository Sync**: Executed `git pull origin main` to synchronize the `report-spot` branch with the latest changes from `main`.
+  - **Files modified**: Various files across frontend, backend, and documentation.
+  - **Why it changed**: The user requested to pull the latest changes from the main branch to stay up to date.
+  - **How it works**: A fast-forward merge was successfully completed, pulling in 31 new commits.
+
 # Last Edited - Global Image Placeholder Fallback
 
 ## [2026-08-31]
