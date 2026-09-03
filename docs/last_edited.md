@@ -1,4 +1,21 @@
+# Last Edited - Spot Verification Card Fix
+
+## [2026-09-03]
+- **Files modified**: `src/styles/dashboard.css`, `src/pages/Dashboard.jsx`
+
+### Problem
+The Approve/Reject buttons were not visible on the spot verification cards, and the submitter name showed "Unknown".
+
+### Root Causes
+1. **Buttons hidden by CSS overflow**: `.spot-card-content` had `overflow: hidden` set. When the card content (title, type, submitter info, location, description, actions) was taller than the fixed `min-height: 280px`, the bottom of the card was clipped — cutting off the Approve/Reject buttons. The buttons were always in the JSX code; they were just being hidden by CSS.
+2. **"Unknown" submitter name**: The spot in the database was submitted without a valid `submittedByUserID` (null or non-existent user), so the SQL LEFT JOIN returned null for the User row and the backend correctly falls back to `"Unknown"`. This is a data issue for that specific test spot.
+
+### Fixes
+- **`dashboard.css`**: Removed `overflow: hidden` from `.spot-card-content` and removed the fixed `min-height: 280px` from `.spot-card` so the card freely expands to fit all its content including the action buttons.
+- **`Dashboard.jsx`**: Improved submitter avatar fallback — instead of an empty grey circle, now shows the first letter of the submitter's name in green, or `?` for truly anonymous spots. The name label also changes from "Unknown User" to "Anonymous User" for better UX.
+
 # Last Edited - Guide Tour Management (Overview Tab)
+
 
 ## [2026-09-03]
 - **Files modified**: `src/components/CreateExperienceModal.jsx`, `src/pages/Dashboard.jsx`, `src/styles/dashboard.css`

@@ -313,14 +313,15 @@
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   width: 100%;
   max-width: 700px;
-  min-height: 280px;
   margin-left: auto;
   margin-right: auto;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .spot-card-img {
@@ -334,7 +335,8 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
+  min-height: 0;
 }
 
 .spot-card-header {

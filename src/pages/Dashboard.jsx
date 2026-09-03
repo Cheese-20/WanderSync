@@ -568,11 +568,13 @@ export default function Dashboard() {
                           {spot.submitterAvatar ? (
                             <img src={spot.submitterAvatar} alt="Submitter" className="spot-submitter-avatar" />
                           ) : (
-                            <div className="spot-submitter-avatar"></div>
+                            <div className="spot-submitter-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#a4ddbc', color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>
+                              {spot.submitterName && spot.submitterName !== 'Unknown' ? spot.submitterName.charAt(0).toUpperCase() : '?'}
+                            </div>
                           )}
                           <div className="spot-submitter-info">
                             <p>Submitted by</p>
-                            <h5>{spot.submitterName || 'Unknown User'}</h5>
+                            <h5>{spot.submitterName && spot.submitterName !== 'Unknown' ? spot.submitterName : 'Anonymous User'}</h5>
                           </div>
                         </div>
 
