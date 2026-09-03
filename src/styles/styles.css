@@ -413,3 +413,77 @@ button:active {
 .forgot-card .btn.transparent:hover {
   color: #1a8f66;
 }
+
+/* ── Shared Modal (used on Auth, Profile, etc.) ───────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+  animation: modal-fade-in 0.18s ease;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.status-modal {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 24px;
+  padding: 36px 28px;
+  box-shadow: 0 28px 55px rgba(15, 23, 42, 0.18);
+  text-align: center;
+  position: relative;
+  animation: modal-slide-up 0.22s ease;
+}
+
+@keyframes modal-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.status-modal .modal-logo {
+  width: 56px;
+  height: auto;
+  margin: 0 auto 18px;
+  display: block;
+}
+
+.status-modal p {
+  margin: 0 0 24px;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: #0f172a;
+}
+
+.status-modal p.modal-success {
+  color: #059669;
+  font-weight: 600;
+}
+
+.status-modal p.modal-error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.status-modal button {
+  background: #1a8f66;
+  color: #fff;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.status-modal button:hover {
+  background: #157a55;
+}

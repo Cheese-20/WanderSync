@@ -1,3 +1,83 @@
+# Last Edited - Guide Tour Management (Overview Tab)
+
+## [2026-09-03]
+- **Files modified**: `src/components/CreateExperienceModal.jsx`, `src/pages/Dashboard.jsx`, `src/styles/dashboard.css`
+
+### What changed
+
+#### `CreateExperienceModal.jsx`
+- Now accepts an optional `editTour` prop. When provided, the modal enters **Edit mode**: all fields are pre-populated from the tour object, the title changes to "Edit Experience", and the submit button sends a `PUT /api/tours/{id}` request with the full Tour model in the body.
+- In Create mode (no `editTour`), behaviour is unchanged — it sends `POST /api/tours` as before.
+- `onCreated(data, isEdit)` now receives a second boolean so the caller can distinguish create vs. edit.
+
+#### `Dashboard.jsx` — Overview tab
+- **New state**: `editingTour` (the tour being edited, or null for create), `deleteConfirm` (the tour awaiting delete confirmation), `isDeletingTour` (loading flag), `toastModal` (auto-dismissing banner).
+- **Edit button** on each experience card: opens the `CreateExperienceModal` with the tour pre-filled.
+- **Delete button** on each experience card: opens a confirmation modal showing the tour name. Clicking "Yes, Delete" calls `DELETE /api/tours/{id}`, removes the tour from local state, and shows a success or error toast. Clicking "Cancel" dismisses without action.
+- **Delete confirmation modal** uses a warning SVG icon and the same `global-loading-overlay / global-loading-popup` pattern already used for the booking-decline confirmation in this file.
+- **Toast feedback** (`exp-success-message` / `exp-error-message`) replaces the old `experienceMessage` string and handles both success and error cases.
+
+#### `dashboard.css`
+- Added `.exp-error-message` for failure feedback.
+- Added `.exp-action-btn`, `.exp-edit-btn`, `.exp-delete-btn` — pill-shaped icon buttons with hover-fill animations.
+
+# Last Edited - Delete Account Feature
+
+
+## [2026-09-03]
+- **Files modified**: `backend/Controllers/AuthController.cs`, `src/pages/Profile.jsx`
+
+### What changed
+- **Button rename**: "Delete Profile" → "Delete Account" (now styled in red for danger clarity).
+- **2-Step confirmation modal** (prevents accidental deletions):
+  1. User must enter their **current password** — verified server-side by re-hashing.
+  2. User must type the word **"DELETE"** exactly — the submit button stays disabled until both fields are filled correctly.
+  - Clicking outside the modal or pressing Cancel closes it without deleting anything.
+  - While deleting, inputs and buttons are disabled to prevent double-submission.
+- **Backend** — `DELETE /api/auth/account/{userId}` added to `AuthController`:
+  - Looks up the user, verifies the password with BCrypt, then removes the User row.
+  - Because all child tables (`Profile`, `Posts`, `Bookings`, `Matches`, `Notifications`, `Messages`, `GuideApplication`, `SpotVotes`, etc.) were created with `ON DELETE CASCADE` in `Program.cs`, removing the `User` row is sufficient to wipe all associated data in one operation.
+  - Returns `401` on wrong password, `404` if account not found, `500` on unexpected error — each with a descriptive message shown to the user.
+- **Feedback**: On success, a green modal shows "Your account has been permanently deleted" and the user is automatically redirected to the login page after 3 seconds. On failure, a red modal shows the backend's error message.
+
+# Last Edited - Group Post Tagging & "I Was There" Feature
+
+
+## [2026-09-02]
+- **Feature: Group Post Collaboration**
+  - **Files modified**: `backend/Models/Post.cs`, `backend/Controllers/PostsController.cs`, `backend/Program.cs`, `src/components/CreatePostModal.jsx`, `src/pages/ExplorerHome.jsx`, `src/pages/GuideHome.jsx`, `src/styles/explorer.css`
+
+  ### How it works
+
+  #### Backend
+  - **`Post.cs`**: Added `TaggedUsers` (JSON array of user IDs who can co-edit) and `AlsoAttended` (JSON array of user IDs who clicked "I Was There") as string columns.
+  - **`Program.cs`**: Adds the two new columns to the `Posts` table on startup via `ALTER TABLE IF NOT EXISTS` (no migration needed).
+  - **`PostsController.cs`** — three key changes:
+    1. **`PUT /api/posts/{id}`** now checks permissions: Individual posts → author only; Group posts → author OR any tagged user. Returns `403` if unauthorised. Uses a `PostUpdateRequest` DTO that includes `userId`.
+    2. **`GET /api/posts/matches/{userId}`** — new endpoint that returns a user's accepted matches (name + avatar) for the tag picker UI.
+    3. **`PUT /api/posts/{id}/also-attended`** — lets a matched non-author user mark themselves as "I Was There" on a Group post. Validates the user is a match of the post author, prevents duplicate entries, and rejects the post author tagging themselves.
+    4. **`DELETE /api/posts/{id}`** now requires a `userId` query param and only allows the original author to delete.
+
+  #### Frontend
+  - **`CreatePostModal.jsx`**: When Group is selected and the user moves to Step 2, the modal fetches their accepted matches and displays them as selectable pill chips (avatar + name). Checked chips show a tick icon. Selected IDs are sent as `taggedUsers` in the POST/PUT payload.
+  - **`ExplorerHome.jsx` & `GuideHome.jsx`**: Post cards now show:
+    - A green strip with a users icon and tag count for Group posts with tagged users.
+    - A purple strip with an attendance count for posts with "I Was There" attendees.
+    - **Edit** button: visible to the author (any type) OR to tagged users (Group only).
+    - **Delete** button: visible to the author only.
+    - **"I Was There"** button (indigo pill): visible on Group posts to non-authors who haven't already marked themselves. Hides after clicking and updates the attendance count live.
+  - **`explorer.css`**: Added `.experience-option-btn`, `.tag-chip`, `.tag-chip-avatar`, `.post-tagged-strip`, `.post-also-attended-strip`, `.btn-i-was-there` — all using SVG icons, no emojis.
+
+# Last Edited - Registration Feedback Modals
+
+## [2026-09-02]
+- **UI Enhancement (Auth Page)**: Registration and login now show proper pop-up modals instead of inline text or raw browser-style divs.
+  - **Files modified**: `src/pages/AuthForm.jsx`, `src/styles/styles.css`
+  - **Why it changed**: The previous implementation showed registration feedback as a small coloured paragraph inside the form, and the login error used ad-hoc inline styles that didn't match the rest of the app.
+  - **How it works**:
+    - **AuthForm.jsx**: Added a `registrationModal` state `{ open, success, message }`. On successful registration it shows a green success modal and auto-dismisses after 2.5s before sliding back to the sign-in panel. On failure it shows a red error modal the user must close manually. The login error was also converted from an inline-styled div to the same `modal-overlay` + `status-modal` pattern used throughout the app (Profile, Explorer, etc.).
+    - **styles.css**: Added `.modal-overlay`, `.status-modal`, `.modal-logo`, `.modal-success`, `.modal-error` and button styles — matching the existing `profile.css` modal, but living in `styles.css` so the auth page can use them without importing an unrelated stylesheet. Added smooth `modal-fade-in` and `modal-slide-up` keyframe animations for a premium feel.
+
 # Last Edited - Cancel Booking on Profile Page
 
 ## [2026-09-01]

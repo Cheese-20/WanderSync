@@ -961,3 +961,147 @@ button:disabled {
   padding: 2px;
   background: white;
 }
+
+/* ── Experience type buttons with icons ───────────────────────────────────── */
+.experience-options {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+  justify-content: center;
+}
+
+.experience-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 28px;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  min-width: 110px;
+}
+
+.experience-option-btn:hover {
+  border-color: #a4ddbc;
+  background: #f0fdf4;
+}
+
+.experience-option-btn.selected {
+  border-color: #1a8f66;
+  background: #ecfdf5;
+  color: #1a8f66;
+  box-shadow: 0 0 0 3px rgba(26,143,102,0.12);
+}
+
+/* ── Tag picker (Group posts) ─────────────────────────────────────────────── */
+.tag-picker-group label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-picker-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #374151;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.tag-chip:hover {
+  border-color: #a4ddbc;
+  background: #f0fdf4;
+}
+
+.tag-chip.tagged {
+  border-color: #1a8f66;
+  background: #ecfdf5;
+  color: #1a8f66;
+  font-weight: 600;
+}
+
+.tag-chip-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #a4ddbc;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.tag-check {
+  display: flex;
+  align-items: center;
+  color: #1a8f66;
+}
+
+/* ── Post card social strips ──────────────────────────────────────────────── */
+.post-tagged-strip,
+.post-also-attended-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
+
+.post-tagged-strip {
+  background: #f0fdf4;
+}
+
+.post-also-attended-strip {
+  background: #eef2ff;
+}
+
+/* ── "I Was There" button ─────────────────────────────────────────────────── */
+.btn-i-was-there {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid #6366f1;
+  border-radius: 999px;
+  background: #fff;
+  color: #6366f1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.btn-i-was-there:hover {
+  background: #6366f1;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+}

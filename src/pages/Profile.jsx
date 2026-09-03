@@ -24,6 +24,14 @@ export default function Profile() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
 
+  // Delete account confirmation modal state
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    password: '',
+    confirmText: '',
+    isDeleting: false,
+  });
+
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -223,9 +231,31 @@ export default function Profile() {
     reader.readAsDataURL(file);
   };
 
-  const handleDeleteProfile = () => {
-    alert('Delete profile functionality is disabled for now.');
-  }
+  const handleDeleteAccount = async () => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
+    const userId = user.id || user.userID;
+
+    setDeleteModal(d => ({ ...d, isDeleting: true }));
+    try {
+      await axios.delete(`/api/auth/account/${userId}`, {
+        data: { password: deleteModal.password },
+      });
+      // Close the confirmation modal and show success
+      setDeleteModal({ open: false, password: '', confirmText: '', isDeleting: false });
+      setStatusModal({ open: true, success: true, message: 'Your account has been permanently deleted. You will be redirected to the login page.' });
+      // Clear session and redirect after the user acknowledges
+      setTimeout(() => {
+        clearSession();
+        navigate('/login');
+      }, 3000);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to delete account. Please try again.';
+      setDeleteModal(d => ({ ...d, isDeleting: false }));
+      setStatusModal({ open: true, success: false, message: msg });
+    }
+  };
 
   const handleLogout = () => {
     clearSession();
@@ -445,7 +475,14 @@ export default function Profile() {
               </div>
 
               <div className="actions-row">
-                <button type="button" onClick={handleDeleteProfile} className="delete button">Delete Profile</button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteModal(d => ({ ...d, open: true, password: '', confirmText: '' }))}
+                  className="delete button"
+                  style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Delete Account
+                </button>
                 <button type="submit" className="save button">Save Profile</button>
               </div>
             </form>
@@ -650,6 +687,102 @@ export default function Profile() {
               <img src={logo} alt="WanderSync logo" className="modal-logo" />
               <p className={statusModal.success ? 'modal-success' : 'modal-error'}>{statusModal.message}</p>
               <button onClick={() => setStatusModal({ ...statusModal, open: false })}>Close</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Delete Account confirmation modal ─────────────────────────── */}
+        {deleteModal.open && (
+          <div className="modal-overlay" onClick={() => !deleteModal.isDeleting && setDeleteModal(d => ({ ...d, open: false }))}>
+            <div className="status-modal" style={{ maxWidth: '460px' }} onClick={e => e.stopPropagation()}>
+              <img src={logo} alt="WanderSync logo" className="modal-logo" />
+
+              {/* Warning icon */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+
+              <h3 style={{ margin: '0 0 8px', color: '#dc2626', fontSize: '1.1rem', fontWeight: 700 }}>
+                Delete Account Permanently
+              </h3>
+              <p style={{ margin: '0 0 20px', color: '#6b7280', fontSize: '0.92rem', lineHeight: '1.55' }}>
+                This action <strong>cannot be undone</strong>. All your data — posts, bookings, matches,
+                messages, and profile — will be permanently deleted.
+              </p>
+
+              {/* Step 1: password */}
+              <div style={{ textAlign: 'left', marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Enter your password to confirm:
+                </label>
+                <input
+                  type="password"
+                  value={deleteModal.password}
+                  onChange={e => setDeleteModal(d => ({ ...d, password: e.target.value }))}
+                  placeholder="Your current password"
+                  disabled={deleteModal.isDeleting}
+                  style={{
+                    width: '100%', padding: '10px 14px', border: '1.5px solid #e5e7eb',
+                    borderRadius: '10px', fontSize: '0.92rem', outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Step 2: type DELETE */}
+              <div style={{ textAlign: 'left', marginBottom: '22px' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Type <strong style={{ color: '#dc2626' }}>DELETE</strong> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={deleteModal.confirmText}
+                  onChange={e => setDeleteModal(d => ({ ...d, confirmText: e.target.value }))}
+                  placeholder="DELETE"
+                  disabled={deleteModal.isDeleting}
+                  style={{
+                    width: '100%', padding: '10px 14px', border: '1.5px solid #e5e7eb',
+                    borderRadius: '10px', fontSize: '0.92rem', outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => setDeleteModal(d => ({ ...d, open: false }))}
+                  disabled={deleteModal.isDeleting}
+                  style={{
+                    padding: '10px 22px', borderRadius: '12px', border: '1.5px solid #e5e7eb',
+                    background: '#fff', color: '#374151', fontWeight: 600, cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={
+                    deleteModal.isDeleting ||
+                    !deleteModal.password.trim() ||
+                    deleteModal.confirmText !== 'DELETE'
+                  }
+                  style={{
+                    padding: '10px 22px', borderRadius: '12px', border: 'none',
+                    background: deleteModal.confirmText === 'DELETE' && deleteModal.password.trim()
+                      ? '#dc2626' : '#fca5a5',
+                    color: '#fff', fontWeight: 600,
+                    cursor: deleteModal.confirmText === 'DELETE' && deleteModal.password.trim()
+                      ? 'pointer' : 'not-allowed',
+                    transition: 'background 0.2s'
+                  }}
+                >
+                  {deleteModal.isDeleting ? 'Deleting...' : 'Delete Account'}
+                </button>
+              </div>
             </div>
           </div>
         )}

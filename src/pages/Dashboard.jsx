@@ -56,7 +56,10 @@ export default function Dashboard() {
   const [experiences, setExperiences] = useState([]);
   const [loadingExperiences, setLoadingExperiences] = useState(false);
   const [showCreateExperience, setShowCreateExperience] = useState(false);
-  const [experienceMessage, setExperienceMessage] = useState('');
+  const [editingTour, setEditingTour] = useState(null);          // null = create, tour = edit
+  const [deleteConfirm, setDeleteConfirm] = useState(null);      // tour to delete
+  const [isDeletingTour, setIsDeletingTour] = useState(false);
+  const [toastModal, setToastModal] = useState({ open: false, success: true, message: '' });
 
   // Stats state
   const [stats, setStats] = useState({ bookingsThisMonth: 0, averageRating: 0.0 });
@@ -103,10 +106,35 @@ export default function Dashboard() {
     }
   };
 
-  const handleExperienceCreated = data => {
-    setExperienceMessage(data?.message || 'Activity added successfully!');
+  const showToast = (success, message) => {
+    setToastModal({ open: true, success, message });
+    setTimeout(() => setToastModal(t => ({ ...t, open: false })), 4000);
+  };
+
+  const handleExperienceCreated = (data, isEdit) => {
     fetchExperiences();
-    setTimeout(() => setExperienceMessage(''), 4000);
+    showToast(true, data?.message || (isEdit ? 'Activity updated successfully!' : 'Activity added successfully!'));
+  };
+
+  const handleDeleteTour = async () => {
+    if (!deleteConfirm) return;
+    setIsDeletingTour(true);
+    try {
+      const tourId = deleteConfirm.tourId ?? deleteConfirm.tourID;
+      const res = await fetch(`/api/tours/${tourId}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setExperiences(prev => prev.filter(e => (e.tourId ?? e.tourID) !== tourId));
+        showToast(true, data.message || 'Activity deleted successfully!');
+      } else {
+        showToast(false, data.message || 'Failed to delete activity.');
+      }
+    } catch {
+      showToast(false, 'Network error. Please try again.');
+    } finally {
+      setIsDeletingTour(false);
+      setDeleteConfirm(null);
+    }
   };
 
   const fetchGuideBookings = async () => {
@@ -191,11 +219,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Create Experience Modal */}
+      {/* Create / Edit Experience Modal */}
       {showCreateExperience && (
         <CreateExperienceModal
           guideId={guideId}
-          onClose={() => setShowCreateExperience(false)}
+          editTour={editingTour}
+          onClose={() => { setShowCreateExperience(false); setEditingTour(null); }}
           onCreated={handleExperienceCreated}
         />
       )}
@@ -280,14 +309,20 @@ export default function Dashboard() {
                 <h3>My Experiences</h3>
                 <button
                   className="btn-create"
-                  onClick={() => setShowCreateExperience(true)}
+                  onClick={() => { setEditingTour(null); setShowCreateExperience(true); }}
                 >
-                  + Create Experience
+                  + New Tour
                 </button>
               </div>
 
-              {experienceMessage && (
-                <p className="exp-success-message" role="status">{experienceMessage}</p>
+              {toastModal.open && (
+                <p
+                  className={toastModal.success ? 'exp-success-message' : 'exp-error-message'}
+                  role="status"
+                  style={{ marginBottom: '12px' }}
+                >
+                  {toastModal.message}
+                </p>
               )}
 
               <div className="experience-list">
@@ -325,6 +360,35 @@ export default function Dashboard() {
                           {` \u00b7 R ${exp.price ?? 0}`}
                           {` \u00b7 max ${exp.maxPeople ?? 0}`}
                         </p>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="exp-actions">
+                        <button
+                          className="exp-action-btn exp-edit-btn"
+                          title="Edit tour"
+                          onClick={() => { setEditingTour(exp); setShowCreateExperience(true); }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                          Edit
+                        </button>
+                        <button
+                          className="exp-action-btn exp-delete-btn"
+                          title="Delete tour"
+                          onClick={() => setDeleteConfirm(exp)}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M10 11v6"/>
+                            <path d="M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                          </svg>
+                          Delete
+                        </button>
                       </div>
                     </div>
                   );
@@ -536,6 +600,57 @@ export default function Dashboard() {
         )}
 
       </div>
+
+      {/* Deleting overlay */}
+      {isDeletingTour && (
+        <div className="global-loading-overlay">
+          <div className="global-loading-popup">
+            <img src={logo} alt="WanderSync" className="brand-logo" style={{ width: '60px', height: 'auto', marginBottom: '1rem' }} />
+            <div className="global-loading-text">Deleting activity...</div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete tour confirmation */}
+      {deleteConfirm && (
+        <div className="global-loading-overlay" style={{ zIndex: 1000 }}>
+          <div className="global-loading-popup" style={{ textAlign: 'center', padding: '2rem', maxWidth: '420px' }}>
+            <img src={logo} alt="WanderSync" className="brand-logo" style={{ width: '70px', height: 'auto', marginBottom: '1.5rem' }} />
+
+            {/* Warning icon */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+
+            <h3 style={{ marginBottom: '0.75rem', color: '#1f2937' }}>Delete Tour?</h3>
+            <p style={{ color: '#4b5563', marginBottom: '1.75rem', lineHeight: '1.55' }}>
+              Are you sure you want to permanently delete{' '}
+              <strong>"{deleteConfirm.title}"</strong>? This cannot be undone and all
+              associated bookings may be affected.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button
+                className="b-btn"
+                style={{ backgroundColor: '#f1f5f9', color: '#475569' }}
+                onClick={() => setDeleteConfirm(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="b-btn b-btn-decline"
+                onClick={handleDeleteTour}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {popup && (
         <ConfirmationPopup
           type={popup.type}

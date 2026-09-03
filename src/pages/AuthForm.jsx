@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 import { setActiveMode, resolveLoginMode } from '../utils/session';
+import '../styles/styles.css';
 
 const MIN_AGE = 12;
 const MAX_AGE = 150;
@@ -63,6 +64,8 @@ function AuthForm() {
     type: '',
   });
 
+  const [registrationModal, setRegistrationModal] = useState({ open: false, success: false, message: '' });
+
   const navigate = useNavigate();
 
   const handleLoginChange = event => {
@@ -120,18 +123,18 @@ function AuthForm() {
 
     const ageError = validateAge(signupValues.age);
     if (ageError) {
-      setSignupStatus({ message: ageError, type: 'error' });
+      setRegistrationModal({ open: true, success: false, message: ageError });
       return;
     }
 
     const passwordError = validatePassword(signupValues.password);
     if (passwordError) {
-      setSignupStatus({ message: passwordError, type: 'error' });
+      setRegistrationModal({ open: true, success: false, message: passwordError });
       return;
     }
 
     if (signupValues.password !== signupValues.confirmPassword) {
-      setSignupStatus({ message: 'Passwords do not match.', type: 'error' });
+      setRegistrationModal({ open: true, success: false, message: 'Passwords do not match.' });
       return;
     }
 
@@ -147,24 +150,25 @@ function AuthForm() {
         confirmPassword: signupValues.confirmPassword
       });
 
-      setSignupStatus({ message: 'User created successfully. You may now sign in.', type: 'success' });
+      setRegistrationModal({ open: true, success: true, message: 'Account created successfully! You can now sign in.' });
 
       // Automatically slide back to the login screen after a short delay
       setTimeout(() => {
+        setRegistrationModal({ open: false, success: true, message: '' });
         setIsSignUpActive(false);
-      }, 1500);
+      }, 2500);
 
     } catch (error) {
       // The API returns plain strings for registration errors, but guard against
       // an object body so we never try to render one.
       const data = error.response?.data;
-      let errorMsg = 'An error occurred during registration.';
+      let errorMsg = 'An error occurred during registration. Please try again.';
       if (typeof data === 'string' && data.trim()) {
         errorMsg = data;
       } else if (data?.message) {
         errorMsg = data.message;
       }
-      setSignupStatus({ message: errorMsg, type: 'error' });
+      setRegistrationModal({ open: true, success: false, message: errorMsg });
     }
   };
 
@@ -312,11 +316,6 @@ function AuthForm() {
               />
 
               <button type="submit" className="btn">Sign Up</button>
-              {signupStatus.message && (
-                <p className={`signup-status ${signupStatus.type}`}>
-                  {signupStatus.message}
-                </p>
-              )}
             </form>
           </div>
 
@@ -341,22 +340,26 @@ function AuthForm() {
         </div>
       </div>
 
+      {/* Login error modal */}
       {loginError && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999,
-          display: 'flex', justifyContent: 'center', alignItems: 'center'
-        }}>
-          <div style={{
-            backgroundColor: 'white', padding: '30px', borderRadius: '10px',
-            maxWidth: '400px', width: '90%', textAlign: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-          }}>
-            <h3 style={{ marginBottom: '15px', color: '#333' }}>Login Failed</h3>
-            <p style={{ marginBottom: '25px', color: '#666', lineHeight: '1.5' }}>{loginError}</p>
-            <button className="btn solid" onClick={() => setLoginError('')} style={{ margin: '0 auto', display: 'block' }}>
-              Close
-            </button>
+        <div className="modal-overlay" onClick={() => setLoginError('')}>
+          <div className="status-modal" onClick={e => e.stopPropagation()}>
+            <img src={logo} alt="WanderSync logo" className="modal-logo" />
+            <p className="modal-error">{loginError}</p>
+            <button onClick={() => setLoginError('')}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Registration success / failure modal */}
+      {registrationModal.open && (
+        <div className="modal-overlay" onClick={() => setRegistrationModal({ ...registrationModal, open: false })}>
+          <div className="status-modal" onClick={e => e.stopPropagation()}>
+            <img src={logo} alt="WanderSync logo" className="modal-logo" />
+            <p className={registrationModal.success ? 'modal-success' : 'modal-error'}>
+              {registrationModal.message}
+            </p>
+            <button onClick={() => setRegistrationModal({ ...registrationModal, open: false })}>Close</button>
           </div>
         </div>
       )}
