@@ -36,5 +36,19 @@ namespace backend.Models
         [Column("userSurname")]
         [MaxLength(100)]
         public string? UserSurname { get; set; }
+
+        /// <summary>
+        /// JSON array of user IDs who are tagged as co-contributors on a Group post.
+        /// e.g. "[1, 5, 12]". Tagged users may edit this post.
+        /// </summary>
+        [Column("taggedUsers")]
+        public string? TaggedUsers { get; set; }
+
+        /// <summary>
+        /// JSON array of user IDs who clicked "I Was There" on a Group post.
+        /// e.g. "[3, 7]". These users attended but were not the original poster.
+        /// </summary>
+        [Column("alsoAttended")]
+        public string? AlsoAttended { get; set; }
     }
 }

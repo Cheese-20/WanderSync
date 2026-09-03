@@ -146,7 +146,7 @@ export default function GuideHome() {
   const handleDeleteClick = async (post) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       try {
-        const response = await fetch(`http://localhost:5200/api/posts/${post.postID}`, {
+        const response = await fetch(`http://localhost:5200/api/posts/${post.postID}?userId=${loggedInUserId}`, {
           method: 'DELETE',
         });
         if (response.ok) {
@@ -159,6 +159,27 @@ export default function GuideHome() {
         console.error(err);
         alert('Network error. Is the backend running?');
       }
+    }
+  };
+
+  const handleIWasThere = async (post) => {
+    try {
+      const res = await fetch(`http://localhost:5200/api/posts/${post.postID}/also-attended`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userID: loggedInUserId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(posts.map(p =>
+          p.postID === post.postID ? { ...p, alsoAttended: data.alsoAttended } : p
+        ));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.message || 'Could not mark attendance.');
+      }
+    } catch (e) {
+      alert('Network error.');
     }
   };
 
@@ -425,24 +446,87 @@ export default function GuideHome() {
                 );
               })()}
 
-              <div className="post-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-                {loggedInUserId === post.userID && (
-                  <>
-                    <span
-                      className="action-icon edit-icon"
-                      onClick={() => handleEditClick(post)}
-                      style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '0.9rem', color: '#007bff' }}
-                    >
-                      Edit
-                    </span>
-                    <span
-                      className="action-icon delete-icon"
-                      onClick={() => handleDeleteClick(post)}
-                      style={{ cursor: 'pointer', fontSize: '0.9rem', color: '#dc3545' }}
-                    >
-                      Delete
-                    </span>
-                  </>
+              {/* Tagged crew chips */}
+              {post.experienceType === 'Group' && post.taggedUsers && (() => {
+                let ids = [];
+                try { ids = JSON.parse(post.taggedUsers); } catch {}
+                if (!ids.length) return null;
+                return (
+                  <div className="post-tagged-strip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1a8f66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span style={{ fontSize: '0.78rem', color: '#555' }}>Tagged: {ids.length} travel crew member{ids.length > 1 ? 's' : ''}</span>
+                  </div>
+                );
+              })()}
+
+              {/* Also attended strip */}
+              {post.experienceType === 'Group' && post.alsoAttended && (() => {
+                let ids = [];
+                try { ids = JSON.parse(post.alsoAttended); } catch {}
+                if (!ids.length) return null;
+                return (
+                  <div className="post-also-attended-strip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                    </svg>
+                    <span style={{ fontSize: '0.78rem', color: '#6366f1' }}>{ids.length} person{ids.length > 1 ? 's' : ''} also attended</span>
+                  </div>
+                );
+              })()}
+
+              <div className="post-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '10px', flexWrap: 'wrap' }}>
+                {/* I Was There */}
+                {post.experienceType === 'Group' &&
+                  Number(loggedInUserId) !== Number(post.userID) &&
+                  !(() => { try { return JSON.parse(post.alsoAttended || '[]').includes(Number(loggedInUserId)); } catch { return false; } })() && (
+                  <button className="btn-i-was-there" onClick={() => handleIWasThere(post)}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    I Was There
+                  </button>
+                )}
+
+                {/* Edit — author or tagged */}
+                {(Number(loggedInUserId) === Number(post.userID) ||
+                  (post.experienceType === 'Group' && (() => {
+                    try { return JSON.parse(post.taggedUsers || '[]').includes(Number(loggedInUserId)); } catch { return false; }
+                  })())) && (
+                  <span
+                    className="action-icon edit-icon"
+                    onClick={() => handleEditClick(post)}
+                    style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '0.9rem', color: '#007bff', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit
+                  </span>
+                )}
+
+                {/* Delete — author only */}
+                {Number(loggedInUserId) === Number(post.userID) && (
+                  <span
+                    className="action-icon delete-icon"
+                    onClick={() => handleDeleteClick(post)}
+                    style={{ cursor: 'pointer', fontSize: '0.9rem', color: '#dc3545', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14H6L5 6"/>
+                      <path d="M10 11v6"/>
+                      <path d="M14 11v6"/>
+                      <path d="M9 6V4h6v2"/>
+                    </svg>
+                    Delete
+                  </span>
                 )}
               </div>
             </div>
