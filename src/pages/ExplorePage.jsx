@@ -380,8 +380,7 @@ export default function ExplorePage() {
       </section>
 
       <header className="explore-hero">
-        <h1>Explore with Verified Guides</h1>
-        <p>Book authentic experiences led by trusted locals. Every guide is verified and reviewed.</p>
+
         {loggedInUserId && (
           <button className="submit-spot-btn" style={{ marginTop: '15px' }} onClick={() => setShowModal(true)}>
             ✨ Submit New Spot

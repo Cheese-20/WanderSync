@@ -555,6 +555,20 @@ namespace backend.Controllers
                 var reviews = await _context.GuideRatings
                     .Where(r => r.GuideId == guideId)
                     .OrderByDescending(r => r.CreatedAt)
+                    .Select(r => new
+                    {
+                        r.RatingId,
+                        r.UserId,
+                        r.GuideId,
+                        r.Score,
+                        r.Comment,
+                        r.CreatedAt,
+                        r.GuideName,
+                        r.GuideSurname,
+                        r.ReviewerName,
+                        r.ReviewerSurname,
+                        ReviewerProfilePicture = _context.Profiles.Where(p => p.UserId == r.UserId).Select(p => p.ProfilePictureLink).FirstOrDefault()
+                    })
                     .ToListAsync();
 
                 return Ok(reviews);

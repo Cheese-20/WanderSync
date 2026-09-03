@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/discover.css';
+import NavBar from '../components/NavBar';
 
 export default function Discover() {
   const [guides, setGuides] = useState([]);
@@ -91,6 +92,7 @@ export default function Discover() {
 
   return (
     <div className="discover-page">
+      <NavBar />
 
       <header className="discover-hero">
         <h1>Discover Local Guides</h1>

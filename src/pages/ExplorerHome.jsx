@@ -310,18 +310,29 @@ export default function ExplorerHome() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     <span>{tour.confirmedBookingsCount || 0}/{tour.maxPeople} going</span>
                   </div>
-                  <button 
-                    className="mint-btn" 
-                    disabled={requestedTourIds.includes(tour.tourId || tour.tourID)}
-                    style={{ 
-                      backgroundColor: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#d3d3d3' : '',
-                      color: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#888' : '',
-                      cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' 
-                    }}
-                    onClick={() => { setSelectedTour(tour); setBookingStatus('idle'); setGuestCount(1); setIsBookingModalOpen(true); }}
-                  >
-                    {requestedTourIds.includes(tour.tourId || tour.tourID) ? 'Requested' : 'Join'}
-                  </button>
+                  {(() => {
+                    const isRequested = requestedTourIds.includes(tour.tourId || tour.tourID);
+                    const isFull = (tour.confirmedBookingsCount || 0) >= tour.maxPeople;
+                    const isDisabled = isRequested || isFull;
+                    let btnText = 'Join';
+                    if (isRequested) btnText = 'Requested';
+                    else if (isFull) btnText = 'Full';
+
+                    return (
+                      <button 
+                        className="mint-btn" 
+                        disabled={isDisabled}
+                        style={{ 
+                          backgroundColor: isDisabled ? '#d3d3d3' : '',
+                          color: isDisabled ? '#888' : '',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer' 
+                        }}
+                        onClick={() => { setSelectedTour(tour); setBookingStatus('idle'); setGuestCount(1); setIsBookingModalOpen(true); }}
+                      >
+                        {btnText}
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             </article>
@@ -557,10 +568,12 @@ export default function ExplorerHome() {
             <button className="close-btn" onClick={() => setIsBookingModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
-              <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+              {bookingStatus === 'idle' && (
+                <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+              )}
             </div>
 
-            {bookingStatus === 'idle' ? (
+            {bookingStatus === 'idle' && (
               <>
                 <div className="form-group" style={{ marginBottom: '20px' }}>
                   <input
@@ -604,13 +617,22 @@ export default function ExplorerHome() {
                   </button>
                 </div>
               </>
-            ) : (
+            )}
+
+            {bookingStatus === 'submitting' && (
+              <div style={{ padding: '30px 0' }}>
+                <div className="loading-spinner" style={{ margin: '0 auto', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #1a8f66', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ marginTop: '20px', color: '#666', fontSize: '1.1rem' }}>Updating ...</p>
+              </div>
+            )}
+
+            {bookingStatus === 'success' && (
               <div>
                 <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1a8f66', marginBottom: '20px' }}>
                   Success, sending request to guide
                 </p>
                 <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
-                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%' }}>OK</button>
+                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>OK</button>
                 </div>
               </div>
             )}

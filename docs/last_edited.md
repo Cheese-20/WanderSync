@@ -368,3 +368,24 @@ Updated `axios.post('/api/bookings')` calls across the application:
 1. **ExplorePage.jsx**: Added fields to the `handleBookTour` function, modifying it to accept the `tour` object and extracting user data from `localStorage`.
 2. **ExplorerHome.jsx**: Added fields to the booking modal submit handler by fetching user information from `localStorage` and retrieving tour details from `selectedTour`.
 3. **GuideDetail.jsx**: Added fields to the standard booking modal using user data from `localStorage` and `selectedTour` properties.
+
+## Recent UI Fixes (2026-09-03)
+
+### What Changed
+- Removed the 'Message Guide' button from Guide Detail page.
+- Styled 'Got it' popup buttons to match the '1-on-1 experience' button.
+- Added reviewer profile pictures to the reviews list.
+- Added the main NavBar to the Discover page and My Activities page.
+- Removed the 'Rate Guide' button from My Activities.
+- Disabled the 'Join' button and changed its text to 'Full' when a tour is at max capacity.
+- Removed 'Explore with Verified Guides' promotional text from the Explore page.
+- Refactored the booking modal to show a proper loading state ('Updating ...') and hide the form/header during submission.
+
+### Why It Changed
+These were a series of UI tweaks and bug fixes requested by the user to polish the application aesthetics and improve the user experience.
+
+### How It Works
+1. `GuideDetail.jsx`: Edited the layout to remove buttons and conditionally render profile images. Updated modal state logic to conditionally render the loading spinner block.
+2. `ExplorerHome.jsx`: Conditionally disabled the Join button checking `confirmedBookingsCount >= maxPeople`. Updated modal state logic for the loading state.
+3. `ExplorePage.jsx`: Removed static HTML text.
+4. `Discover.jsx` & `MyActivities.jsx`: Imported and rendered `<NavBar />`.

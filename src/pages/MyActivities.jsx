@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from '../components/NavBar';
 import '../styles/discover.css';
 
 export default function MyActivities() {
@@ -124,6 +125,7 @@ export default function MyActivities() {
 
   return (
     <div className="discover-page">
+      <NavBar />
 
       <header className="discover-hero">
         <h1>My Activities</h1>
@@ -169,51 +171,7 @@ export default function MyActivities() {
                   >
                     {group.guideName}
                   </h3>
-                  <button
-                    className="btn-rate-guide"
-                    onClick={() => handleOpenRating(group.guideId)}
-                  >
-                    Rate Guide
-                  </button>
                 </div>
-
-                {/* Rating form for this guide */}
-                {ratingForm.guideId === group.guideId && (
-                  <div className="rating-form-container">
-                    <form onSubmit={handleSubmitRating} className="rating-form">
-                      <h4>Rate {group.guideName}</h4>
-                      <div className="rating-form-stars">
-                        {renderStars(ratingForm.score, true)}
-                      </div>
-                      <textarea
-                        className="rating-form-comment"
-                        placeholder="Leave a comment (optional)"
-                        value={ratingForm.comment}
-                        onChange={handleCommentChange}
-                        rows="3"
-                        maxLength="500"
-                      />
-                      <div className="rating-form-actions">
-                        <button
-                          type="submit"
-                          className="btn-filter"
-                          disabled={isSubmittingRating}
-                        >
-                          {isSubmittingRating ? 'Submitting...' : 'Submit Rating'}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-filter-clear"
-                          onClick={handleCloseRating}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                      {ratingMessage && <p className="booking-success">{ratingMessage}</p>}
-                      {ratingError && <p className="booking-error">{ratingError}</p>}
-                    </form>
-                  </div>
-                )}
 
                 <div className="activity-bookings-list">
                   {group.bookings.map((booking) => {
