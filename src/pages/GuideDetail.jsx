@@ -274,11 +274,7 @@ export default function GuideDetail() {
               </div>
             )}
           </div>
-          <div className="guide-detail-actions">
-            <button className="btn-contact" onClick={handleContact}>
-              Message Guide
-            </button>
-          </div>
+
         </div>
 
         {guide.description && (
@@ -392,11 +388,11 @@ export default function GuideDetail() {
                       className="mint-btn"
                       onClick={() => handleBookTourClick(tour)}
                       disabled={requestedTourIds.includes(tour.tourId || tour.tourID)}
-                      style={{ 
+                      style={{
                         width: '100%',
                         backgroundColor: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#d3d3d3' : '',
                         color: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#888' : '',
-                        cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' 
+                        cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer'
                       }}
                     >
                       {requestedTourIds.includes(tour.tourId || tour.tourID) ? 'Requested' : 'Book Tour'}
@@ -413,7 +409,7 @@ export default function GuideDetail() {
         <div className="guide-reviews">
           <div className="reviews-header-container">
             <h2>Reviews</h2>
-            <button 
+            <button
               className={`btn-add-review ${!canReview ? 'disabled' : ''}`}
               onClick={() => {
                 if (!canReview) {
@@ -422,7 +418,6 @@ export default function GuideDetail() {
                 }
                 setShowReviewForm(!showReviewForm);
               }}
-              style={!canReview ? { backgroundColor: 'grey', cursor: 'not-allowed' } : {}}
               title={!canReview ? "You must book a tour with this guide to leave a review." : ""}
             >
               {showReviewForm ? 'Cancel Review' : 'Add Review'}
@@ -434,8 +429,8 @@ export default function GuideDetail() {
               <form onSubmit={submitReview} className="review-form">
                 <div className="form-group">
                   <label>Rating</label>
-                  <select 
-                    value={reviewScore} 
+                  <select
+                    value={reviewScore}
                     onChange={(e) => setReviewScore(Number(e.target.value))}
                     required
                   >
@@ -457,8 +452,8 @@ export default function GuideDetail() {
                   ></textarea>
                 </div>
                 {reviewError && <p className="review-error">{reviewError}</p>}
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn-submit-review"
                   disabled={isSubmittingReview}
                 >
@@ -474,9 +469,22 @@ export default function GuideDetail() {
               {reviews.map((review) => (
                 <div key={review.ratingId || review.reviewId} className="review-card">
                   <div className="review-header">
-                    <span className="reviewer-name">
-                      {review.reviewerName} {review.reviewerSurname}
-                    </span>
+                    <div className="reviewer-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      {review.reviewerProfilePicture ? (
+                        <img
+                          src={review.reviewerProfilePicture}
+                          alt={`${review.reviewerName}'s profile`}
+                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold' }}>
+                          {review.reviewerName ? review.reviewerName.charAt(0) : '?'}
+                        </div>
+                      )}
+                      <span className="reviewer-name">
+                        {review.reviewerName} {review.reviewerSurname}
+                      </span>
+                    </div>
                     <span className="review-date">
                       {new Date(review.createdAt || review.sentAt).toLocaleDateString()}
                     </span>
@@ -505,7 +513,7 @@ export default function GuideDetail() {
             <p className="ineligible-modal-text">
               You must have a confirmed booking that occurred more than 30 minutes ago to leave a review for this guide.
             </p>
-            <button className="ineligible-modal-close" onClick={() => setShowIneligiblePopup(false)}>
+            <button className="mint-btn" onClick={() => setShowIneligiblePopup(false)} style={{ width: '100%', padding: '12px', fontSize: '1rem' }}>
               Got it
             </button>
           </div>
@@ -518,10 +526,12 @@ export default function GuideDetail() {
             <button className="close-btn" onClick={() => setIsBookingModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
-              <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+              {bookingStatus === 'idle' && (
+                <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+              )}
             </div>
 
-            {bookingStatus === 'idle' ? (
+            {bookingStatus === 'idle' && (
               <>
                 <div className="form-group" style={{ marginBottom: '20px' }}>
                   <input
@@ -536,12 +546,13 @@ export default function GuideDetail() {
 
                 <div className="modal-actions" style={{ display: 'flex', gap: '12px' }}>
                   <button className="btn-secondary" onClick={() => setIsBookingModalOpen(false)} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>Cancel</button>
-                  <button className="btn-primary" style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }} onClick={async () => {
+                  <button className="btn-primary" disabled={bookingStatus === 'submitting'} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold' }} onClick={async () => {
                     try {
+                      setBookingStatus('submitting');
                       const userJson = localStorage.getItem('user');
                       const userObj = userJson ? JSON.parse(userJson) : {};
                       const loggedInUserId = userObj.id || userObj.userID || null;
-                      
+
                       await axios.post('http://localhost:5200/api/bookings', {
                         userID: loggedInUserId,
                         tourID: selectedTour.tourId || selectedTour.tourID,
@@ -559,17 +570,29 @@ export default function GuideDetail() {
                     } catch (e) {
                       console.error(e);
                       alert('Error creating booking');
+                      setBookingStatus('idle');
                     }
-                  }}>Submit Request</button>
+                  }}>
+                    {bookingStatus === 'submitting' ? 'Submitting...' : 'Submit Request'}
+                  </button>
                 </div>
               </>
-            ) : (
+            )}
+
+            {bookingStatus === 'submitting' && (
+              <div style={{ padding: '30px 0' }}>
+                <div className="loading-spinner" style={{ margin: '0 auto', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #1a8f66', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ marginTop: '20px', color: '#666', fontSize: '1.1rem' }}>Updating ...</p>
+              </div>
+            )}
+
+            {bookingStatus === 'success' && (
               <div>
                 <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1a8f66', marginBottom: '20px' }}>
                   Success, sending request to guide
                 </p>
                 <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
-                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%' }}>OK</button>
+                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>OK</button>
                 </div>
               </div>
             )}

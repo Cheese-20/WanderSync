@@ -437,6 +437,18 @@ namespace backend.Controllers
 
             try
             {
+                // Reviews.guideID has a foreign key on TravelGuide(userID). Guides approved
+                // before that row was being created only have Role = "Guide" on the User
+                // record, which would make the insert below fail, so backfill it here.
+                // Saved on its own because EF has no configured relationship between the two
+                // tables and would otherwise be free to order the inserts the wrong way.
+                var travelGuideExists = await _context.TravelGuides.AnyAsync(g => g.UserID == guideId);
+                if (!travelGuideExists)
+                {
+                    _context.TravelGuides.Add(new TravelGuide { UserID = guideId });
+                    await _context.SaveChangesAsync();
+                }
+
                 if (existingRating != null)
                 {
                     // Update existing rating
@@ -543,6 +555,20 @@ namespace backend.Controllers
                 var reviews = await _context.GuideRatings
                     .Where(r => r.GuideId == guideId)
                     .OrderByDescending(r => r.CreatedAt)
+                    .Select(r => new
+                    {
+                        r.RatingId,
+                        r.UserId,
+                        r.GuideId,
+                        r.Score,
+                        r.Comment,
+                        r.CreatedAt,
+                        r.GuideName,
+                        r.GuideSurname,
+                        r.ReviewerName,
+                        r.ReviewerSurname,
+                        ReviewerProfilePicture = _context.Profiles.Where(p => p.UserID == r.UserId).Select(p => p.ProfilePictureLink).FirstOrDefault()
+                    })
                     .ToListAsync();
 
                 return Ok(reviews);

@@ -187,6 +187,19 @@
   overflow: hidden;
 }
 
+.experience-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #f3f4f6;
+  transition: transform 0.4s ease;
+}
+
+.experience-card:hover .experience-image {
+  transform: scale(1.05);
+}
+
 .experience-image-placeholder {
   width: 100%;
   height: 100%;
@@ -331,8 +344,13 @@
   transition: background 0.2s ease;
 }
 
-.experience-book-btn:hover {
+.experience-book-btn:hover:not(:disabled) {
   background: #157a57;
+}
+
+.experience-book-btn:disabled {
+  background: #a4ddbc;
+  cursor: not-allowed;
 }
 
 /* Verified Guides Section */
@@ -922,4 +940,143 @@
 .cool-image-remove-btn:hover {
   background: #ef4444;
   transform: scale(1.1);
+}
+
+/* --- Booking result dialog ---------------------------------------------------
+   Replaces window.alert() for booking outcomes. Centred on screen and built from
+   the same palette as the rest of the app: green #1a8f66 for success, amber for
+   an outcome the explorer can act on, red for a genuine failure.               */
+.booking-feedback-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1100;
+  animation: fadeIn 0.2s ease;
+}
+
+.booking-feedback-card {
+  /* Per-tone accents, overridden by the tone classes below. */
+  --accent: #1a8f66;
+  --accent-dark: #157a57;
+  --accent-tint: #f0fdf4;
+
+  background: #ffffff;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 20px;
+  padding: 32px 28px 24px;
+  text-align: center;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.booking-feedback-notice {
+  --accent: #f59e0b;
+  --accent-dark: #b45309;
+  --accent-tint: #fffbeb;
+}
+
+.booking-feedback-error {
+  --accent: #ef4444;
+  --accent-dark: #b91c1c;
+  --accent-tint: #fef2f2;
+}
+
+.booking-feedback-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: var(--accent-tint);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.booking-feedback-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.booking-feedback-title {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.booking-feedback-tour {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+
+.booking-feedback-message {
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+.booking-feedback-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.booking-feedback-btn,
+.booking-feedback-btn-secondary {
+  flex: 1;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.booking-feedback-btn {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+}
+
+.booking-feedback-btn:hover {
+  background: var(--accent-dark);
+}
+
+.booking-feedback-btn-secondary {
+  background: #ffffff;
+  color: #374151;
+  border: 1.5px solid #d1d5db;
+}
+
+.booking-feedback-btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.booking-feedback-btn:focus-visible,
+.booking-feedback-btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 143, 102, 0.3);
+}
+
+@media (max-width: 420px) {
+  .booking-feedback-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-feedback-overlay,
+  .booking-feedback-card {
+    animation: none;
+  }
 }

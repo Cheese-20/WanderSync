@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NavBar from '../components/NavBar';
 import '../styles/discover.css';
 
 export default function MyActivities() {
@@ -13,6 +14,7 @@ export default function MyActivities() {
   const [ratingError, setRatingError] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
     const userJson = localStorage.getItem('user');
@@ -92,6 +94,25 @@ export default function MyActivities() {
     }
   };
 
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    setCancellingId(bookingId);
+    try {
+      await axios.put(`/api/bookings/${bookingId}/cancel?userId=${userId}`);
+      // Update local state so the UI reflects the cancellation immediately
+      setBookings(prev =>
+        prev.map(b =>
+          b.bookingId === bookingId ? { ...b, status: 'Cancelled' } : b
+        )
+      );
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to cancel booking. Please try again.';
+      alert(msg);
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   // Group bookings by guide
   const groupedByGuide = bookings.reduce((acc, booking) => {
     const key = booking.guideId;
@@ -124,8 +145,12 @@ export default function MyActivities() {
 
   return (
     <div className="discover-page">
+      <NavBar />
 
       <header className="discover-hero">
+        <button className="discover-back-btn" onClick={() => navigate('/explore')}>
+          ← Back to Explore
+        </button>
         <h1>My Activities</h1>
         <p>View your past bookings with local guides and leave reviews</p>
       </header>
@@ -169,51 +194,7 @@ export default function MyActivities() {
                   >
                     {group.guideName}
                   </h3>
-                  <button
-                    className="btn-rate-guide"
-                    onClick={() => handleOpenRating(group.guideId)}
-                  >
-                    Rate Guide
-                  </button>
                 </div>
-
-                {/* Rating form for this guide */}
-                {ratingForm.guideId === group.guideId && (
-                  <div className="rating-form-container">
-                    <form onSubmit={handleSubmitRating} className="rating-form">
-                      <h4>Rate {group.guideName}</h4>
-                      <div className="rating-form-stars">
-                        {renderStars(ratingForm.score, true)}
-                      </div>
-                      <textarea
-                        className="rating-form-comment"
-                        placeholder="Leave a comment (optional)"
-                        value={ratingForm.comment}
-                        onChange={handleCommentChange}
-                        rows="3"
-                        maxLength="500"
-                      />
-                      <div className="rating-form-actions">
-                        <button
-                          type="submit"
-                          className="btn-filter"
-                          disabled={isSubmittingRating}
-                        >
-                          {isSubmittingRating ? 'Submitting...' : 'Submit Rating'}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-filter-clear"
-                          onClick={handleCloseRating}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                      {ratingMessage && <p className="booking-success">{ratingMessage}</p>}
-                      {ratingError && <p className="booking-error">{ratingError}</p>}
-                    </form>
-                  </div>
-                )}
 
                 <div className="activity-bookings-list">
                   {group.bookings.map((booking) => {
@@ -244,9 +225,20 @@ export default function MyActivities() {
                               )}
                               <h4>{booking.tourTitle}</h4>
                             </div>
-                            <span className={`detailed-status status-${booking.status?.toLowerCase()}`}>
-                              {booking.status}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <span className={`detailed-status status-${booking.status?.toLowerCase()}`}>
+                                {booking.status}
+                              </span>
+                              {['pending', 'accepted'].includes(booking.status?.toLowerCase()) && (
+                                <button
+                                  className="btn-cancel-booking"
+                                  onClick={() => handleCancelBooking(booking.bookingId)}
+                                  disabled={cancellingId === booking.bookingId}
+                                >
+                                  {cancellingId === booking.bookingId ? 'Cancelling...' : '✕ Cancel'}
+                                </button>
+                              )}
+                            </div>
                           </div>
                           
                           {booking.location && (

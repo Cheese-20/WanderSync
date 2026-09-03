@@ -237,11 +237,53 @@ namespace backend.Controllers
                 return StatusCode(500, new { message = "Failed to reset password. Please try again." });
             }
         }
+
+        /// <summary>
+        /// DELETE /api/auth/account/{userId}
+        /// Permanently deletes the user account and all associated data (cascaded by DB).
+        /// Requires the user's current password as a final confirmation guard.
+        /// </summary>
+        [HttpDelete("account/{userId}")]
+        public async Task<IActionResult> DeleteAccount(int userId, [FromBody] DeleteAccountRequest request)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                    return NotFound(new { message = "Account not found." });
+
+                // Re-verify password as a server-side safeguard against accidental deletion
+                if (string.IsNullOrWhiteSpace(request.Password) ||
+                    !BCrypt.Net.BCrypt.Verify(request.Password, user.HashedPword))
+                {
+                    return Unauthorized(new { message = "Incorrect password. Account was not deleted." });
+                }
+
+                // Removing the User row cascades to all child tables:
+                // Profile, Posts, Bookings, Matches, Notifications, Messages,
+                // GuideApplication, SpotVotes, AccountReports, etc.
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Account {UserId} permanently deleted.", userId);
+                return Ok(new { message = "Your account has been permanently deleted." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting account {UserId}.", userId);
+                return StatusCode(500, new { message = "An error occurred while deleting your account. Please try again." });
+            }
+        }
     }
 
     public class ResetPasswordRequest
     {
         public string Email { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
+    }
+
+    public class DeleteAccountRequest
+    {
+        public string Password { get; set; } = string.Empty;
     }
 }

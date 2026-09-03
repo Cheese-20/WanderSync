@@ -240,7 +240,7 @@ export default function ExplorerHome() {
   const handleDeleteClick = async (post) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       try {
-        const response = await fetch(`http://localhost:5200/api/posts/${post.postID}`, {
+        const response = await fetch(`http://localhost:5200/api/posts/${post.postID}?userId=${loggedInUserId}`, {
           method: 'DELETE',
         });
         if (response.ok) {
@@ -253,6 +253,28 @@ export default function ExplorerHome() {
         console.error(err);
         alert('Network error. Is the backend running?');
       }
+    }
+  };
+
+  // Mark "I Was There" on a Group post
+  const handleIWasThere = async (post) => {
+    try {
+      const res = await fetch(`http://localhost:5200/api/posts/${post.postID}/also-attended`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userID: loggedInUserId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(posts.map(p =>
+          p.postID === post.postID ? { ...p, alsoAttended: data.alsoAttended } : p
+        ));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.message || 'Could not mark attendance.');
+      }
+    } catch (e) {
+      alert('Network error.');
     }
   };
 
@@ -310,18 +332,29 @@ export default function ExplorerHome() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     <span>{tour.confirmedBookingsCount || 0}/{tour.maxPeople} going</span>
                   </div>
-                  <button 
-                    className="mint-btn" 
-                    disabled={requestedTourIds.includes(tour.tourId || tour.tourID)}
-                    style={{ 
-                      backgroundColor: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#d3d3d3' : '',
-                      color: requestedTourIds.includes(tour.tourId || tour.tourID) ? '#888' : '',
-                      cursor: requestedTourIds.includes(tour.tourId || tour.tourID) ? 'not-allowed' : 'pointer' 
-                    }}
-                    onClick={() => { setSelectedTour(tour); setBookingStatus('idle'); setGuestCount(1); setIsBookingModalOpen(true); }}
-                  >
-                    {requestedTourIds.includes(tour.tourId || tour.tourID) ? 'Requested' : 'Join'}
-                  </button>
+                  {(() => {
+                    const isRequested = requestedTourIds.includes(tour.tourId || tour.tourID);
+                    const isFull = (tour.confirmedBookingsCount || 0) >= tour.maxPeople;
+                    const isDisabled = isRequested || isFull;
+                    let btnText = 'Join';
+                    if (isRequested) btnText = 'Requested';
+                    else if (isFull) btnText = 'Full';
+
+                    return (
+                      <button 
+                        className="mint-btn" 
+                        disabled={isDisabled}
+                        style={{ 
+                          backgroundColor: isDisabled ? '#d3d3d3' : '',
+                          color: isDisabled ? '#888' : '',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer' 
+                        }}
+                        onClick={() => { setSelectedTour(tour); setBookingStatus('idle'); setGuestCount(1); setIsBookingModalOpen(true); }}
+                      >
+                        {btnText}
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             </article>
@@ -504,24 +537,94 @@ export default function ExplorerHome() {
                 );
               })()}
 
-              <div className="post-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+              {/* Tagged user chips (Group posts) */}
+              {post.experienceType === 'Group' && post.taggedUsers && (() => {
+                let ids = [];
+                try { ids = JSON.parse(post.taggedUsers); } catch {}
+                if (!ids.length) return null;
+                return (
+                  <div className="post-tagged-strip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1a8f66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span style={{ fontSize: '0.78rem', color: '#555' }}>
+                      Tagged: {ids.length} travel crew member{ids.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {/* Also attended strip (Group posts) */}
+              {post.experienceType === 'Group' && post.alsoAttended && (() => {
+                let ids = [];
+                try { ids = JSON.parse(post.alsoAttended); } catch {}
+                if (!ids.length) return null;
+                return (
+                  <div className="post-also-attended-strip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                    </svg>
+                    <span style={{ fontSize: '0.78rem', color: '#6366f1' }}>
+                      {ids.length} person{ids.length > 1 ? 's' : ''} also attended
+                    </span>
+                  </div>
+                );
+              })()}
+
+              <div className="post-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '10px', flexWrap: 'wrap' }}>
+                {/* I Was There — Group posts, not the author, not already marked */}
+                {post.experienceType === 'Group' &&
+                  Number(loggedInUserId) !== Number(post.userID) &&
+                  !(() => { try { return JSON.parse(post.alsoAttended || '[]').includes(Number(loggedInUserId)); } catch { return false; } })() && (
+                  <button
+                    className="btn-i-was-there"
+                    onClick={() => handleIWasThere(post)}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    I Was There
+                  </button>
+                )}
+
+                {/* Edit — author (any type) OR tagged user (Group only) */}
+                {(Number(loggedInUserId) === Number(post.userID) ||
+                  (post.experienceType === 'Group' && (() => {
+                    try { return JSON.parse(post.taggedUsers || '[]').includes(Number(loggedInUserId)); } catch { return false; }
+                  })())) && (
+                  <span
+                    className="action-icon edit-icon"
+                    onClick={() => handleEditClick(post)}
+                    style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '0.9rem', color: '#007bff', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit
+                  </span>
+                )}
+
+                {/* Delete — author only */}
                 {Number(loggedInUserId) === Number(post.userID) && (
-                  <>
-                    <span
-                      className="action-icon edit-icon"
-                      onClick={() => handleEditClick(post)}
-                      style={{ marginLeft: 'auto', cursor: 'pointer', fontSize: '0.9rem', color: '#007bff' }}
-                    >
-                      Edit
-                    </span>
-                    <span
-                      className="action-icon delete-icon"
-                      onClick={() => handleDeleteClick(post)}
-                      style={{ cursor: 'pointer', fontSize: '0.9rem', color: '#dc3545' }}
-                    >
-                      Delete
-                    </span>
-                  </>
+                  <span
+                    className="action-icon delete-icon"
+                    onClick={() => handleDeleteClick(post)}
+                    style={{ cursor: 'pointer', fontSize: '0.9rem', color: '#dc3545', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14H6L5 6"/>
+                      <path d="M10 11v6"/>
+                      <path d="M14 11v6"/>
+                      <path d="M9 6V4h6v2"/>
+                    </svg>
+                    Delete
+                  </span>
                 )}
               </div>
             </div>
@@ -557,10 +660,12 @@ export default function ExplorerHome() {
             <button className="close-btn" onClick={() => setIsBookingModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
-              <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+              {bookingStatus === 'idle' && (
+                <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+              )}
             </div>
 
-            {bookingStatus === 'idle' ? (
+            {bookingStatus === 'idle' && (
               <>
                 <div className="form-group" style={{ marginBottom: '20px' }}>
                   <input
@@ -604,13 +709,22 @@ export default function ExplorerHome() {
                   </button>
                 </div>
               </>
-            ) : (
+            )}
+
+            {bookingStatus === 'submitting' && (
+              <div style={{ padding: '30px 0' }}>
+                <div className="loading-spinner" style={{ margin: '0 auto', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #1a8f66', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ marginTop: '20px', color: '#666', fontSize: '1.1rem' }}>Updating ...</p>
+              </div>
+            )}
+
+            {bookingStatus === 'success' && (
               <div>
                 <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1a8f66', marginBottom: '20px' }}>
                   Success, sending request to guide
                 </p>
                 <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
-                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%' }}>OK</button>
+                  <button className="btn-primary" onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>OK</button>
                 </div>
               </div>
             )}

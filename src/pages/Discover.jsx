@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/discover.css';
+import NavBar from '../components/NavBar';
 
 export default function Discover() {
   const [guides, setGuides] = useState([]);
@@ -91,8 +92,12 @@ export default function Discover() {
 
   return (
     <div className="discover-page">
+      <NavBar />
 
       <header className="discover-hero">
+        <button className="discover-back-btn" onClick={() => navigate('/explore')}>
+          ← Back to Explore
+        </button>
         <h1>Discover Local Guides</h1>
         <p>Connect with experienced local guides who can show you the best of their area</p>
       </header>

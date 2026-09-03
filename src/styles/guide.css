@@ -281,3 +281,60 @@ textarea.form-input {
   margin-top: -8px;
   font-size: 0.9rem;
 }
+
+/* --- Reviews Styling --- */
+.review-card {
+  background: #f9fbff;
+  border: 1.5px solid #e8eaf0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.review-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.reviewer-name {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 1.05rem;
+}
+
+.review-date {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 600;
+}
+
+.review-rating {
+  color: #fbbf24;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+}
+
+.review-comment {
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.btn-add-review.disabled {
+  background: #e0e4ec !important;
+  color: #888 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}

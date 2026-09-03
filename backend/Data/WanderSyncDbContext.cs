@@ -36,5 +36,6 @@ namespace backend.Data
         public DbSet<GuideRating> GuideRatings { get; set; }
         public DbSet<SpotRating> SpotRatings { get; set; }
         public DbSet<Admin> Admins { get; set; }
+        public DbSet<TravelGuide> TravelGuides { get; set; }
     }
 }
