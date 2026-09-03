@@ -466,6 +466,10 @@ LIMIT {take};";
 
         // ========== REPORTED SPOTS ==========
 
+        // Spot moderation reads the real curatedSpots table via the CuratedSpots DbSet.
+        // The Spot entity maps to a `Spots` table that does not exist in this database, so
+        // it cannot be used here. The submitter name is joined from Users manually because
+        // CuratedSpot has no navigation property.
         [HttpGet("reported-spots")]
         public async Task<IActionResult> GetReportedSpots()
         {
@@ -474,23 +478,24 @@ LIMIT {take};";
                 .Distinct()
                 .ToListAsync();
 
-            var spots = await _context.Spots
-                .Where(s => reportedSpotIds.Contains(s.SpotID))
-                .Include(s => s.SubmittedByUser)
-                .Select(s => new
-                {
-                    s.SpotID,
-                    s.ActivityName,
-                    s.ActivityType,
-                    s.Location,
-                    s.IsVerified,
-                    s.PictureURL,
-                    s.SubmittedAt,
-                    submittedByName = s.SubmittedByUser.FirstName + " " + s.SubmittedByUser.LastName,
-                    reportCount = _context.SpotReports.Count(sr => sr.SpotID == s.SpotID)
-                })
-                .OrderByDescending(s => s.reportCount)
-                .ToListAsync();
+            var spots = await (from s in _context.CuratedSpots
+                               where reportedSpotIds.Contains(s.SpotID)
+                               join u in _context.Users on s.SubmittedByUserID equals u.UserID into ug
+                               from u in ug.DefaultIfEmpty()
+                               select new
+                               {
+                                   s.SpotID,
+                                   s.ActivityName,
+                                   s.ActivityType,
+                                   s.Location,
+                                   s.IsVerified,
+                                   s.PictureURL,
+                                   s.SubmittedAt,
+                                   submittedByName = u != null ? u.FirstName + " " + u.LastName : "Unknown",
+                                   reportCount = _context.SpotReports.Count(sr => sr.SpotID == s.SpotID)
+                               })
+                               .OrderByDescending(s => s.reportCount)
+                               .ToListAsync();
 
             return Ok(spots);
         }
@@ -498,26 +503,33 @@ LIMIT {take};";
         [HttpGet("reported-spots/{id}")]
         public async Task<IActionResult> GetReportedSpotDetail(int id)
         {
-            var spot = await _context.Spots
-                .Include(s => s.SubmittedByUser)
-                .FirstOrDefaultAsync(s => s.SpotID == id);
+            var spot = await _context.CuratedSpots.FirstOrDefaultAsync(s => s.SpotID == id);
 
             if (spot == null)
                 return NotFound("Spot not found.");
 
+            var submittedByName = "Unknown";
+            if (spot.SubmittedByUserID.HasValue)
+            {
+                var submitter = await _context.Users.FindAsync(spot.SubmittedByUserID.Value);
+                if (submitter != null)
+                    submittedByName = submitter.FirstName + " " + submitter.LastName;
+            }
+
             var reportCount = await _context.SpotReports.CountAsync(sr => sr.SpotID == id);
-            var reports = await _context.SpotReports
-                .Where(sr => sr.SpotID == id)
-                .Include(sr => sr.Reporter)
-                .OrderByDescending(sr => sr.SentAt)
-                .Select(sr => new
-                {
-                    sr.SpotReportID,
-                    reporterName = sr.Reporter.FirstName + " " + sr.Reporter.LastName,
-                    sr.Reason,
-                    sr.SentAt
-                })
-                .ToListAsync();
+            var reports = await (from sr in _context.SpotReports
+                                 where sr.SpotID == id
+                                 join u in _context.Users on sr.ReporterID equals u.UserID into rg
+                                 from u in rg.DefaultIfEmpty()
+                                 orderby sr.SentAt descending
+                                 select new
+                                 {
+                                     sr.SpotReportID,
+                                     reporterName = u != null ? u.FirstName + " " + u.LastName : "Unknown",
+                                     sr.Reason,
+                                     sr.SentAt
+                                 })
+                                 .ToListAsync();
 
             return Ok(new
             {
@@ -529,7 +541,7 @@ LIMIT {take};";
                 spot.IsVerified,
                 spot.PictureURL,
                 spot.SubmittedByUserID,
-                submittedByName = spot.SubmittedByUser.FirstName + " " + spot.SubmittedByUser.LastName,
+                submittedByName,
                 spot.SubmittedAt,
                 reportCount,
                 reports
@@ -539,7 +551,7 @@ LIMIT {take};";
         [HttpPatch("reported-spots/{id}/flag")]
         public async Task<IActionResult> FlagSpot(int id)
         {
-            var spot = await _context.Spots.FirstOrDefaultAsync(s => s.SpotID == id);
+            var spot = await _context.CuratedSpots.FirstOrDefaultAsync(s => s.SpotID == id);
 
             if (spot == null)
                 return NotFound("Spot not found.");
@@ -558,7 +570,7 @@ LIMIT {take};";
         [HttpDelete("reported-spots/{id}")]
         public async Task<IActionResult> DeleteSpot(int id)
         {
-            var spot = await _context.Spots.FirstOrDefaultAsync(s => s.SpotID == id);
+            var spot = await _context.CuratedSpots.FirstOrDefaultAsync(s => s.SpotID == id);
 
             if (spot == null)
                 return NotFound("Spot not found.");
@@ -568,13 +580,9 @@ LIMIT {take};";
             if (reportCount <= 5)
                 return BadRequest("A spot must have more than 5 reports to be deleted.");
 
-            // Remove all reports for this spot
-            var spotReports = await _context.SpotReports.Where(sr => sr.SpotID == id).ToListAsync();
-            _context.SpotReports.RemoveRange(spotReports);
-
-            // Remove the spot
-            _context.Spots.Remove(spot);
-
+            // The FK from SpotReports to curatedSpots is ON DELETE CASCADE, so the child
+            // reports are removed automatically when the spot row goes.
+            _context.CuratedSpots.Remove(spot);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Spot has been permanently deleted.", spotID = id });
