@@ -46,33 +46,41 @@ namespace backend.Controllers
                 using var command = _context.Database.GetDbConnection().CreateCommand();
                 command.CommandTimeout = 120; // Increase timeout to prevent crashing on large base64 profile pictures
                 command.CommandText = @"
-                    SELECT 
-                        u.userID, 
-                        u.firstName, 
-                        u.lastName, 
-                        CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
-                        p.job,
-                        m.matchID,
-                        u.role
-                    FROM Matches m
-                    JOIN User u ON u.userID = m.receiverID
-                    LEFT JOIN Profile p ON p.userID = u.userID
-                    WHERE m.requesterID = @userId AND LOWER(m.status) = 'accepted'
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        u.userID, 
-                        u.firstName, 
-                        u.lastName, 
-                        CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
-                        p.job,
-                        m.matchID,
-                        u.role
-                    FROM Matches m
-                    JOIN User u ON u.userID = m.requesterID
-                    LEFT JOIN Profile p ON p.userID = u.userID
-                    WHERE m.receiverID = @userId AND LOWER(m.status) = 'accepted'
+                    SELECT c.* FROM (
+                        SELECT 
+                            u.userID, 
+                            u.firstName, 
+                            u.lastName, 
+                            CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
+                            p.job,
+                            m.matchID,
+                            u.role
+                        FROM Matches m
+                        JOIN User u ON u.userID = m.receiverID
+                        LEFT JOIN Profile p ON p.userID = u.userID
+                        WHERE m.requesterID = @userId AND LOWER(m.status) = 'accepted'
+                        
+                        UNION ALL
+                        
+                        SELECT 
+                            u.userID, 
+                            u.firstName, 
+                            u.lastName, 
+                            CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
+                            p.job,
+                            m.matchID,
+                            u.role
+                        FROM Matches m
+                        JOIN User u ON u.userID = m.requesterID
+                        LEFT JOIN Profile p ON p.userID = u.userID
+                        WHERE m.receiverID = @userId AND LOWER(m.status) = 'accepted'
+                    ) c
+                    LEFT JOIN (
+                        SELECT matchID, MAX(sentAt) as lastMsgTime
+                        FROM Message
+                        GROUP BY matchID
+                    ) lm ON c.matchID = lm.matchID
+                    ORDER BY lm.lastMsgTime DESC, c.firstName ASC
                 ";
                 
                 var param = command.CreateParameter();

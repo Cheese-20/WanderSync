@@ -567,7 +567,7 @@ namespace backend.Controllers
                         r.GuideSurname,
                         r.ReviewerName,
                         r.ReviewerSurname,
-                        ReviewerProfilePicture = _context.Profiles.Where(p => p.UserId == r.UserId).Select(p => p.ProfilePictureLink).FirstOrDefault()
+                        ReviewerProfilePicture = _context.Profiles.Where(p => p.UserID == r.UserId).Select(p => p.ProfilePictureLink).FirstOrDefault()
                     })
                     .ToListAsync();
 

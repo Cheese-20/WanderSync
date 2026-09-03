@@ -482,11 +482,13 @@ export default function Dashboard() {
 
                   return (
                     <div className="spot-card" key={`pending-spot-${spot.spotID}`}>
-                      {spot.pictureURL ? (
-                        <img src={spot.pictureURL} alt={spot.activityName} className="spot-card-img" />
-                      ) : (
-                        <div className="spot-card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#e2e8f0', color: '#94a3b8' }}>No Image</div>
-                      )}
+                      <div className="spot-card-img-wrapper">
+                        {spot.pictureURL ? (
+                          <img src={spot.pictureURL} alt={spot.activityName} className="spot-card-img" />
+                        ) : (
+                          <div className="spot-card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#e2e8f0', color: '#94a3b8' }}>No Image</div>
+                        )}
+                      </div>
 
                       <div className="spot-card-content">
                         <div className="spot-card-header">
