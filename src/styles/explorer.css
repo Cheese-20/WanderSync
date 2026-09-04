@@ -1217,9 +1217,22 @@ button:disabled {
   object-fit: contain;
 }
 
+.spot-popup-image-container {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.spot-popup-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .spot-popup-title {
-  margin: 4px 16px 6px;
-  font-size: 1.15rem;
+  margin: 12px 16px 6px;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #0f172a;
 }
@@ -1229,19 +1242,20 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-.star-icon {
-  color: #eab308;
-  font-size: 1rem;
+.star-icon-svg {
+  flex-shrink: 0;
+  margin-top: -2px;
 }
 
 .review-count {
-  color: #94a3b8;
-  font-weight: 400;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 2px;
 }
 
 .spot-popup-desc {

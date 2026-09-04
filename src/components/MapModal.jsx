@@ -73,12 +73,19 @@ export default function MapModal({ isOpen, onClose, spots }) {
                       <div className="spot-popup-header">
                         <img src={logo} alt="WanderSync logo" className="spot-popup-logo" />
                       </div>
+                      {spot.pictureURL && (
+                        <div className="spot-popup-image-container">
+                          <img src={spot.pictureURL} alt={spot.activityName} className="spot-popup-image" />
+                        </div>
+                      )}
                       <h3 className="spot-popup-title">{spot.activityName}</h3>
                       
                       <div className="spot-popup-rating">
-                        <span className="star-icon">★</span>
-                        <span>{spot.averageRating ? spot.averageRating.toFixed(1) : 'New'}</span>
-                        <span className="review-count">({spot.totalRatings || 0} reviews)</span>
+                        <svg className="star-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span className="rating-score">{(spot.averageRating || 0).toFixed(1)}</span>
+
                       </div>
                       
                       <p className="spot-popup-desc">{spot.description}</p>

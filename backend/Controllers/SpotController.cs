@@ -59,8 +59,8 @@ namespace backend.Controllers
                                from p in profileGroup.DefaultIfEmpty()
                                let upvotesCount = _context.SpotVotes.Count(v => v.SpotID == s.SpotID && v.VoteType == "upvote")
                                let hasUpvoted = userId.HasValue ? _context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.VoteType == "upvote" && v.GuideID == userId.Value) : false
-                               let averageRating = _context.SpotRatings.Where(r => r.SpotID == s.SpotID).Average(r => (double?)r.RatingScore) ?? 0.0
-                               let totalRatings = _context.SpotRatings.Count(r => r.SpotID == s.SpotID)
+                               let averageRating = (double?)s.Rating ?? (_context.SpotRatings.Where(r => r.SpotID == s.SpotID).Average(r => (double?)r.RatingScore) ?? 0.0)
+                               let totalRatings = s.Rating.HasValue ? 1 : _context.SpotRatings.Count(r => r.SpotID == s.SpotID)
                                let hasRated = userId.HasValue ? _context.SpotRatings.Any(r => r.SpotID == s.SpotID && r.UserID == userId.Value) : false
                                select new {
                                    spotID = s.SpotID,

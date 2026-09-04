@@ -45,5 +45,8 @@ namespace backend.Models
 
         [Column("submittedByName")]
         public string? SubmittedByName { get; set; }
+
+        [Column("rating", TypeName = "decimal(4,2)")]
+        public decimal? Rating { get; set; }
     }
 }
