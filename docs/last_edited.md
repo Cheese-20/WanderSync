@@ -512,3 +512,101 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 2. `ExplorerHome.jsx`: Conditionally disabled the Join button checking `confirmedBookingsCount >= maxPeople`. Updated modal state logic for the loading state.
 3. `ExplorePage.jsx`: Removed static HTML text.
 4. `Discover.jsx` & `MyActivities.jsx`: Imported and rendered `<NavBar />`.
+
+## 2026-09-04: Added Navigation Icons
+**What has been changed:**
+- Downloaded `magnify.png`, `users.png`, `messenger.png`, and `user.png` icons into `src/assets/images/`.
+- Updated `src/components/NavBar.jsx` to import these icons and display them to the left of the links (Explore, Match, Messages, Profile).
+- Updated `src/styles/nav.css` to add a `.nav-icon` class for proper sizing and alignment.
+
+**Why it has changed:**
+- To improve the visual navigation experience per the user's request.
+
+**How the change works:**
+- The PNG images are statically imported at the top of the React component.
+- Each `<NavLink>` encapsulates an `<img>` tag and the link text.
+- Flexbox (`display: flex; align-items: center;`) on the anchor tags ensures the icon and text are horizontally aligned and centered.
+
+
+## 2026-09-04: Changed message icon
+**What has been changed:**
+- Replaced  with a single speech bubble icon.
+
+**Why it has changed:**
+- User requested to change the icon from a chat bubble with dots to a single message bubble.
+
+**How the change works:**
+- Just downloaded and overwrote the existing  in . The  component automatically uses the new image without any code changes.
+
+
+## 2026-09-04: Changed message icon
+**What has been changed:**
+- Replaced `messenger.png` with a single speech bubble icon.
+
+**Why it has changed:**
+- User requested to change the icon from a chat bubble with dots to a single message bubble.
+
+**How the change works:**
+- Just downloaded and overwrote the existing `messenger.png` in `src/assets/images`. The `NavBar.jsx` component automatically uses the new image without any code changes.
+
+
+## 2026-09-04: Added Dashboard Icon
+**What has been changed:**
+- Downloaded a `dashboard.png` icon (bar chart in a rounded rectangle) into `src/assets/images`.
+- Updated `src/components/NavBar.jsx` to import and display the dashboard icon to the left of the Dashboard navigation link.
+
+**Why it has changed:**
+- User requested to add the dashboard icon to the NavBar to match the styling of the other navigation items.
+
+**How the change works:**
+- The new PNG image is statically imported at the top of the React component.
+- The `<NavLink>` for Dashboard encapsulates an `<img>` tag with the `.nav-icon` class and the link text.
+
+
+## 2026-09-04: Updated Active Tab Styling
+**What has been changed:**
+- Updated `src/styles/nav.css` to add padding and border-radius to the navigation links.
+- Added a brown background color (`#d1c896`) matching the system palette for the `.active` navigation link state.
+
+**Why it has changed:**
+- User requested to highlight the active tab using the system brown color instead of only using a bold font weight, improving visibility of the current page.
+
+**How the change works:**
+- CSS padding and border radius applied to `.ws-nav-list a` creates a clickable button-like area.
+- When a link gets the `.active` class from React Router, it receives the `#d1c896` background color.
+
+
+## 2026-09-04: Added Home Icon to NavBar
+**What has been changed:**
+- Downloaded a `home.png` icon into `src/assets/images`.
+- Updated `src/components/NavBar.jsx` to import `home.png` and add a new `Home` NavLink to the start of the navigation list.
+
+**Why it has changed:**
+- User requested a specific Home icon/link on the nav bar instead of relying solely on clicking the logo.
+
+**How the change works:**
+- The new `Home` item uses the same `<NavLink>` component structure and styling (including `.nav-icon` class for the image) as the other links, making it automatically inherit the new active tab styling.
+
+
+## 2026-09-04: Updated "Submit New Spot" Button Styling
+**What has been changed:**
+- Modified the `.submit-spot-btn` class in `src/styles/explore.css` to match the "Create a post" button (`.mint-btn` style).
+- Removed the linear gradient background and drop shadow.
+- Applied a flat `#a6d8b6` background, `20px` border-radius, `0.9rem` font size, and `6px 20px` padding.
+
+**Why it has changed:**
+- User requested that the "Submit New Spot" button match the design of the "Create a post" button for visual consistency across the application.
+
+**How the change works:**
+- The new CSS flat styling overrides the previous gradient and box-shadow, using `transition` on `background-color` for a subtle hover effect (`#92cdb2`).
+
+
+## 2026-09-04: Removed Emoji from Submit Spot Button
+**What has been changed:**
+- Removed the sparkles emoji (`✨`) from the "Submit New Spot" button text in `src/pages/ExplorePage.jsx`.
+
+**Why it has changed:**
+- User requested to remove the emoji for a cleaner, text-only button label that matches the simple "Create a post" style.
+
+**How the change works:**
+- Just a simple text replacement within the JSX returned by the component, removing the emoji character.

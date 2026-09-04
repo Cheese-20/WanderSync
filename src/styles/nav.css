@@ -2,8 +2,9 @@
 .ws-brand-wrap{display:flex;align-items:center;gap:1px;cursor:pointer}
 .ws-brand{font-weight:700;color:#a6d8b6}
 .ws-nav-list{list-style:none;display:flex;gap:16px;margin:0;padding:0}
-.ws-nav-list a{color:#333;text-decoration:none}
-.ws-nav-list a.active{font-weight:700}
+.ws-nav-list a{display:flex;align-items:center;color:#333;text-decoration:none;padding:8px 12px;border-radius:8px;transition:background 0.2s}
+.ws-nav-list a.active{font-weight:700;background-color:#d1c896}
+.nav-icon{width:20px;height:20px;margin-right:8px;vertical-align:middle;object-fit:contain}
 .ws-nav .brand-logo{width:34px;height:auto;object-fit:contain;flex-shrink:0}
 
 /* Notification UI */

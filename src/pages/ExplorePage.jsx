@@ -383,7 +383,7 @@ export default function ExplorePage() {
 
         {loggedInUserId && (
           <button className="submit-spot-btn" style={{ marginTop: '15px' }} onClick={() => setShowModal(true)}>
-            ✨ Submit New Spot
+            Submit New Spot
           </button>
         )}
       </header>
