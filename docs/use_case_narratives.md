@@ -382,41 +382,120 @@
 ---
 
 ## Use Case 11: Manage Itinerary (D800)
-**Actor:** User (Travel Guide / Organizer)
+**Actor:** Local Guide (Primary Actor), Matched Tourist / Explorer (Secondary Actor / Recipient)
 
-**Trigger:** The actor selects "Manage Itinerary" from the dashboard trip management view.
+**Trigger:** The Local Guide clicks the "Manage Itinerary" button on an assigned tourist's card in the "Manage Tourist Itineraries" section on the Guide Home Page.
 
 **Preconditions:**
-1. The actor is successfully authenticated and logged into the system.
-2. The actor has active administrative or guide permissions for the selected tourist/group trip.
+1. The Local Guide is registered, authenticated, and logged in with the Guide role.
+2. The Guide has at least one assigned/matched Tourist (established via an accepted match or approved 1-on-1 booking request).
+3. The system has initialized or can create a corresponding `CustomItinerary` tour record linking the Guide and the Tourist.
 
-**Main Flow (How it is accomplished):**
-1. The actor navigates to the Dashboard and selects an assigned tourist's active trip.
-2. The system retrieves and displays the trip calendar, timeline, and current schedule items.
-3. The actor selects a specific day/date from the calendar to manage.
-4. The actor chooses an action: Add Activity, Remove Activity, Reorder Timeline, or Block Transit Time.
-5. The system prompts the actor with the relevant input form or drag-and-drop timeline interface.
-6. The actor inputs or modifies the required details (e.g., activity name, start/end time, location, category, and notes).
-7. The actor clicks the "Save" or "Update" button.
-8. The system performs a validation check for schedule overlapping, invalid time bounds, or missing mandatory fields.
-9. The system updates the itinerary records and timestamps in the database.
-10. The system triggers a real-time synchronization update across active client sessions.
-11. The system generates and sends a notification to the assigned tourist regarding the updated schedule.
-12. The system displays a success confirmation message and returns the actor to the updated itinerary view.
+**Main Flow (User Interaction Journey):**
+
+### Step 1: Navigating to Manage Itineraries
+1. The Guide logs in and lands on the Guide Home Page (`/home`).
+2. The Guide scrolls down to the **"Manage Tourist Itineraries"** section, situated between "Local Favourites" and the "Community Feed".
+3. The Guide views cards for each assigned tourist, displaying the tourist's initial avatar, full name, and email address.
+4. The Guide clicks the **"Manage Itinerary"** button on the desired tourist's card.
+5. The application navigates to the dedicated itinerary workspace at `/manage-itinerary/:touristId`.
+
+### Step 2: Loading Tourist & Itinerary Data
+6. Upon route entry, the application:
+   - Fetches the assigned tourist's profile via `GET /api/local-guide/{guideId}/assigned-tourists` and displays their avatar, full name, and email.
+   - Retrieves the existing itinerary via `GET /api/local-guide/{guideId}/itinerary/{touristId}` (which finds or auto-creates a `CustomItinerary` tour record and decodes the timeline JSON stored in `Tour.Description`).
+   - If an itinerary already exists, its scheduled activities are populated into the timeline state.
+
+### Step 3: Inspecting Header and Live Stats Bar
+7. The Guide views the persistent top header containing:
+   - A **"← Back"** button to return to the Guide Home Page.
+   - Tourist avatar badge, name, email, and trip label.
+   - A prominent **"💾 Save & Notify"** button.
+8. Directly below the header, the Guide consults the **Live Stats Bar**, which dynamically recalculates as activities change:
+   - **Activities**: Total count of scheduled activities.
+   - **Total Duration**: Cumulative sum of hours and minutes across all activities (e.g., `4h 30m`).
+   - **Start Time**: The start time of the day's first activity.
+   - **End Time**: The calculated ending time of the final activity (start time + duration).
+
+### Step 4: Building & Managing the Itinerary Across Tabs
+9. The Guide interacts with three dedicated tabs:
+
+#### A. Itinerary Builder Tab (`🗓️ Itinerary Builder` - Default View)
+10. The Guide uses the **"➕ Add New Activity"** form to schedule a stop:
+    - **Activity Name** (Mandatory): Enters a title (e.g., *"Visit Table Mountain Cableway"*).
+    - **Type**: Selects from 8 categorized options with signature colors and emojis: Sightseeing (🏛️), Dining (🍽️), Transit (🚗), Outdoor (🏕️), Shopping (🛍️), Entertainment (🎭), Accommodation (🏨), or Photo Stop (📸).
+    - **Location**: Enters an address or landmark name (e.g., *"Tafelberg Rd, Cape Town"*).
+    - **Start Time** (Mandatory): Picks a starting time (e.g., `09:30`).
+    - **Duration** (Mandatory): Enters estimated time in standard formats (e.g., `1h`, `45m`, `2h 30m`, or numeric minutes like `90`).
+    - **Notes**: Adds optional personalized guidance or tips for the tourist (e.g., *"Bring a light jacket and comfortable shoes"*).
+11. The Guide clicks **"+ Add to Timeline"**.
+12. The system validates the inputs:
+    - Confirms name, start time, and duration are populated and duration is greater than 0.
+    - Runs **time-conflict detection** against all currently scheduled activities.
+    - If valid, appends the new activity and **automatically sorts the entire timeline chronologically** by start time.
+13. The Guide views the visual **Vertical Timeline** beneath the form:
+    - Each stop is rendered as a chronological timeline node connected by color-coded indicator lines and dots matching the activity category.
+    - Each card displays an index badge (`#1`, `#2`, etc.), start and calculated end times, and full details.
+    - **Inline Editing**: The Guide can click directly into any field on a timeline card (name, type dropdown, location, start time, duration, notes) to make instant adjustments without re-submitting a form.
+    - **Removing Activities**: The Guide can click the **"✕"** icon button on any card header to delete an activity immediately from the timeline.
+
+#### B. Overview Tab (`📋 Overview`)
+14. The Guide clicks the **"📋 Overview"** tab to review the clean day-at-a-glance summary.
+15. Each activity is presented in an orderly card row with:
+    - Sequence number badge.
+    - Color-coded left border.
+    - Category type pill badge.
+    - Location with map pin icon.
+    - Scheduled time window (e.g., `09:30 – 11:00`).
+    - Duration and guide notes.
+16. If no activities exist yet, an empty state displays an illustration and a **"Go to Builder →"** button.
+
+#### C. Locations Tab (`📍 Locations`)
+17. The Guide clicks the **"📍 Locations"** tab to review the geographic route stops.
+18. The system displays only activities that have a location specified, ordered sequentially with numeric pin icons, addresses, and scheduled times.
+19. A helpful route tip advises visiting the locations in order for the smoothest travel flow.
+
+### Step 5: Saving Changes and Notifying the Tourist
+20. Once satisfied with the schedule, the Guide clicks the **"💾 Save & Notify"** button in the header.
+21. The button switches to **"Saving..."** and is disabled to prevent duplicate submissions.
+22. The frontend serializes the timeline array into JSON and issues a `PUT /api/local-guide/itinerary/{currentTourId}` request.
+23. The backend:
+    - Updates `Tour.Description` with the serialized timeline JSON and updates the tour timestamp.
+    - Auto-generates a notification in the `Notifications` table addressed to the tourist: *"Your guide updated your itinerary schedule."*
+24. The frontend alerts the Guide: *"Itinerary saved! The tourist has been notified."*
+
+### Step 6: Tourist Accessing the Updated Itinerary
+25. The matched Tourist receives an in-app notification alerting them of the itinerary update.
+26. The Tourist navigates to **"My Activities"** (`/activities`) or the **"Bookings"** tab on their Profile page (`/profile`).
+27. The custom itinerary booking card renders a glassmorphic itinerary timeline displaying the full sequence of activities, locations, times, and notes curated by their guide.
 
 **Postconditions:**
-1. The itinerary database records are successfully updated.
-2. Real-time synchronization propagates changes to connected client views.
-3. A notification is dispatched to the assigned tourist(s).
+1. The custom itinerary timeline is securely serialized and stored in the database (`Tour` table with `Type = 'CustomItinerary'`).
+2. A persistent notification is dispatched to the assigned tourist.
+3. The updated itinerary is immediately accessible to both the Guide (via `/manage-itinerary/:touristId`) and the Tourist (via `/activities` and `/profile`).
 
 **Alternative Flows:**
-- **8a. Validation Failure (Overlapping Times or Missing Fields):**
-  - 8a.1. The system detects a time conflict with an existing scheduled activity or a missing mandatory field.
-  - 8a.2. The system aborts the save operation and displays a descriptive error message highlighting the conflict.
-  - 8a.3. The actor modifies the conflicting time slot or fills in missing data, then returns to step 7.
-- **10a. Network Connectivity Loss During Sync:**
-  - 10a.1. The system fails to connect to the backend database/real-time server.
-  - 10a.2. The system caches the itinerary updates locally and displays a "Pending Sync / Offline Mode" warning banner to the actor.
+
+- **11a. Missing Mandatory Information in Activity Form:**
+  - 11a.1. The Guide clicks "+ Add to Timeline" without entering an activity name, start time, or duration.
+  - 11a.2. The system triggers a validation alert specifying the missing requirement (e.g., *"Please enter an activity name"*, *"Please set a start time"*, or *"Invalid duration"*).
+  - 11a.3. The Guide provides the missing value and clicks "+ Add to Timeline" again.
+
+- **11b. Schedule Overlap / Time Conflict Detected:**
+  - 11b.1. The Guide attempts to add an activity whose time span (start time to end time) overlaps with an existing activity on the timeline.
+  - 11b.2. The system blocks insertion and displays an alert: *"Time conflict with '[Conflicting Activity Name]'. Choose a different time."*
+  - 11b.3. The Guide adjusts the start time or duration to an open window and re-submits.
+
+- **11c. Network Connectivity Interruption / Offline Mode:**
+  - 11c.1. The Guide clicks "Save & Notify" while experiencing a network drop (`ERR_NETWORK` or `!navigator.onLine`).
+  - 11c.2. The frontend catches the network exception and stores the updated timeline in `localStorage` under `pending_itinerary_{currentTourId}`.
+  - 11c.3. The system sets offline mode, rendering a yellow notification banner across the top: *"📶 Offline Mode — Changes saved locally and will sync when you reconnect."*
+  - 11c.4. An alert informs the Guide that their changes are preserved locally and will be synchronized when connectivity returns.
+
+- **11d. Empty Itinerary State Navigation:**
+  - 11d.1. The Guide switches to the "Overview" or "Locations" tab when no activities have been added yet.
+  - 11d.2. The system renders an empty state illustration explaining that no activities are present.
+  - 11d.3. The Guide clicks the "Go to Builder →" call-to-action button, which automatically switches the active tab back to the Itinerary Builder.
 
 ---
 

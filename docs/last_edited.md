@@ -1,3 +1,19 @@
+# Last Edited - Manage Itinerary Use Case Narrative Update (D800)
+
+## [2026-09-04]
+- **Documentation (Use Case Narratives Update)**: Rewrote **Use Case 11: Manage Itinerary (D800)** to reflect the exact user interaction journey implemented in the application.
+  - **Files modified**: `docs/use_case_narratives.md`
+  - **Why it changed**: The user requested that the Manage Itinerary use case narrative be updated to accurately describe how a user (the Local Guide and matched Tourist) interacts with the system, replacing obsolete placeholders with the real UI interaction model.
+  - **How the change works**:
+    - Detailed the step-by-step navigation from the "Manage Tourist Itineraries" section on `GuideHome.jsx` to the full-page workspace at `/manage-itinerary/:touristId`.
+    - Documented user interaction with the live summary stats bar (dynamic activity count, total duration, start and end times).
+    - Described the interaction across all 3 tabs:
+      1. **Itinerary Builder (`🗓️ Itinerary Builder`)**: Adding activities via form inputs, automatic time conflict detection, timeline sorting, and inline editing/deletion directly on the vertical timeline nodes.
+      2. **Overview (`📋 Overview`)**: Reviewing the high-level sequential itinerary list with color-coded category badges, time ranges, and guide notes.
+      3. **Locations (`📍 Locations`)**: Browsing sequential geographic stops with addresses and recommended visit order tips.
+    - Documented saving and notification logic ("Save & Notify" button, `PUT /api/local-guide/itinerary/{tourId}`, notification dispatch, and offline fallback banner with `localStorage` caching).
+    - Documented the tourist side of the experience, viewing the custom itinerary in `MyActivities.jsx` and `Profile.jsx`.
+
 # Last Edited - Synchronized Latest from Main (Interactive Map & Booking Fixes)
 
 ## [2026-09-04]
