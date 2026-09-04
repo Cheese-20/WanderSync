@@ -3,6 +3,12 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/nav.css';
 import logo from '../assets/images/logo.png';
+import magnifyIcon from '../assets/images/magnify.png';
+import usersIcon from '../assets/images/users.png';
+import messengerIcon from '../assets/images/messenger.png';
+import userIcon from '../assets/images/user.png';
+import dashboardIcon from '../assets/images/dashboard.png';
+import homeIcon from '../assets/images/home.png';
 import { getActiveMode, MODE_GUIDE } from '../utils/session';
 
 export default function NavBar() {
@@ -84,13 +90,14 @@ export default function NavBar() {
         <div className="ws-brand">WanderSync</div>
       </div>
       <ul className="ws-nav-list">
-        <li><NavLink to="/explore" className={navLinkClass}>Explore</NavLink></li>
-        <li><NavLink to="/match" className={navLinkClass}>Match</NavLink></li>
-        <li><NavLink to="/messages" className={navLinkClass}>Messages</NavLink></li>
+        <li><NavLink to="/home" className={navLinkClass}><img src={homeIcon} alt="Home" className="nav-icon" />Home</NavLink></li>
+        <li><NavLink to="/explore" className={navLinkClass}><img src={magnifyIcon} alt="Explore" className="nav-icon" />Explore</NavLink></li>
+        <li><NavLink to="/match" className={navLinkClass}><img src={usersIcon} alt="Match" className="nav-icon" />Match</NavLink></li>
+        <li><NavLink to="/messages" className={navLinkClass}><img src={messengerIcon} alt="Messages" className="nav-icon" />Messages</NavLink></li>
         {isGuideView && (
-          <li><NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink></li>
+          <li><NavLink to="/dashboard" className={navLinkClass}><img src={dashboardIcon} alt="Dashboard" className="nav-icon" />Dashboard</NavLink></li>
         )}
-        <li><NavLink to="/profile" className={navLinkClass}>Profile</NavLink></li>
+        <li><NavLink to="/profile" className={navLinkClass}><img src={userIcon} alt="Profile" className="nav-icon" />Profile</NavLink></li>
         
         <li className="notification-container" ref={dropdownRef}>
           <div className="notification-bell" onClick={() => setShowDropdown(!showDropdown)}>
