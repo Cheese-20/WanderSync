@@ -239,7 +239,10 @@ using (var scope = app.Services.CreateScope())
             "ALTER TABLE `curatedSpots` ADD COLUMN `pictureURL` longtext NULL;",
             "ALTER TABLE `curatedSpots` ADD COLUMN `submittedByUserID` int NULL;",
             "ALTER TABLE `curatedSpots` ADD COLUMN `submittedAt` datetime(6) NULL;",
-            "ALTER TABLE `curatedSpots` MODIFY COLUMN `isVerified` varchar(50) DEFAULT 'pending';"
+            "ALTER TABLE `curatedSpots` MODIFY COLUMN `isVerified` varchar(50) DEFAULT 'pending';",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `latitude` double NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `longitude` double NULL;",
+            "ALTER TABLE `curatedSpots` ADD COLUMN `submittedByName` longtext NULL;"
         };
 
         foreach (var sql in curatedSpotsColumnSqls)
@@ -276,13 +279,13 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("INFO: Attempting to seed dummy local favourites...");
         try {
             var insertDummySpotsSql = @"
-                INSERT IGNORE INTO `curatedSpots` (`spotID`, `activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`) 
+                INSERT IGNORE INTO `curatedSpots` (`spotID`, `activityName`, `activityType`, `location`, `description`, `isVerified`, `pictureURL`, `submittedAt`, `latitude`, `longitude`, `submittedByName`) 
                 VALUES 
-                (9001, 'Sunset Kayaking', 'Water Sports', 'V&A Waterfront', 'Enjoy a beautiful sunset kayaking experience with views of Table Mountain. Suitable for all skill levels.', 'approved', 'https://images.unsplash.com/photo-1544256718-3bcf237f3974?w=600', NOW()),
-                (9002, 'Hidden Rooftop Cafe', 'Dining', 'City Center', 'A secret cafe with the best coffee and panoramic views of the city. Try their signature pastries.', 'approved', 'https://images.unsplash.com/photo-1525610553991-2bede1a236e2?w=600', NOW()),
-                (9003, 'Mountain Bike Trail', 'Adventure', 'Table Mountain', 'An exhilarating trail through the lower slopes of Table Mountain. Bike rentals available at the start.', 'approved', 'https://images.unsplash.com/photo-1574768395574-8b6a38612ff0?w=600', NOW()),
-                (9004, 'Kalk Bay Harbor Walk', 'Culture', 'Kalk Bay', 'Explore the vibrant working harbor, see the local seals, and enjoy fresh fish and chips by the sea.', 'approved', 'https://images.unsplash.com/photo-1580509653855-66795f7004f1?w=600', NOW()),
-                (9005, 'Boulders Beach Penguins', 'Nature', 'Simon''s Town', 'Get up close with the famous African penguin colony at Boulders Beach. A must-see for animal lovers.', 'approved', 'https://images.unsplash.com/photo-1586071853637-231cb489e27c?w=600', NOW());
+                (9201, 'Boardwalk Casino and Entertainment', 'Leisure', 'Gqeberha', 'An entertainment precinct featuring dining, shopping, and a spectacular musical fountain show.', 'approved', 'https://images.unsplash.com/photo-1549490349-8643362247b5?w=600', NOW(), -33.9825, 25.6586, 'John Doe'),
+                (9202, 'Donkin Reserve', 'History', 'Gqeberha', 'A historic park featuring a lighthouse and a pyramid monument built by Sir Rufane Donkin in memory of his wife.', 'approved', 'https://images.unsplash.com/photo-1518342797664-9f93ee74f261?w=600', NOW(), -33.9622, 25.6214, 'Jane Smith'),
+                (9203, 'Kragga Kamma Game Park', 'Wildlife', 'Gqeberha', 'A lush coastal forest setting where you can see white rhino, buffalo, cheetah, giraffe, and zebra.', 'approved', 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=600', NOW(), -33.9806, 25.4526, 'Alice Johnson'),
+                (9204, 'Sardinia Bay Beach', 'Nature', 'Gqeberha', 'Known for its miles of unspoiled beach and towering sand dunes. Perfect for a long walk.', 'approved', 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600', NOW(), -34.0372, 25.4947, 'Bob Lee'),
+                (9205, 'Bayworld', 'Culture', 'Gqeberha', 'A museum and oceanarium complex offering a blend of natural and cultural history.', 'approved', 'https://images.unsplash.com/photo-1586071853637-231cb489e27c?w=600', NOW(), -33.9781, 25.6483, 'Charlie Brown');
             ";
             context.Database.ExecuteSqlRaw(insertDummySpotsSql);
             Console.WriteLine("SUCCESS: Inserted 5 dummy spots (or skipped if already exist)");

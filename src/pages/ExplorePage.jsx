@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
+import MapModal from '../components/MapModal';
 import '../styles/explore.css';
 
 const ACTIVITY_TYPES = [
@@ -44,6 +45,10 @@ export default function ExplorePage() {
   const [error, setError] = useState('');
   const [showAllTours, setShowAllTours] = useState(false);
   const [userBookings, setUserBookings] = useState([]);
+  
+  // Map Modal State
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [mapSpots, setMapSpots] = useState([]);
   
   // Submit New Spot Modal State
   const [showModal, setShowModal] = useState(false);
@@ -102,6 +107,13 @@ export default function ExplorePage() {
     setErrorMessage('');
     setSuccessMessage('');
     try {
+      const userStr = localStorage.getItem('user');
+      let submittedByName = 'Anonymous';
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        submittedByName = `${user.firstName || user.FirstName || ''} ${user.lastName || user.LastName || ''}`.trim() || 'Anonymous';
+      }
+
       await axios.post('/api/curatedspots', {
         activityName: newSpot.activityName,
         activityType: newSpot.activityType,
@@ -110,7 +122,8 @@ export default function ExplorePage() {
         pictureURL: newSpot.pictureURL,
         isVerified: "pending",
         submittedByUserID: loggedInUserId,
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString(),
+        submittedByName: submittedByName
       });
       setSuccessMessage('Spot submitted successfully for review!');
       setNewSpot({ activityName: '', activityType: '', description: '', location: '', pictureURL: '' });
@@ -133,13 +146,16 @@ export default function ExplorePage() {
       if (currentUserId) {
         bookingsRes = await axios.get(`/api/bookings/user/${currentUserId}/with-details`).catch(() => ({ data: [] }));
       }
-      const [guidesRes, toursRes] = await Promise.all([
+      const [guidesRes, toursRes, spotsRes] = await Promise.all([
         axios.get('/api/local-guide/list'),
-        axios.get('/api/tours')
+        axios.get('/api/tours'),
+        axios.get('/api/spots/verified').catch(() => ({ data: [] }))
       ]);
       setGuides(guidesRes.data || []);
       setFilteredGuides(guidesRes.data || []);
       setTours(toursRes.data || []);
+      setUserBookings(bookingsRes.data || []);
+      setMapSpots(spotsRes.data || []);
       setUserBookings(bookingsRes.data || []);
     } catch (err) {
       console.error('Error loading explore data:', err);
@@ -376,15 +392,20 @@ export default function ExplorePage() {
 
       <div className="explore-page">
       <section className="explore-search-section">
-        <form className="explore-search-form" onSubmit={handleSearch}>
-          <div className="search-input-wrapper">
-            <input type="text" className="explore-search-input" placeholder="Search for Local Guide or spot" value={query} onChange={(e) => setQuery(e.target.value)} />
-            {query && <button type="button" className="search-clear-btn" onClick={handleClearSearch}>&times;</button>}
-          </div>
-          <button type="submit" className="explore-search-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '660px', margin: '0 auto' }}>
+          <button type="button" className="map-btn" title="Explore spots on map" onClick={() => setIsMapModalOpen(true)}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#475569' }}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
           </button>
-        </form>
+          <form className="explore-search-form" onSubmit={handleSearch} style={{ margin: 0, flex: 1 }}>
+            <div className="search-input-wrapper">
+              <input type="text" className="explore-search-input" placeholder="Search for Local Guide or spot" value={query} onChange={(e) => setQuery(e.target.value)} />
+              {query && <button type="button" className="search-clear-btn" onClick={handleClearSearch}>&times;</button>}
+            </div>
+            <button type="submit" className="explore-search-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+          </form>
+        </div>
       </section>
 
       <header className="explore-hero">
@@ -630,12 +651,15 @@ export default function ExplorePage() {
           </section>
 
 
-
           <section className="explore-my-activities-link">
             <p>Already booked a tour?</p>
             <button className="btn-view-all" onClick={() => navigate('/my-activities')}>View My Activities & Rate Guides</button>
           </section>
         </>
+      )}
+
+      {isMapModalOpen && (
+        <MapModal isOpen={isMapModalOpen} onClose={() => setIsMapModalOpen(false)} spots={mapSpots} />
       )}
     </div>
     </>

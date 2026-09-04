@@ -687,3 +687,55 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 - `loadData` now accepts `currentUserId` and makes an additional API call to fetch bookings.
 - The state `userBookings` stores this data.
 - In the JSX rendering, `userBookings.some(...)` is used to evaluate whether the button should be disabled and what text should be displayed.
+
+## 2026-09-04: Added Interactive Map to Explore Page
+**What has been changed:**
+- Added `latitude`, `longitude`, and `submittedByName` columns to the `CuratedSpot` model and `curatedSpots` database table.
+- Seeded initial spot dummy data with accurate GPS coordinates in `backend/Program.cs`.
+- Installed `leaflet` and `react-leaflet@4.2.1` in the frontend.
+- Created `src/components/MapModal.jsx`, a new component overlay featuring an interactive map using `react-leaflet`.
+- Placed a map button `🗺️` next to the search bar in `src/pages/ExplorePage.jsx` to toggle the Map Modal.
+- Styled custom map pins and popups with the WanderSync logo, spot rating, description, and "added by" data.
+
+**Why it has changed:**
+- User requested a visual way to explore available spots on a map using the browser's live GPS location, ensuring an aesthetically pleasing popup for spot details.
+
+**How the change works:**
+- The backend API (`/api/spots/verified`) now returns location coordinates.
+- When the Map button is clicked, `ExplorePage.jsx` sets `isMapModalOpen` to true, rendering the `<MapModal>`.
+- The modal uses `navigator.geolocation.getCurrentPosition()` to find the user's location, centering the Leaflet map on those coordinates.
+- Each spot is rendered as a `<Marker>` with an accompanying styled `<Popup>` component.
+
+## 2026-09-04: Aesthetic Improvements for Map Feature
+**What has been changed:**
+- Transformed the map pins from the default blue image to a custom HTML/CSS div (`L.divIcon`) featuring a `linear-gradient` of mint green (`#a6d8b6`) and light brown (`#d1c896`). 
+- Redesigned the map popups with `border-radius: 16px`, a larger drop shadow, and a frosted glass background (`backdrop-filter: blur(8px)`).
+- Enhanced popup typography (bolder titles, darker text) and adjusted spacing/margins for a cleaner, premium look.
+- Switched the map tile layer back to standard OpenStreetMap to remove the "API KEY REQUIRED" CartoDB watermark.
+* **Updated `backend/Controllers/SpotController.cs`**: Switched the `averageRating` logic to prioritize mapping the actual `Rating` column value from the database instead of manually aggregating nonexistent `SpotRatings`.
+* **Updated `backend/Models/CuratedSpot.cs`**: Mapped the `Rating` field specifically with `TypeName = "decimal(4,2)"` to properly consume the MySQL database schema without EF Core silently nullifying it.
+* **Updated `src/components/MapModal.jsx`**: Removed the `(x reviews)` text next to the rating score inside popup components at the user's request.
+
+**Why it has changed:**
+- User requested pins in the brand's gradient and a more aesthetic popup design.
+
+**How the change works:**
+- Removed `DefaultIcon` in `MapModal.jsx` and created a `gradientIcon` using `L.divIcon` which injects a `<div class="pin-body"></div>`.
+- Added `.custom-gradient-pin` styles to `explorer.css` with a 45-degree rotated box and `border-radius: 50% 50% 50% 0` to create a teardrop pin shape.
+- Overrode Leaflet's default popup `.leaflet-popup-content-wrapper` and `.leaflet-popup-tip` classes with custom CSS variables.
+
+## 2026-09-04: Integrate Mendy's 1-on-1 Booking Fix & Popup Formatting
+**What has been changed:**
+- Integrated Mendy's remote branch `origin/Check` into the current working branch via `git cherry-pick`.
+- This applies a bug fix to `backend/Controllers/BookingsController.cs` for 1-on-1 experience bookings.
+- Refined the Map modal popups: replaced the native text star character (`★`) with an SVG star to fix rendering clipping issues, added top margin to the popup title so it's not flush with the spot image, and refined font weights and text colors for the rating/review text.
+
+**Why it has changed:**
+- The user requested that Mendy's latest code (which fixes database connection resiliency issues with the bookings endpoint) be added to the current branch.
+- The user noticed the popup title was too close to the image and the star icon was getting cut off/misaligned.
+
+**How the change works:**
+- Entity Framework Core was throwing an exception when manually initializing transactions because the database is configured to automatically retry on failure (`EnableRetryOnFailure`). Mendy wrapped the 1-on-1 tour and booking creation in a retry execution strategy: `var strategy = _context.Database.CreateExecutionStrategy(); strategy.ExecuteAsync(...)`.
+- Added `_context.ChangeTracker.Clear()` to properly clean state on retries.
+- Added `_logger.LogError(...)` inside the `catch` block to make future booking failures debuggable.
+- Updated `MapModal.jsx` to swap the text star with a custom SVG polygon, and tweaked `.spot-popup-title` margin and `.spot-popup-rating` typography in `explorer.css`.
