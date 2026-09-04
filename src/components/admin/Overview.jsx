@@ -41,8 +41,8 @@ export default function Overview() {
   // `currentColor`. Muted tones keep the cards scannable without clashing with
   // the green project palette.
   const reportCards = [
-    { key: 'new-profiles', title: 'Number of New Profiles Created', Icon: UserIcon, accent: '#3d5a3e' },
-    { key: 'active-users', title: 'Number of Active Users', Icon: CheckCircleIcon, accent: '#2e7d32' },
+    { key: 'new-profiles', title: 'Number of New Profiles Created', Icon: UserIcon, accent: '#6f7d45' },
+    { key: 'active-users', title: 'Number of Active Users', Icon: CheckCircleIcon, accent: '#8a9a5b' },
     { key: 'top-experiences', title: 'Top Rated Experiences', Icon: StarIcon, accent: '#a67c1a' },
     { key: 'guide-leaderboard', title: 'Guide Performance Leaderboard', Icon: TrophyIcon, accent: '#8a6a34' },
   ];

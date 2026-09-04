@@ -43,6 +43,7 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAllTours, setShowAllTours] = useState(false);
+  const [userBookings, setUserBookings] = useState([]);
   
   // Submit New Spot Modal State
   const [showModal, setShowModal] = useState(false);
@@ -71,13 +72,15 @@ export default function ExplorePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadData();
+    let currentUserId = null;
     const userJson = localStorage.getItem('user');
     if (userJson) {
       const user = JSON.parse(userJson);
       setUserRole((user.role || '').toLowerCase());
-      setLoggedInUserId(user.id || user.userID);
+      currentUserId = user.id || user.userID;
+      setLoggedInUserId(currentUserId);
     }
+    loadData(currentUserId);
   }, []);
 
   // Move focus into the dialog and allow Escape to dismiss it, so the replacement
@@ -122,10 +125,14 @@ export default function ExplorePage() {
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (currentUserId) => {
     setLoading(true);
     setError('');
     try {
+      let bookingsRes = { data: [] };
+      if (currentUserId) {
+        bookingsRes = await axios.get(`/api/bookings/user/${currentUserId}/with-details`).catch(() => ({ data: [] }));
+      }
       const [guidesRes, toursRes] = await Promise.all([
         axios.get('/api/local-guide/list'),
         axios.get('/api/tours')
@@ -133,6 +140,7 @@ export default function ExplorePage() {
       setGuides(guidesRes.data || []);
       setFilteredGuides(guidesRes.data || []);
       setTours(toursRes.data || []);
+      setUserBookings(bookingsRes.data || []);
     } catch (err) {
       console.error('Error loading explore data:', err);
       setError('Unable to load data. Please make sure the backend is running.');
@@ -383,7 +391,7 @@ export default function ExplorePage() {
 
         {loggedInUserId && (
           <button className="submit-spot-btn" style={{ marginTop: '15px' }} onClick={() => setShowModal(true)}>
-            ✨ Submit New Spot
+            Submit New Spot
           </button>
         )}
       </header>
@@ -573,9 +581,11 @@ export default function ExplorePage() {
                           <button
                             className="experience-book-btn"
                             onClick={(e) => handleBookTour(tour, e)}
-                            disabled={bookingTourId !== null}
+                            disabled={bookingTourId !== null || userBookings.some(b => b.tourId === (tour.tourId || tour.tourID) || b.tourID === (tour.tourId || tour.tourID))}
                           >
-                            {bookingTourId === (tour.tourId || tour.tourID) ? 'Booking...' : 'Book'}
+                            {userBookings.some(b => b.tourId === (tour.tourId || tour.tourID) || b.tourID === (tour.tourId || tour.tourID))
+                              ? 'Already booked'
+                              : (bookingTourId === (tour.tourId || tour.tourID) ? 'Booking...' : 'Book')}
                           </button>
                         </div>
                       </div>

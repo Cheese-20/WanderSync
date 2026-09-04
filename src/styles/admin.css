@@ -10,13 +10,17 @@
    styles.css. */
 
 .admin-page {
-  /* Palette, mirrored from the shared stylesheets so there is one place to adjust. */
-  --admin-green: #1a8f66;
-  --admin-green-dark: #157a57;
-  --admin-green-soft: #a4ddbc;
-  --admin-green-tint: #f0fdf4;
-  --admin-green-border: #bbf7d0;
-  --admin-green-text: #166534;
+  /* Olive/sage accent ramp, keyed off the sign-up overlay colour (#c9cfa9/#d1c896 in
+     styles.css). The variable names keep the `green` suffix so every rule below stays
+     unchanged; only the values move to olive. Solid/active shades are deepened so white
+     text on buttons and active tabs still meets contrast; tint/border/text are the light
+     olive + a dark-olive text for readability. This is the single place to adjust. */
+  --admin-green: #8a9a5b;
+  --admin-green-dark: #6f7d45;
+  --admin-green-soft: #c9cfa9;
+  --admin-green-tint: #f3f4ea;
+  --admin-green-border: #dfe3c4;
+  --admin-green-text: #4a5327;
 
   --ink: #1f2937;
   --ink-soft: #374151;
@@ -39,7 +43,7 @@
   --warn-tint: #fffbeb;
   --warn-border: #fde68a;
 
-  --focus-ring: 0 0 0 3px rgba(26, 143, 102, 0.12);
+  --focus-ring: 0 0 0 3px rgba(138, 154, 91, 0.22);
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.05);
 
   min-height: 100vh;
@@ -187,7 +191,7 @@
 
 .report-card:hover {
   border-color: var(--admin-green-soft);
-  box-shadow: 0 6px 20px rgba(26, 143, 102, 0.12);
+  box-shadow: 0 6px 20px rgba(138, 154, 91, 0.22);
   transform: translateY(-2px);
 }
 
@@ -548,7 +552,7 @@
 }
 
 .btn-approve:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(26, 143, 102, 0.3);
+  box-shadow: 0 6px 20px rgba(138, 154, 91, 0.35);
 }
 
 .btn-reject,
@@ -767,7 +771,7 @@
 
 .btn-accept-large:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(26, 143, 102, 0.3);
+  box-shadow: 0 6px 20px rgba(138, 154, 91, 0.35);
 }
 
 .btn-reject-large {

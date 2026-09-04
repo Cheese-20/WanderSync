@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import ConfirmationPopup from './ConfirmationPopup';
+import { MapPinIcon } from '../icons/AdminIcons.jsx';
 
 export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
   const [spot, setSpot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
+  // popup: { type, title, message, onClose } shown after a flag/delete completes.
+  const [popup, setPopup] = useState(null);
 
   useEffect(() => {
     fetchSpotDetail();
@@ -27,21 +30,35 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
 
   const handleFlag = async () => {
     setActionLoading('flag');
-    setError(null);
     try {
       const response = await fetch(
         `http://localhost:5200/api/admin/reported-spots/${spotId}/flag`,
         { method: 'PATCH' }
       );
       if (response.ok) {
-        setSuccessMsg('Spot has been flagged successfully. Users will see a warning.');
-        setTimeout(() => onFlagged(spotId), 2000);
+        // On close, return to the list so it reflects the new status.
+        setPopup({
+          type: 'success',
+          title: 'Spot Flagged',
+          message: 'This spot has been flagged. Users will now see a warning on it.',
+          onClose: () => onFlagged(spotId)
+        });
       } else {
         const data = await response.text();
-        setError(data || 'Failed to flag the spot.');
+        setPopup({
+          type: 'failure',
+          title: 'Could Not Flag Spot',
+          message: data || 'Failed to flag the spot. Please try again.',
+          onClose: () => setPopup(null)
+        });
       }
     } catch (err) {
-      setError('A network error occurred. Please try again.');
+      setPopup({
+        type: 'failure',
+        title: 'Could Not Flag Spot',
+        message: 'A network error occurred. Please try again.',
+        onClose: () => setPopup(null)
+      });
     } finally {
       setActionLoading(null);
     }
@@ -49,21 +66,34 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
 
   const handleDelete = async () => {
     setActionLoading('delete');
-    setError(null);
     try {
       const response = await fetch(
         `http://localhost:5200/api/admin/reported-spots/${spotId}`,
         { method: 'DELETE' }
       );
       if (response.ok) {
-        setSuccessMsg('Spot has been permanently deleted.');
-        setTimeout(() => onDeleted(spotId), 2000);
+        setPopup({
+          type: 'success',
+          title: 'Spot Deleted',
+          message: 'This spot has been permanently removed from WanderSync.',
+          onClose: () => onDeleted(spotId)
+        });
       } else {
         const data = await response.text();
-        setError(data || 'Failed to delete the spot.');
+        setPopup({
+          type: 'failure',
+          title: 'Could Not Delete Spot',
+          message: data || 'Failed to delete the spot. Please try again.',
+          onClose: () => setPopup(null)
+        });
       }
     } catch (err) {
-      setError('A network error occurred. Please try again.');
+      setPopup({
+        type: 'failure',
+        title: 'Could Not Delete Spot',
+        message: 'A network error occurred. Please try again.',
+        onClose: () => setPopup(null)
+      });
     } finally {
       setActionLoading(null);
     }
@@ -167,11 +197,7 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
           )}
         </div>
 
-        {successMsg && <div className="detail-success">{successMsg}</div>}
-        {error && <div className="detail-error">{error}</div>}
-
-        {!successMsg && (
-          <div className="detail-card-footer">
+        <div className="detail-card-footer">
           <button
             className="btn-flag-large"
             onClick={handleFlag}
@@ -189,8 +215,19 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
             {actionLoading === 'delete' ? 'Deleting...' : `Delete Spot (${spot.reportCount}/6)`}
           </button>
         </div>
-        )}
       </div>
+
+      {popup && (
+        <ConfirmationPopup
+          type={popup.type}
+          title={popup.title}
+          message={popup.message}
+          icon={<MapPinIcon size={38} />}
+          showClose
+          duration={0}
+          onClose={popup.onClose}
+        />
+      )}
     </div>
   );
 }

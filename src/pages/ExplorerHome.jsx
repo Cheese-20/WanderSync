@@ -13,6 +13,7 @@ export default function ExplorerHome() {
   const [editingPost, setEditingPost] = useState(null);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [tours, setTours] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [requestedTourIds, setRequestedTourIds] = useState([]);
   const [selectedTour, setSelectedTour] = useState(null);
@@ -173,6 +174,17 @@ export default function ExplorerHome() {
               })
               .catch(err => console.error('Failed to fetch user bookings:', err))
           );
+
+          // Fetch the user's profile to get their location
+          promises.push(
+            axios.get(`http://localhost:5200/api/profile/${userId}`)
+              .then(res => {
+                if (res.data && res.data.location) {
+                  setUserLocation(res.data.location);
+                }
+              })
+              .catch(err => console.error('Failed to fetch user profile:', err))
+          );
         }
       } catch (e) {
         console.warn('Failed to parse user from local storage', e);
@@ -299,6 +311,14 @@ export default function ExplorerHome() {
     );
   }
 
+  const displayTours = userLocation
+    ? tours.filter(t => 
+        t.location && 
+        (t.location.toLowerCase().includes(userLocation.toLowerCase()) || 
+         userLocation.toLowerCase().includes(t.location.toLowerCase()))
+      )
+    : tours;
+
   return (
     <>
       <NavBar />
@@ -308,7 +328,7 @@ export default function ExplorerHome() {
           <h2>Tours happening lately</h2>
         </div>
         <div className="tours-grid" ref={scrollRef} style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
-          {tours.slice(0, visibleToursCount).map(tour => (
+          {displayTours.slice(0, visibleToursCount).map(tour => (
             <article key={tour.tourId || tour.tourID} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
                 <img src={tour.pictureURL || logo} alt="Tour" />
@@ -337,11 +357,12 @@ export default function ExplorerHome() {
                     const isFull = (tour.confirmedBookingsCount || 0) >= tour.maxPeople;
                     const isDisabled = isRequested || isFull;
                     let btnText = 'Join';
-                    if (isRequested) btnText = 'Requested';
+                    if (isRequested) btnText = 'Already booked';
                     else if (isFull) btnText = 'Full';
 
                     return (
                       <button 
+
                         className="mint-btn" 
                         disabled={isDisabled}
                         style={{ 
@@ -360,7 +381,7 @@ export default function ExplorerHome() {
             </article>
           ))}
           
-          {tours.length > 0 && (
+          {displayTours.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
               <button 
                 onClick={() => {
@@ -373,13 +394,13 @@ export default function ExplorerHome() {
                 }} 
                 style={{
                   width: '50px', height: '50px', borderRadius: '50%', 
-                  backgroundColor: (visibleToursCount >= 12 || visibleToursCount >= tours.length) ? '#ccc' : '#a6d8b6', 
+                  backgroundColor: (visibleToursCount >= 12 || visibleToursCount >= displayTours.length) ? '#ccc' : '#a6d8b6', 
                   color: '#fff', border: 'none', fontSize: '1.5rem', 
-                  cursor: (visibleToursCount >= 12 || visibleToursCount >= tours.length) ? 'default' : 'pointer', 
+                  cursor: (visibleToursCount >= 12 || visibleToursCount >= displayTours.length) ? 'default' : 'pointer', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}
-                disabled={visibleToursCount >= 12 || visibleToursCount >= tours.length}
+                disabled={visibleToursCount >= 12 || visibleToursCount >= displayTours.length}
                 title="Load more tours"
               >
                 &#8594;
@@ -387,7 +408,7 @@ export default function ExplorerHome() {
             </div>
           )}
 
-          {tours.length === 0 && <p>No tours available today.</p>}
+          {displayTours.length === 0 && <p>No tours available today.</p>}
         </div>
       </section>
 
