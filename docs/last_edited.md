@@ -610,3 +610,18 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 
 **How the change works:**
 - Just a simple text replacement within the JSX returned by the component, removing the emoji character.
+
+
+## 2026-09-04: Prevent Re-booking in Explore Page
+**What has been changed:**
+- Updated `src/pages/ExplorePage.jsx` to fetch the logged-in user's bookings (`/api/bookings/user/{userId}/with-details`) alongside the tours and guides.
+- Modified the "Book" button logic to check if the user has already booked the specific tour.
+- If a booking exists for that `tourId`, the button is disabled and the text changes to "Already booked".
+
+**Why it has changed:**
+- User requested that we prevent users from booking the same tour multiple times and provide clear feedback on the button itself.
+
+**How the change works:**
+- `loadData` now accepts `currentUserId` and makes an additional API call to fetch bookings.
+- The state `userBookings` stores this data.
+- In the JSX rendering, `userBookings.some(...)` is used to evaluate whether the button should be disabled and what text should be displayed.
