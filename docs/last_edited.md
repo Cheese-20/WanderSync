@@ -1,3 +1,14 @@
+# Last Edited - Synchronized Latest from Main (Interactive Map & Booking Fixes)
+
+## [2026-09-04]
+- **Repository Sync**: Successfully pulled and merged the latest changes from `main` into `report-spot`.
+  - **Files modified/added**: `backend/Controllers/BookingsController.cs`, `backend/Controllers/SpotController.cs`, `backend/Models/CuratedSpot.cs`, `src/components/MapModal.jsx`, `src/pages/ExplorePage.jsx`, `src/styles/explorer.css`, `docs/last_edited.md`
+  - **Why it changed**: The user requested another pull from `main` after recent updates were pushed.
+  - **How it works**: Cleanly merged new features from `main` into the branch, bringing in:
+    1. **Interactive Map Feature**: `MapModal.jsx` and map toggle button on `ExplorePage.jsx` using `react-leaflet`, custom gradient pins, and frosted glass popups.
+    2. **Booking Resiliency Fix**: Added EF Core execution retry strategy to `backend/Controllers/BookingsController.cs` for 1-on-1 experience booking requests.
+    3. **Spot Rating & GPS Alignment**: Added GPS coordinates (`latitude`, `longitude`) and accurate database rating column mappings to `CuratedSpot.cs`.
+
 # Last Edited - Pulled Latest from Main & Resolved Conflicts
 
 ## [2026-09-04]
