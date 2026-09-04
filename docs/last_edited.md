@@ -690,6 +690,7 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 * **Updated `backend/Controllers/SpotController.cs`**: Switched the `averageRating` logic to prioritize mapping the actual `Rating` column value from the database instead of manually aggregating nonexistent `SpotRatings`.
 * **Updated `backend/Models/CuratedSpot.cs`**: Mapped the `Rating` field specifically with `TypeName = "decimal(4,2)"` to properly consume the MySQL database schema without EF Core silently nullifying it.
 * **Updated `src/components/MapModal.jsx`**: Removed the `(x reviews)` text next to the rating score inside popup components at the user's request.
+* **Updated `README.md`**: Updated project documentation to reflect newly added features (Interactive Leaflet Map, 1-on-1 Local Guide Bookings, Admin Dashboard).
 
 **Why it has changed:**
 - User requested pins in the brand's gradient and a more aesthetic popup design.
