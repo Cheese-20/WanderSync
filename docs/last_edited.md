@@ -662,3 +662,36 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 - `loadData` now accepts `currentUserId` and makes an additional API call to fetch bookings.
 - The state `userBookings` stores this data.
 - In the JSX rendering, `userBookings.some(...)` is used to evaluate whether the button should be disabled and what text should be displayed.
+
+## 2026-09-04: Added Interactive Map to Explore Page
+**What has been changed:**
+- Added `latitude`, `longitude`, and `submittedByName` columns to the `CuratedSpot` model and `curatedSpots` database table.
+- Seeded initial spot dummy data with accurate GPS coordinates in `backend/Program.cs`.
+- Installed `leaflet` and `react-leaflet@4.2.1` in the frontend.
+- Created `src/components/MapModal.jsx`, a new component overlay featuring an interactive map using `react-leaflet`.
+- Placed a map button `🗺️` next to the search bar in `src/pages/ExplorePage.jsx` to toggle the Map Modal.
+- Styled custom map pins and popups with the WanderSync logo, spot rating, description, and "added by" data.
+
+**Why it has changed:**
+- User requested a visual way to explore available spots on a map using the browser's live GPS location, ensuring an aesthetically pleasing popup for spot details.
+
+**How the change works:**
+- The backend API (`/api/spots/verified`) now returns location coordinates.
+- When the Map button is clicked, `ExplorePage.jsx` sets `isMapModalOpen` to true, rendering the `<MapModal>`.
+- The modal uses `navigator.geolocation.getCurrentPosition()` to find the user's location, centering the Leaflet map on those coordinates.
+- Each spot is rendered as a `<Marker>` with an accompanying styled `<Popup>` component.
+
+## 2026-09-04: Aesthetic Improvements for Map Feature
+**What has been changed:**
+- Transformed the map pins from the default blue image to a custom HTML/CSS div (`L.divIcon`) featuring a `linear-gradient` of mint green (`#a6d8b6`) and light brown (`#d1c896`). 
+- Redesigned the map popups with `border-radius: 16px`, a larger drop shadow, and a frosted glass background (`backdrop-filter: blur(8px)`).
+- Enhanced popup typography (bolder titles, darker text) and adjusted spacing/margins for a cleaner, premium look.
+- Switched the map tile layer back to standard OpenStreetMap to remove the "API KEY REQUIRED" CartoDB watermark.
+
+**Why it has changed:**
+- User requested pins in the brand's gradient and a more aesthetic popup design.
+
+**How the change works:**
+- Removed `DefaultIcon` in `MapModal.jsx` and created a `gradientIcon` using `L.divIcon` which injects a `<div class="pin-body"></div>`.
+- Added `.custom-gradient-pin` styles to `explorer.css` with a 45-degree rotated box and `border-radius: 50% 50% 50% 0` to create a teardrop pin shape.
+- Overrode Leaflet's default popup `.leaflet-popup-content-wrapper` and `.leaflet-popup-tip` classes with custom CSS variables.

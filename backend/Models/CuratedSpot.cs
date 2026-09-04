@@ -36,5 +36,14 @@ namespace backend.Models
 
         [Column("submittedAt")]
         public DateTime? SubmittedAt { get; set; }
+
+        [Column("latitude")]
+        public double? Latitude { get; set; }
+
+        [Column("longitude")]
+        public double? Longitude { get; set; }
+
+        [Column("submittedByName")]
+        public string? SubmittedByName { get; set; }
     }
 }
