@@ -1,3 +1,16 @@
+# Last Edited - Bug Fixes & UX Improvements
+
+## [2026-09-04]
+- **Enhancement (Frontend UI)**: Changed the text of the disabled tour button on the Explorer Home page from "Requested" to "Already booked".
+  - **Files modified**: `src/pages/ExplorerHome.jsx`
+  - **Why it changed**: The user requested that the button explicitly state "Already booked" when they have already requested or booked a tour.
+  - **How it works**: Updated the `btnText` conditional assignment in `ExplorerHome.jsx` to render "Already booked".
+
+- **Bug Fix (Database Seeding)**: Fixed duplicate entry errors preventing dummy tours from being inserted.
+  - **Files modified**: `backend/Program.cs`
+  - **Why it changed**: The dummy tours for Gqeberha were not being inserted because their primary keys conflicted with existing entries or the application timed out on startup.
+  - **How it works**: Updated the tour IDs for the dummy data to the 9100 range to ensure uniqueness and ran a manual script to ensure the data was seeded correctly. 
+
 # Last Edited - Guide Tour Management (Overview Tab)
 
 ## [2026-09-03]
@@ -216,6 +229,30 @@
   - **Files modified**: `backend/Controllers/ProfileController.cs`
   - **Why it changed**: The Match page ("Find Your Travel Buddy") was experiencing the same performance issue as messages—fetching massive Base64 profile pictures natively in JSON arrays.
   - **How it works**: Updated `GetMatches`, `GetPendingRequests`, `GetProfile`, and `GetPublicProfile` in the backend to return the lightweight `/api/profile/{userId}/picture` endpoint URL instead of the heavy raw Base64 image data.
+
+# Last Edited - Dummy Tours for Gqeberha
+
+## [2026-09-04]
+- **Enhancement (Seed Data)**: Added 7 dummy tours located in Gqeberha.
+  - **Files modified**: `backend/Program.cs`
+  - **Why it changed**: The user requested 7 dummy tours in Gqeberha to test the location filtering feature on the Explorer Home page.
+  - **How it works**: Expanded the `INSERT IGNORE INTO Tours` SQL script in `Program.cs` to include 7 new tours located in Gqeberha and restarted the backend to run the seeding script.
+
+# Last Edited - Location Filtering for Tours
+
+## [2026-09-04]
+- **Enhancement (Frontend UI)**: Filtered the "Tours happening lately" section on the Explorer home page to only show tours matching the user's location.
+  - **Files modified**: `src/pages/ExplorerHome.jsx`
+  - **Why it changed**: The user requested that the "Tours happening lately" section only display tours taking place in their own city/area, based on their profile location.
+  - **How it works**: The user's profile is now fetched during page load. If the profile contains a `location`, the application filters the upcoming tours to only those whose `location` field includes the user's location (case-insensitive) before rendering them on the page.
+
+# Last Edited - Prevent Multiple Bookings
+
+## [2026-09-04]
+- **UI Cleanup (Dashboard)**: Removed the hardcoded bookings placeholder section from the Local Guide dashboard overview.
+  - **Files modified**: `src/pages/Dashboard.jsx`
+  - **Why it changed**: The user requested the removal of the dummy "Sunrise photo walk" booking cards since real bookings are handled in the "Bookings" tab.
+  - **How it works**: Simply deleted the JSX block rendering the hardcoded `.booking-item` elements under the Overview tab section.
 
 # Last Edited - Remove Hardcoded Bookings
 
