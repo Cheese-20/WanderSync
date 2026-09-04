@@ -226,72 +226,96 @@ namespace backend.Controllers
             var title = $"1-on-1 with {guide.FirstName} {guide.LastName}";
             if (title.Length > 100) title = title.Substring(0, 100);
 
-            var tour = new Tour
-            {
-                GuideId = request.GuideID,
-                Title = title,
-                Type = TourTypes.OneOnOne,
-                Description = focus.Length > 0
-                    ? focus
-                    : "Private one-on-one experience requested by an explorer.",
-                Date = startsAt,
-                MaxPeople = guests,
-                // No published rate exists for a private session: the guide agrees it in chat.
-                Price = 0m,
-                Location = string.IsNullOrWhiteSpace(guideProfile?.Location) ? null : guideProfile!.Location,
-                PictureURL = null
-            };
+            var description = focus.Length > 0
+                ? focus
+                : "Private one-on-one experience requested by an explorer.";
+            var tourLocation = string.IsNullOrWhiteSpace(guideProfile?.Location) ? null : guideProfile!.Location;
+            var notificationMessage =
+                $"{user.FirstName} {user.LastName} requested a 1-on-1 experience with you on {startsAt:dd MMM yyyy} at {time}.";
+            var guideFullName = $"{guide.FirstName} {guide.LastName}";
 
-            // The tour only exists to carry this booking, so don't leave it behind if the
-            // booking insert fails.
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // Program.cs enables connection resiliency (EnableRetryOnFailure). A retrying
+            // execution strategy refuses to run SaveChanges inside a transaction we opened
+            // ourselves, so the whole transaction has to be wrapped in the strategy and
+            // replayed as one retriable unit.
+            var strategy = _context.Database.CreateExecutionStrategy();
+
             try
             {
-                _context.Tours.Add(tour);
-                await _context.SaveChangesAsync();
-
-                var booking = new Booking
+                var (bookingId, tourId) = await strategy.ExecuteAsync(async () =>
                 {
-                    userID = request.UserID,
-                    tourID = tour.TourId,
-                    curatedSpotID = 0,
-                    bookingType = BookingTypes.OneOnOne,
-                    status = "Pending",
-                    bookingDate = startsAt,
-                    timeOfBooking = time,
-                    numberOfGuests = guests
-                };
-                _context.Bookings.Add(booking);
-                await _context.SaveChangesAsync();
+                    // A retry replays this whole delegate, so drop anything a failed attempt
+                    // left tracked - otherwise the retry would try to re-insert those rows.
+                    _context.ChangeTracker.Clear();
 
-                var notification = new Notification
-                {
-                    UserID = request.GuideID,
-                    Type = "NewBooking",
-                    Message = $"{user.FirstName} {user.LastName} requested a 1-on-1 experience with you on {startsAt:dd MMM yyyy} at {time}.",
-                    RelatedEntityID = booking.bookingID,
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.Notifications.Add(notification);
-                await _context.SaveChangesAsync();
+                    // The tour only exists to carry this booking, so don't leave it behind if
+                    // the booking insert fails.
+                    await using var transaction = await _context.Database.BeginTransactionAsync();
 
-                await transaction.CommitAsync();
+                    var tour = new Tour
+                    {
+                        GuideId = request.GuideID,
+                        Title = title,
+                        Type = TourTypes.OneOnOne,
+                        Description = description,
+                        Date = startsAt,
+                        MaxPeople = guests,
+                        // No published rate exists for a private session: the guide agrees it in chat.
+                        Price = 0m,
+                        Location = tourLocation,
+                        PictureURL = null
+                    };
+                    _context.Tours.Add(tour);
+                    await _context.SaveChangesAsync();
+
+                    var booking = new Booking
+                    {
+                        userID = request.UserID,
+                        tourID = tour.TourId,
+                        curatedSpotID = 0,
+                        bookingType = BookingTypes.OneOnOne,
+                        status = "Pending",
+                        bookingDate = startsAt,
+                        timeOfBooking = time,
+                        numberOfGuests = guests
+                    };
+                    _context.Bookings.Add(booking);
+                    await _context.SaveChangesAsync();
+
+                    var notification = new Notification
+                    {
+                        UserID = request.GuideID,
+                        Type = "NewBooking",
+                        Message = notificationMessage,
+                        RelatedEntityID = booking.bookingID,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(notification);
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return (booking.bookingID, tour.TourId);
+                });
 
                 return Ok(new
                 {
                     message = "Your one-on-one request has been sent! The guide will confirm shortly.",
-                    bookingId = booking.bookingID,
-                    tourId = tour.TourId,
-                    guideName = $"{guide.FirstName} {guide.LastName}",
+                    bookingId,
+                    tourId,
+                    guideName = guideFullName,
                     date = startsAt,
                     timeOfBooking = time,
                     numberOfGuests = guests
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                // Without this the real cause is invisible and every failure looks identical.
+                _logger.LogError(ex,
+                    "One-on-one booking failed for user {UserID} with guide {GuideID}.",
+                    request.UserID, request.GuideID);
                 return StatusCode(500, new { message = "Failed to send your request. Please try again." });
             }
         }
