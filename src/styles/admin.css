@@ -52,11 +52,13 @@
   color: var(--ink);
 }
 
-/* ===== Header ===== */
+/* ===== Header =====
+   Single flat sage colour (no gradient), per request. Text is dark ink because the
+   sage is light and white would wash out. */
 .admin-header {
-  background: linear-gradient(135deg, var(--admin-green) 0%, var(--admin-green-dark) 100%);
+  background: #cdd09f;
   padding: 32px 28px;
-  color: #ffffff;
+  color: #2f3d24;
   border-radius: 0 0 16px 16px;
 }
 
@@ -65,6 +67,7 @@
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  color: #2f3d24;
 }
 
 /* ===== Tabs =====
@@ -444,6 +447,35 @@
 .reported-email {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+/* Reported-account identity: avatar next to the name/email block. */
+.reported-user-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+
+/* Initials shown when there is no picture. */
+.account-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--admin-green-text);
+  background: var(--admin-green-tint);
+  border-color: var(--admin-green-border);
 }
 
 /* ===== Status badges =====
@@ -880,6 +912,15 @@
 }
 
 /* ========== REPORTED SPOTS ========== */
+
+/* Each reported spot renders its full detail card inline; space them apart so the
+   stacked cards read as separate entries. */
+.reported-spots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .spot-badges {
   display: flex;
   align-items: center;

@@ -2,6 +2,34 @@ import React, { useState, useEffect } from 'react';
 import ReportDetail from './ReportDetail';
 import { ShieldIcon } from '../icons/AdminIcons.jsx';
 
+/**
+ * Round avatar for a reported account. Shows the profile picture when one exists and
+ * loads; otherwise falls back to the user's initials on a neutral circle, so a missing
+ * or broken image never shows a broken-image icon.
+ */
+function Avatar({ name, src }) {
+  const [failed, setFailed] = useState(false);
+  const initials = (name || '?')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+
+  if (src && !failed) {
+    return (
+      <img
+        className="account-avatar"
+        src={src}
+        alt={name}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
+  return <div className="account-avatar account-avatar-fallback" aria-hidden="true">{initials}</div>;
+}
+
 export default function ReportedAccounts() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,9 +91,12 @@ export default function ReportedAccounts() {
         {reports.map((report) => (
           <div key={report.reportID} className="report-card">
             <div className="report-header">
-              <div className="reported-user-info">
-                <h3>{report.reportedUserName}</h3>
-                <span className="reported-email">{report.reportedUserEmail}</span>
+              <div className="reported-user-identity">
+                <Avatar name={report.reportedUserName} src={report.reportedUserAvatar} />
+                <div className="reported-user-info">
+                  <h3>{report.reportedUserName}</h3>
+                  <span className="reported-email">{report.reportedUserEmail}</span>
+                </div>
               </div>
               <span className={`status-badge status-${report.status.toLowerCase()}`}>
                 {report.status}

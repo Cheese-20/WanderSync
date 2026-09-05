@@ -5,7 +5,6 @@ import { MapPinIcon } from '../icons/AdminIcons.jsx';
 export default function ReportedSpots() {
   const [spots, setSpots] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSpot, setSelectedSpot] = useState(null);
 
   useEffect(() => {
     fetchReportedSpots();
@@ -25,9 +24,10 @@ export default function ReportedSpots() {
     }
   };
 
-  const handleSpotProcessed = (spotId) => {
+  // A spot that has been deleted drops out of the list; a flagged spot stays but its
+  // status updates. Each embedded SpotDetail reports back via these callbacks.
+  const handleSpotDeleted = (spotId) => {
     setSpots((prev) => prev.filter((spot) => spot.spotID !== spotId));
-    setSelectedSpot(null);
   };
 
   const handleSpotFlagged = (spotId) => {
@@ -36,26 +36,10 @@ export default function ReportedSpots() {
         spot.spotID === spotId ? { ...spot, isVerified: 'Flagged' } : spot
       )
     );
-    setSelectedSpot(null);
-  };
-
-  const handleBack = () => {
-    setSelectedSpot(null);
   };
 
   if (loading) {
     return <div className="admin-loading">Loading reported spots...</div>;
-  }
-
-  if (selectedSpot) {
-    return (
-      <SpotDetail
-        spotId={selectedSpot.spotID}
-        onBack={handleBack}
-        onDeleted={handleSpotProcessed}
-        onFlagged={handleSpotFlagged}
-      />
-    );
   }
 
   if (spots.length === 0) {
@@ -67,40 +51,19 @@ export default function ReportedSpots() {
     );
   }
 
+  // Show every reported spot's full details inline, so the admin sees all reports,
+  // report history and the flag/delete actions without opening each spot individually.
   return (
     <div className="reported-spots-list">
-      <div className="reports-list">
-        {spots.map((spot) => (
-          <div key={spot.spotID} className="report-card">
-            <div className="report-header">
-              <div className="reported-user-info">
-                <h3>{spot.activityName}</h3>
-                <span className="reported-email">{spot.location || 'No location'}</span>
-              </div>
-              <div className="spot-badges">
-                <span className={`status-badge status-${(spot.isVerified || 'active').toLowerCase()}`}>
-                  {spot.isVerified || 'Active'}
-                </span>
-                <span className="report-count-badge">{spot.reportCount} report{spot.reportCount !== 1 ? 's' : ''}</span>
-              </div>
-            </div>
-
-            <div className="application-summary">
-              <span className="summary-item">Type: {spot.activityType || 'N/A'}</span>
-              <span className="summary-item"> | Submitted by: {spot.submittedByName}</span>
-            </div>
-
-            <div className="application-actions">
-              <button
-                className="btn-view"
-                onClick={() => setSelectedSpot(spot)}
-              >
-                View
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {spots.map((spot) => (
+        <SpotDetail
+          key={spot.spotID}
+          spotId={spot.spotID}
+          embedded
+          onDeleted={handleSpotDeleted}
+          onFlagged={handleSpotFlagged}
+        />
+      ))}
     </div>
   );
 }

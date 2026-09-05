@@ -377,6 +377,16 @@ LIMIT {take};";
             if (application == null)
                 return NotFound("Application not found.");
 
+            // Reset the applicant's role. Applying sets the role to "PendingGuide"; if we
+            // only delete the application on reject, the user is left stranded as a
+            // PendingGuide with no application to review. Put them back to Explorer so they
+            // can re-apply and are not stuck in a limbo state.
+            if (application.User != null &&
+                string.Equals(application.User.Role, "PendingGuide", StringComparison.OrdinalIgnoreCase))
+            {
+                application.User.Role = "Explorer";
+            }
+
             // Create a notification for the applicant about their unsuccessful application
             var notification = new Notification
             {
@@ -411,6 +421,13 @@ LIMIT {take};";
                     r.ReportedUserID,
                     reportedUserName = r.ReportedUser.FirstName + " " + r.ReportedUser.LastName,
                     reportedUserEmail = r.ReportedUser.Email,
+                    // The avatar lives on the Profile table (one per user), fetched via a
+                    // subquery since Report has no direct navigation to Profile. Null when
+                    // the user has no profile or hasn't set a picture.
+                    reportedUserAvatar = _context.Profiles
+                        .Where(p => p.UserID == r.ReportedUserID)
+                        .Select(p => p.ProfilePictureLink)
+                        .FirstOrDefault(),
                     r.ReporterID,
                     reporterName = r.Reporter.FirstName + " " + r.Reporter.LastName,
                     r.Reason,

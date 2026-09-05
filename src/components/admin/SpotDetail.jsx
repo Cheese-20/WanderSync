@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ConfirmationPopup from './ConfirmationPopup';
 import { MapPinIcon } from '../icons/AdminIcons.jsx';
 
-export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
+// `embedded` renders the card without the "Back" button and titles it with the spot
+// name, so several can stack in the reported-spots list. Non-embedded (drill-in) keeps
+// the original back button and generic "Spot Details" heading.
+export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged, embedded = false }) {
   const [spot, setSpot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
@@ -112,15 +115,28 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
     );
   }
 
+  // Reports come back newest-first, so the first entry is the most recent report.
+  const latestReport = spot.reports && spot.reports.length > 0 ? spot.reports[0] : null;
+
+  const formatDate = (value) => {
+    if (!value) return 'N/A';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime())
+      ? 'N/A'
+      : d.toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
   return (
-    <div className="application-detail">
-      <button className="btn-back" onClick={onBack}>
-        &larr; Back to Reported Spots
-      </button>
+    <div className={embedded ? 'spot-detail-embedded' : 'application-detail'}>
+      {!embedded && (
+        <button className="btn-back" onClick={onBack}>
+          &larr; Back to Reported Spots
+        </button>
+      )}
 
       <div className="detail-card">
         <div className="detail-card-header">
-          <h2>Spot Details</h2>
+          <h2>{embedded ? spot.activityName : 'Spot Details'}</h2>
           <div className="spot-badges">
             <span className={`status-badge status-${(spot.isVerified || 'active').toLowerCase()}`}>
               {spot.isVerified || 'Active'}
@@ -136,49 +152,79 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
             </div>
           )}
 
-          <div className="detail-field">
-            <label>Activity Name</label>
-            <p>{spot.activityName}</p>
-          </div>
+          {/* When embedded, the spot name is already the card heading. */}
+          {!embedded && (
+            <div className="detail-field">
+              <label>Activity Name</label>
+              <p>{spot.activityName}</p>
+            </div>
+          )}
 
-          <div className="detail-field">
-            <label>Activity Type</label>
-            <p>{spot.activityType || 'Not specified'}</p>
-          </div>
+          {spot.activityType && (
+            <div className="detail-field">
+              <label>Activity Type</label>
+              <p>{spot.activityType}</p>
+            </div>
+          )}
 
-          <div className="detail-field">
-            <label>Description</label>
-            <p>{spot.description || 'No description'}</p>
-          </div>
+          {spot.description && (
+            <div className="detail-field">
+              <label>Description</label>
+              <p>{spot.description}</p>
+            </div>
+          )}
 
-          <div className="detail-field">
-            <label>Location</label>
-            <p>{spot.location || 'Not specified'}</p>
-          </div>
+          {spot.location && (
+            <div className="detail-field">
+              <label>Location</label>
+              <p>{spot.location}</p>
+            </div>
+          )}
 
-          <div className="detail-field">
-            <label>Verification Status</label>
-            <p>{spot.isVerified || 'Not verified'}</p>
-          </div>
+          {spot.isVerified && (
+            <div className="detail-field">
+              <label>Verification Status</label>
+              <p>{spot.isVerified}</p>
+            </div>
+          )}
 
-          <div className="detail-field">
-            <label>Submitted By</label>
-            <p>{spot.submittedByName}</p>
-          </div>
+          {/* Reporting details up front: who raised the most recent report and when.
+              The API returns reports newest-first, so reports[0] is the latest. */}
+          {latestReport && (
+            <>
+              <div className="detail-field">
+                <label>Reported By</label>
+                <p>{latestReport.reporterName || 'Unknown'}</p>
+              </div>
 
-          <div className="detail-field">
-            <label>Date Submitted</label>
-            <p>{spot.submittedAt ? new Date(spot.submittedAt).toLocaleDateString('en-ZA', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }) : 'N/A'}</p>
-          </div>
+              <div className="detail-field">
+                <label>Date Reported</label>
+                <p>{formatDate(latestReport.sentAt)}</p>
+              </div>
+            </>
+          )}
 
           <div className="detail-field">
             <label>Number of Reports</label>
             <p className="report-count-large">{spot.reportCount}</p>
           </div>
+
+          {/* Who originally submitted the spot. Distinct from who reported it, and often
+              missing on older curated spots. Hidden entirely when unknown rather than
+              showing an empty placeholder. */}
+          {spot.submittedByName && spot.submittedByName !== 'Unknown' && (
+            <div className="detail-field">
+              <label>Spot Submitted By</label>
+              <p>{spot.submittedByName}</p>
+            </div>
+          )}
+
+          {spot.submittedAt && (
+            <div className="detail-field">
+              <label>Spot Submitted On</label>
+              <p>{formatDate(spot.submittedAt)}</p>
+            </div>
+          )}
 
           {spot.reports && spot.reports.length > 0 && (
             <div className="detail-field">
@@ -186,7 +232,7 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged }) {
               <ul className="report-history-list">
                 {spot.reports.map((r) => (
                   <li key={r.spotReportID} className="report-history-item">
-                    <strong>{r.reporterName}</strong>: {r.reason}
+                    <strong>{r.reporterName || 'Unknown'}</strong>: {r.reason}
                     <span className="report-history-date">
                       {r.sentAt ? new Date(r.sentAt).toLocaleDateString() : ''}
                     </span>
