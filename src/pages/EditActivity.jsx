@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import { useFeedback } from '../context/FeedbackContext.jsx';
 import '../styles/guide.css';
 
 export default function EditActivity() {
@@ -13,9 +13,7 @@ export default function EditActivity() {
     date: '',
     maxPeople: 0
   });
-  const [message, setMessage] = useState('');
   const [originalTour, setOriginalTour] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetch(`http://localhost:5200/api/tours/${id}`)
@@ -40,7 +38,9 @@ export default function EditActivity() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const { withFeedback } = useFeedback();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!originalTour) return;
 
@@ -50,39 +50,26 @@ export default function EditActivity() {
       maxPeople: parseInt(formData.maxPeople, 10) || 0
     };
 
-    setIsSaving(true);
-    fetch(`http://localhost:5200/api/tours/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updatedTour)
-    })
-      .then(res => {
-        if (res.ok) {
-          setMessage('Activity updated successfully!');
-          setTimeout(() => navigate('/activities'), 2000);
-        } else {
-          setMessage('Failed to update activity.');
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        setMessage('Error updating activity.');
-      })
-      .finally(() => {
-        setIsSaving(false);
+    await withFeedback(async () => {
+      const res = await fetch(`http://localhost:5200/api/tours/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedTour)
       });
+      if (!res.ok) {
+        throw new Error('Failed to update activity.');
+      }
+      setTimeout(() => navigate('/activities'), 1500);
+    }, {
+      loadingMsg: 'Saving Changes...',
+      successMsg: 'Activity updated successfully!'
+    });
   };
 
   return (
     <>
-      {isSaving && (
-        <div className="global-loading-overlay">
-          <div className="global-spinner"></div>
-          <div className="global-loading-text">Saving Changes...</div>
-        </div>
-      )}
       <div className="guide-page">
 
       <header className="guide-hero">
@@ -90,7 +77,6 @@ export default function EditActivity() {
       </header>
       
       <section className="edit-activity-container">
-        {message && <div className="alert-success">{message}</div>}
         <form onSubmit={handleSubmit} className="edit-activity-form">
           <div>
             <label>Title</label><br />
@@ -112,8 +98,8 @@ export default function EditActivity() {
             <label>Max People</label><br />
             <input type="number" name="maxPeople" value={formData.maxPeople} onChange={handleChange} required className="form-input" />
           </div>
-          <button type="submit" className="btn-submit" disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Changes'}
+          <button type="submit" className="btn-submit">
+            Save Changes
           </button>
         </form>
       </section>

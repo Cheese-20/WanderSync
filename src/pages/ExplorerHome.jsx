@@ -202,17 +202,23 @@ export default function ExplorerHome() {
       alert("Please log in to upvote.");
       return;
     }
+    
+    const originalSpots = [...spots];
+    
+    // Optimistic UI update
+    setSpots(spots.map(s => {
+      if ((s.spotID || s.spotId) === spotId) {
+        return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
+      }
+      return s;
+    }));
+
     try {
       await axios.post(`http://localhost:5200/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
-      setSpots(spots.map(s => {
-        if ((s.spotID || s.spotId) === spotId) {
-          return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
-        }
-        return s;
-      }));
     } catch (e) {
       console.error('Error upvoting spot:', e);
       alert(e.response?.data?.message || e.response?.data || 'Failed to upvote spot.');
+      setSpots(originalSpots); // Revert on failure
     }
   };
 
@@ -270,6 +276,19 @@ export default function ExplorerHome() {
 
   // Mark "I Was There" on a Group post
   const handleIWasThere = async (post) => {
+    const originalPosts = [...posts];
+    
+    // Optimistic UI update
+    setPosts(posts.map(p => {
+      if (p.postID === post.postID) {
+        let current = [];
+        try { current = JSON.parse(p.alsoAttended || '[]'); } catch {}
+        if (!current.includes(Number(loggedInUserId))) current.push(Number(loggedInUserId));
+        return { ...p, alsoAttended: JSON.stringify(current) };
+      }
+      return p;
+    }));
+
     try {
       const res = await fetch(`http://localhost:5200/api/posts/${post.postID}/also-attended`, {
         method: 'PUT',
@@ -278,15 +297,17 @@ export default function ExplorerHome() {
       });
       if (res.ok) {
         const data = await res.json();
-        setPosts(posts.map(p =>
+        setPosts(prev => prev.map(p =>
           p.postID === post.postID ? { ...p, alsoAttended: data.alsoAttended } : p
         ));
       } else {
         const err = await res.json().catch(() => ({}));
         alert(err.message || 'Could not mark attendance.');
+        setPosts(originalPosts); // Revert
       }
     } catch (e) {
       alert('Network error.');
+      setPosts(originalPosts); // Revert
     }
   };
 

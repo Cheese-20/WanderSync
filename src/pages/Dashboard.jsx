@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../styles/dashboard.css';
 import logo from '../assets/images/logo.png';
 import NavBar from '../components/NavBar';
+import { useFeedback } from '../context/FeedbackContext.jsx';
 import CreateExperienceModal from '../components/CreateExperienceModal';
 import ConfirmationPopup from '../components/admin/ConfirmationPopup';
 
@@ -41,13 +42,10 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('Overview');
   const [pendingSpots, setPendingSpots] = useState([]);
   const [loadingSpots, setLoadingSpots] = useState(false);
-  const [isVoting, setIsVoting] = useState(false);
 
   // Bookings state
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
-  const [isUpdatingBooking, setIsUpdatingBooking] = useState(false);
-  const [popup, setPopup] = useState(null);
   const [bookingToDecline, setBookingToDecline] = useState(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [tourTypeFilter, setTourTypeFilter] = useState('All');
@@ -58,7 +56,6 @@ export default function Dashboard() {
   const [showCreateExperience, setShowCreateExperience] = useState(false);
   const [editingTour, setEditingTour] = useState(null);          // null = create, tour = edit
   const [deleteConfirm, setDeleteConfirm] = useState(null);      // tour to delete
-  const [isDeletingTour, setIsDeletingTour] = useState(false);
   const [toastModal, setToastModal] = useState({ open: false, success: true, message: '' });
 
   // Stats state
@@ -118,23 +115,23 @@ export default function Dashboard() {
 
   const handleDeleteTour = async () => {
     if (!deleteConfirm) return;
-    setIsDeletingTour(true);
-    try {
+    
+    await withFeedback(async () => {
       const tourId = deleteConfirm.tourId ?? deleteConfirm.tourID;
       const res = await fetch(`/api/tours/${tourId}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
+      
       if (res.ok) {
         setExperiences(prev => prev.filter(e => (e.tourId ?? e.tourID) !== tourId));
-        showToast(true, data.message || 'Activity deleted successfully!');
       } else {
-        showToast(false, data.message || 'Failed to delete activity.');
+        throw new Error(data.message || 'Failed to delete activity.');
       }
-    } catch {
-      showToast(false, 'Network error. Please try again.');
-    } finally {
-      setIsDeletingTour(false);
-      setDeleteConfirm(null);
-    }
+    }, {
+      loadingMsg: 'Deleting activity...',
+      successMsg: 'Activity deleted successfully!'
+    });
+    
+    setDeleteConfirm(null);
   };
 
   const fetchGuideBookings = async () => {
@@ -151,25 +148,23 @@ export default function Dashboard() {
     setLoadingBookings(false);
   };
 
+  const { withFeedback } = useFeedback();
+
   const updateBookingStatus = async (bookingId, action) => {
-    setIsUpdatingBooking(true);
-    try {
+    await withFeedback(async () => {
       const response = await fetch(`/api/bookings/${bookingId}/${action}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' }
       });
       if (response.ok) {
-        setPopup({ type: 'success', message: `Successfully ${action}ed the booking!` });
-        // Refresh bookings
         fetchGuideBookings();
       } else {
-        setPopup({ type: 'error', message: `Failed to ${action} booking.` });
+        throw new Error(`Failed to ${action} booking.`);
       }
-    } catch (error) {
-      console.error(`Error updating booking: ${action}`, error);
-    } finally {
-      setIsUpdatingBooking(false);
-    }
+    }, {
+      loadingMsg: 'Updating booking status...',
+      successMsg: `Successfully ${action}ed the booking!`
+    });
   };
 
   const fetchPendingSpots = async () => {
@@ -187,37 +182,26 @@ export default function Dashboard() {
   };
 
   const handleVote = async (spotId, voteType) => {
-    setIsVoting(true);
-    try {
+    await withFeedback(async () => {
       const response = await fetch(`/api/spots/${spotId}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ guideId, voteType })
       });
       if (response.ok) {
-        // Remove the voted spot from the list
         setPendingSpots(prev => prev.filter(s => s.spotID !== spotId));
       } else {
-        alert("Failed to submit vote");
+        throw new Error("Failed to submit vote");
       }
-    } catch (error) {
-      console.error("Error submitting vote", error);
-    } finally {
-      setIsVoting(false);
-    }
+    }, {
+      loadingMsg: 'Submitting your vote...',
+      successMsg: 'Vote recorded successfully!'
+    });
   };
 
   return (
     <>
       <NavBar />
-      {(isVoting || isUpdatingBooking) && (
-        <div className="global-loading-overlay">
-          <div className="global-loading-popup">
-            <img src={logo} alt="WanderSync" className="brand-logo" style={{ width: '60px', height: 'auto', marginBottom: '1rem', animation: 'pulse 1.5s infinite' }} />
-            <div className="global-loading-text">Updating, please wait</div>
-          </div>
-        </div>
-      )}
 
       {/* Create / Edit Experience Modal */}
       {showCreateExperience && (
@@ -493,14 +477,12 @@ export default function Dashboard() {
                             <div className="b-actions">
                               <button
                                 className="b-btn b-btn-decline"
-                                disabled={isUpdatingBooking}
                                 onClick={() => setBookingToDecline(booking)}
                               >
                                 Decline
                               </button>
                               <button
                                 className="b-btn b-btn-accept"
-                                disabled={isUpdatingBooking}
                                 onClick={() => updateBookingStatus(booking.bookingId, 'accept')}
                               >
                                 Accept
@@ -589,8 +571,8 @@ export default function Dashboard() {
                         <p className="spot-desc">{spot.description}</p>
 
                         <div className="spot-card-actions">
-                          <button className="spot-btn-reject" onClick={() => handleVote(spot.spotID, 'reject')} disabled={isVoting}>Reject</button>
-                          <button className="spot-btn-approve" onClick={() => handleVote(spot.spotID, 'approve')} disabled={isVoting}>Approve</button>
+                          <button className="spot-btn-reject" onClick={() => handleVote(spot.spotID, 'reject')}>Reject</button>
+                          <button className="spot-btn-approve" onClick={() => handleVote(spot.spotID, 'approve')}>Approve</button>
                         </div>
                       </div>
                     </div>
@@ -602,16 +584,6 @@ export default function Dashboard() {
         )}
 
       </div>
-
-      {/* Deleting overlay */}
-      {isDeletingTour && (
-        <div className="global-loading-overlay">
-          <div className="global-loading-popup">
-            <img src={logo} alt="WanderSync" className="brand-logo" style={{ width: '60px', height: 'auto', marginBottom: '1rem' }} />
-            <div className="global-loading-text">Deleting activity...</div>
-          </div>
-        </div>
-      )}
 
       {/* Delete tour confirmation */}
       {deleteConfirm && (
@@ -653,13 +625,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {popup && (
-        <ConfirmationPopup
-          type={popup.type}
-          message={popup.message}
-          onClose={() => setPopup(null)}
-        />
-      )}
     </>
   );
 }

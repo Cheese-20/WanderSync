@@ -1,5 +1,12 @@
 # Last Edited - Bug Fixes & UX Improvements
 
+## [2026-09-05]
+- **Enhancement (Frontend UI)**: Implemented a global feedback modal system and optimistic UI updates.
+  - **Files modified**: `src/App.jsx`, `src/context/FeedbackContext.jsx`, `src/styles/feedback.css`, `src/pages/Dashboard.jsx`, `src/pages/EditActivity.jsx`, `src/pages/ManageItinerary.jsx`, `src/pages/GuideHome.jsx`, `src/pages/ExplorerHome.jsx`.
+  - **Why it changed**: To provide a unified loading/success/error feedback experience across the app when communicating with the backend, instead of relying on one-off local states and native alerts. Micro-interactions like upvoting and marking attendance needed to feel completely instant.
+  - **How it works**: Created a global `FeedbackContext` that provides a `withFeedback` hook. It renders an overlay blocking user input during async operations. Components were refactored to remove local `isSaving` states and native `alert()`s. For instant actions ("Upvote" and "I Was There"), the frontend state is updated immediately before the backend call. If the request fails, the local state is reverted.
+
+
 ## [2026-09-04]
 - **Enhancement (Frontend UI)**: Changed the text of the disabled tour button on the Explorer Home page from "Requested" to "Already booked".
   - **Files modified**: `src/pages/ExplorerHome.jsx`

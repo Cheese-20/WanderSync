@@ -88,40 +88,44 @@ function ApplyGuideRoute() {
   return <LocalGuideApplication />;
 }
 
+import { FeedbackProvider } from './context/FeedbackContext.jsx';
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/login" element={<AuthForm />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/home" element={<AuthWrapper><HomeRouter /></AuthWrapper>} />
+    <FeedbackProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/login" element={<AuthForm />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/home" element={<AuthWrapper><HomeRouter /></AuthWrapper>} />
 
-        {/* Shared */}
-        <Route path="/messages" element={<AuthWrapper><Messages /></AuthWrapper>} />
-        <Route path="/profile" element={<AuthWrapper><Profile /></AuthWrapper>} />
-        <Route path="/match" element={<AuthWrapper><Match /></AuthWrapper>} />
-        <Route path="/report" element={<AuthWrapper><ReportForm /></AuthWrapper>} />
+          {/* Shared */}
+          <Route path="/messages" element={<AuthWrapper><Messages /></AuthWrapper>} />
+          <Route path="/profile" element={<AuthWrapper><Profile /></AuthWrapper>} />
+          <Route path="/match" element={<AuthWrapper><Match /></AuthWrapper>} />
+          <Route path="/report" element={<AuthWrapper><ReportForm /></AuthWrapper>} />
 
-        {/* Explorer pages */}
-        <Route path="/discover" element={<AuthWrapper><Discover /></AuthWrapper>} />
-        <Route path="/explore" element={<AuthWrapper><ExplorePage /></AuthWrapper>} />
-        <Route path="/guide/:guideId" element={<AuthWrapper><GuideDetail /></AuthWrapper>} />
-        <Route path="/my-activities" element={<AuthWrapper><MyActivities /></AuthWrapper>} />
-        <Route path="/local-guide-application" element={<AuthWrapper><ApplyGuideRoute /></AuthWrapper>} />
-        <Route path="/apply-guide" element={<AuthWrapper><ApplyGuideRoute /></AuthWrapper>} />
+          {/* Explorer pages */}
+          <Route path="/discover" element={<AuthWrapper><Discover /></AuthWrapper>} />
+          <Route path="/explore" element={<AuthWrapper><ExplorePage /></AuthWrapper>} />
+          <Route path="/guide/:guideId" element={<AuthWrapper><GuideDetail /></AuthWrapper>} />
+          <Route path="/my-activities" element={<AuthWrapper><MyActivities /></AuthWrapper>} />
+          <Route path="/local-guide-application" element={<AuthWrapper><ApplyGuideRoute /></AuthWrapper>} />
+          <Route path="/apply-guide" element={<AuthWrapper><ApplyGuideRoute /></AuthWrapper>} />
 
-        {/* Guide-only pages: hidden from explorer mode */}
-        <Route path="/dashboard" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><Dashboard /></RequireMode></AuthWrapper>} />
-        <Route path="/activities" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><Activities /></RequireMode></AuthWrapper>} />
-        <Route path="/edit-activity/:id" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><EditActivity /></RequireMode></AuthWrapper>} />
-        <Route path="/manage-itinerary/:touristId" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><ManageItinerary /></RequireMode></AuthWrapper>} />
+          {/* Guide-only pages: hidden from explorer mode */}
+          <Route path="/dashboard" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><Dashboard /></RequireMode></AuthWrapper>} />
+          <Route path="/activities" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><Activities /></RequireMode></AuthWrapper>} />
+          <Route path="/edit-activity/:id" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><EditActivity /></RequireMode></AuthWrapper>} />
+          <Route path="/manage-itinerary/:touristId" element={<AuthWrapper><RequireMode mode={MODE_GUIDE}><ManageItinerary /></RequireMode></AuthWrapper>} />
 
-        {/* Admin only */}
-        <Route path="/admin" element={<AuthWrapper><RequireMode mode={MODE_ADMIN}><AdminHome /></RequireMode></AuthWrapper>} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Admin only */}
+          <Route path="/admin" element={<AuthWrapper><RequireMode mode={MODE_ADMIN}><AdminHome /></RequireMode></AuthWrapper>} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </FeedbackProvider>
   );
 }
 

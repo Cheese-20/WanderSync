@@ -86,9 +86,10 @@ export default function GuideHome() {
 
     try {
       const userStr = localStorage.getItem('user');
+      let userId = '';
       if (userStr) {
         const user = JSON.parse(userStr);
-        const userId = user.id || user.userID;
+        userId = user.id || user.userID;
         setLoggedInUserId(userId);
         setUserRole(user.role || user.Role);
         
@@ -163,6 +164,19 @@ export default function GuideHome() {
   };
 
   const handleIWasThere = async (post) => {
+    const originalPosts = [...posts];
+    
+    // Optimistic UI update
+    setPosts(posts.map(p => {
+      if (p.postID === post.postID) {
+        let current = [];
+        try { current = JSON.parse(p.alsoAttended || '[]'); } catch {}
+        if (!current.includes(Number(loggedInUserId))) current.push(Number(loggedInUserId));
+        return { ...p, alsoAttended: JSON.stringify(current) };
+      }
+      return p;
+    }));
+
     try {
       const res = await fetch(`http://localhost:5200/api/posts/${post.postID}/also-attended`, {
         method: 'PUT',
@@ -171,15 +185,17 @@ export default function GuideHome() {
       });
       if (res.ok) {
         const data = await res.json();
-        setPosts(posts.map(p =>
+        setPosts(prev => prev.map(p =>
           p.postID === post.postID ? { ...p, alsoAttended: data.alsoAttended } : p
         ));
       } else {
         const err = await res.json().catch(() => ({}));
         alert(err.message || 'Could not mark attendance.');
+        setPosts(originalPosts); // Revert
       }
     } catch (e) {
       alert('Network error.');
+      setPosts(originalPosts); // Revert
     }
   };
 
@@ -209,17 +225,22 @@ export default function GuideHome() {
   };
 
   const handleUpvote = async (spotId) => {
+    const originalSpots = [...spots];
+    
+    // Optimistic UI update
+    setSpots(spots.map(s => {
+      if ((s.spotID || s.spotId) === spotId) {
+        return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
+      }
+      return s;
+    }));
+
     try {
       await axios.post(`http://localhost:5200/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
-      setSpots(spots.map(s => {
-        if ((s.spotID || s.spotId) === spotId) {
-          return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
-        }
-        return s;
-      }));
     } catch (e) {
       console.error('Error upvoting spot:', e);
       alert(e.response?.data || 'Failed to upvote spot.');
+      setSpots(originalSpots); // Revert on failure
     }
   };
 
@@ -308,7 +329,6 @@ export default function GuideHome() {
             <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
               <div className="tour-image-placeholder">
                 <img src={spot.pictureURL || logo} alt="Spot" />
-                <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(255,255,255,0.9)', color: '#1a8f66', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>✓ Verified</span>
               </div>
               <div className="tour-card-body">
                 <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>

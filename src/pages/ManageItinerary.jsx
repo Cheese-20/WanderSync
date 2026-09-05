@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
 import '../styles/manage-itinerary.css';
+import { useFeedback } from '../context/FeedbackContext.jsx';
 
 const ACTIVITY_TYPES = [
   { label: '🏛️ Sightseeing', value: 'Sightseeing' },
@@ -35,7 +36,6 @@ export default function ManageItinerary() {
   const [timeline, setTimeline] = useState([]);
   const [currentTourId, setCurrentTourId] = useState(null);
   const [activeTab, setActiveTab] = useState('itinerary');
-  const [isSaving, setIsSaving] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [loadError, setLoadError] = useState(null);
@@ -112,24 +112,26 @@ export default function ManageItinerary() {
   const removeItem = (id) => setTimeline(prev => prev.filter(t => t.id !== id));
   const updateItem = (id, field, value) => setTimeline(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
 
+  const { withFeedback } = useFeedback();
+
   const handleSave = async () => {
     if (!currentTourId) { alert('Itinerary not loaded yet. Please wait.'); return; }
-    setIsSaving(true);
+    
     try {
-      await axios.put(`http://localhost:5200/api/local-guide/itinerary/${currentTourId}`, {
-        timelineJson: JSON.stringify(timeline)
+      await withFeedback(async () => {
+        await axios.put(`http://localhost:5200/api/local-guide/itinerary/${currentTourId}`, {
+          timelineJson: JSON.stringify(timeline)
+        });
+      }, {
+        loadingMsg: 'Saving itinerary...',
+        successMsg: 'Itinerary saved! The tourist has been notified.'
       });
-      alert('Itinerary saved! The tourist has been notified.');
     } catch (e) {
       if (!navigator.onLine || e.code === 'ERR_NETWORK') {
         localStorage.setItem(`pending_itinerary_${currentTourId}`, JSON.stringify(timeline));
         setIsOfflineMode(true);
         alert('No connection. Changes saved locally and will sync when back online.');
-      } else {
-        alert('Failed to save itinerary. Please try again.');
       }
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -156,8 +158,8 @@ export default function ManageItinerary() {
               <p className="mi-subtitle">{tourist?.email || ''} · Custom Trip Itinerary</p>
             </div>
           </div>
-          <button className="mi-save-btn" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Saving...' : '💾 Save & Notify'}
+          <button className="mi-save-btn" onClick={handleSave}>
+            💾 Save & Notify
           </button>
         </div>
 
