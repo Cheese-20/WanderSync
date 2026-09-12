@@ -318,7 +318,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   width: 100%;
   max-width: 700px;
-  min-height: 280px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -344,6 +343,8 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  overflow: visible;
+  min-height: 0;
 }
 
 .spot-card-header {

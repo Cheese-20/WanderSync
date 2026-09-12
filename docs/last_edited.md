@@ -1,3 +1,32 @@
+# Last Edited - Simplified Manage Itinerary Use Case Narrative (D800)
+
+## [2026-09-05]
+- **Documentation (Use Case Narratives Update)**: Simplified **Use Case 11: Manage Itinerary (D800)** into a clean, concise, 10-step flow matching the format of the rest of the document.
+  - **Files modified**: `docs/use_case_narratives.md`
+  - **Why it changed**: The user requested a simpler narrative describing how the user interacts with the feature without unnecessary technical complexity.
+  - **How the change works**:
+    - Replaced multi-layer nested sub-sections with standard 10-step Main Flow: navigating from Guide Home, opening the itinerary page, inputting activity details, automatic conflict detection and sorting, inline timeline editing, tab switching ("Builder", "Overview", "Locations"), saving and notifying the tourist, and tourist viewing the schedule.
+    - Kept Alternative Flows concise (Time Conflict, Missing Information, and Offline Mode).
+
+# Last Edited - Synchronized Latest from Main (Interactive Map & Booking Fixes)
+
+## [2026-09-04]
+- **Repository Sync**: Successfully pulled and merged the latest changes from `main` into `report-spot`.
+  - **Files modified/added**: `backend/Controllers/BookingsController.cs`, `backend/Controllers/SpotController.cs`, `backend/Models/CuratedSpot.cs`, `src/components/MapModal.jsx`, `src/pages/ExplorePage.jsx`, `src/styles/explorer.css`, `docs/last_edited.md`
+  - **Why it changed**: The user requested another pull from `main` after recent updates were pushed.
+  - **How it works**: Cleanly merged new features from `main` into the branch, bringing in:
+    1. **Interactive Map Feature**: `MapModal.jsx` and map toggle button on `ExplorePage.jsx` using `react-leaflet`, custom gradient pins, and frosted glass popups.
+    2. **Booking Resiliency Fix**: Added EF Core execution retry strategy to `backend/Controllers/BookingsController.cs` for 1-on-1 experience booking requests.
+    3. **Spot Rating & GPS Alignment**: Added GPS coordinates (`latitude`, `longitude`) and accurate database rating column mappings to `CuratedSpot.cs`.
+
+# Last Edited - Pulled Latest from Main & Resolved Conflicts
+
+## [2026-09-04]
+- **Repository Sync**: Merged branch `main` into `report-spot`.
+  - **Files modified**: `docs/last_edited.md`, `src/styles/dashboard.css`
+  - **Why it changed**: Synchronized latest features and bugfixes from `main` into the current branch as requested.
+  - **How it works**: Resolved merge conflicts in `docs/last_edited.md` (combining log history) and `src/styles/dashboard.css` (retaining image wrapper styles from main while preserving visible overflow and no min-height on `.spot-card-content` so Approve/Reject buttons remain accessible and unclipped).
+
 # Last Edited - Bug Fixes & UX Improvements
 
 ## [2026-09-05]
@@ -18,7 +47,24 @@
   - **Why it changed**: The dummy tours for Gqeberha were not being inserted because their primary keys conflicted with existing entries or the application timed out on startup.
   - **How it works**: Updated the tour IDs for the dummy data to the 9100 range to ensure uniqueness and ran a manual script to ensure the data was seeded correctly. 
 
+# Last Edited - Spot Verification Card Fix
+
+## [2026-09-03]
+- **Files modified**: `src/styles/dashboard.css`, `src/pages/Dashboard.jsx`
+
+### Problem
+The Approve/Reject buttons were not visible on the spot verification cards, and the submitter name showed "Unknown".
+
+### Root Causes
+1. **Buttons hidden by CSS overflow**: `.spot-card-content` had `overflow: hidden` set. When the card content (title, type, submitter info, location, description, actions) was taller than the fixed `min-height: 280px`, the bottom of the card was clipped — cutting off the Approve/Reject buttons. The buttons were always in the JSX code; they were just being hidden by CSS.
+2. **"Unknown" submitter name**: The spot in the database was submitted without a valid `submittedByUserID` (null or non-existent user), so the SQL LEFT JOIN returned null for the User row and the backend correctly falls back to `"Unknown"`. This is a data issue for that specific test spot.
+
+### Fixes
+- **`dashboard.css`**: Removed `overflow: hidden` from `.spot-card-content` and removed the fixed `min-height: 280px` from `.spot-card` so the card freely expands to fit all its content including the action buttons.
+- **`Dashboard.jsx`**: Improved submitter avatar fallback — instead of an empty grey circle, now shows the first letter of the submitter's name in green, or `?` for truly anonymous spots. The name label also changes from "Unknown User" to "Anonymous User" for better UX.
+
 # Last Edited - Guide Tour Management (Overview Tab)
+
 
 ## [2026-09-03]
 - **Files modified**: `src/components/CreateExperienceModal.jsx`, `src/pages/Dashboard.jsx`, `src/styles/dashboard.css`

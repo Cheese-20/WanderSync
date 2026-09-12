@@ -382,41 +382,34 @@
 ---
 
 ## Use Case 11: Manage Itinerary (D800)
-**Actor:** User (Travel Guide / Organizer)
+**Actor:** Guide
 
-**Trigger:** The actor selects "Manage Itinerary" from the dashboard trip management view.
+**Trigger:** The Guide clicks "Manage Itinerary" on an assigned tourist's card on the Guide Home Page.
 
 **Preconditions:**
-1. The actor is successfully authenticated and logged into the system.
-2. The actor has active administrative or guide permissions for the selected tourist/group trip.
+- The Guide is registered and logged into the application.
+- The Guide has at least one assigned or matched tourist.
 
 **Main Flow (How it is accomplished):**
-1. The actor navigates to the Dashboard and selects an assigned tourist's active trip.
-2. The system retrieves and displays the trip calendar, timeline, and current schedule items.
-3. The actor selects a specific day/date from the calendar to manage.
-4. The actor chooses an action: Add Activity, Remove Activity, Reorder Timeline, or Block Transit Time.
-5. The system prompts the actor with the relevant input form or drag-and-drop timeline interface.
-6. The actor inputs or modifies the required details (e.g., activity name, start/end time, location, category, and notes).
-7. The actor clicks the "Save" or "Update" button.
-8. The system performs a validation check for schedule overlapping, invalid time bounds, or missing mandatory fields.
-9. The system updates the itinerary records and timestamps in the database.
-10. The system triggers a real-time synchronization update across active client sessions.
-11. The system generates and sends a notification to the assigned tourist regarding the updated schedule.
-12. The system displays a success confirmation message and returns the actor to the updated itinerary view.
+1. The Guide navigates to the Guide Home Page (`/home`) and views their assigned tourists in the "Manage Tourist Itineraries" section.
+2. The Guide clicks the "Manage Itinerary" button on a tourist's card.
+3. The system opens the Manage Itinerary page (`/manage-itinerary/:touristId`), displaying the tourist's details and their trip schedule.
+4. The Guide enters the activity details in the form (Activity Name, Category, Location, Start Time, Duration, and optional Notes) and clicks "+ Add to Timeline".
+5. The system validates the inputs, checks for time conflicts, adds the activity, and automatically sorts the timeline in chronological order.
+6. The Guide can review or edit activity fields directly on the timeline cards, remove an activity using the "✕" button, or switch between the "Overview", "Itinerary Builder", and "Locations" tabs to review the schedule.
+7. The Guide clicks the "Save & Notify" button in the header.
+8. The backend saves the updated itinerary to the database and automatically sends a notification to the tourist.
+9. The system displays a confirmation message ("Itinerary saved! The tourist has been notified").
+10. The tourist receives the notification and can view the updated itinerary on their "My Activities" page or Profile.
 
 **Postconditions:**
-1. The itinerary database records are successfully updated.
-2. Real-time synchronization propagates changes to connected client views.
-3. A notification is dispatched to the assigned tourist(s).
+- The custom itinerary is successfully saved in the database.
+- The tourist receives a notification and can access the updated itinerary.
 
 **Alternative Flows:**
-- **8a. Validation Failure (Overlapping Times or Missing Fields):**
-  - 8a.1. The system detects a time conflict with an existing scheduled activity or a missing mandatory field.
-  - 8a.2. The system aborts the save operation and displays a descriptive error message highlighting the conflict.
-  - 8a.3. The actor modifies the conflicting time slot or fills in missing data, then returns to step 7.
-- **10a. Network Connectivity Loss During Sync:**
-  - 10a.1. The system fails to connect to the backend database/real-time server.
-  - 10a.2. The system caches the itinerary updates locally and displays a "Pending Sync / Offline Mode" warning banner to the actor.
+- **Time Conflict:** If a new activity overlaps with an existing scheduled activity, the system displays an alert and prompts the Guide to choose a different time slot.
+- **Missing Information:** If required fields (Name, Start Time, Duration) are missing or invalid, the system displays a validation alert prompting the Guide to complete them.
+- **Offline Mode:** If connection is lost when saving, the system caches the itinerary in local storage, displays an offline warning banner, and syncs once reconnected.
 
 ---
 
