@@ -18,6 +18,14 @@ const pendingIcon = L.divIcon({
   popupAnchor: [0, -38]
 });
 
+const verifiedIcon = L.divIcon({
+  className: 'custom-gradient-pin',
+  html: `<div class="pin-body"></div>`,
+  iconSize: [30, 42],
+  iconAnchor: [15, 42],
+  popupAnchor: [0, -38]
+});
+
 export default function GuideHome() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
@@ -37,6 +45,9 @@ export default function GuideHome() {
   const [reportReason, setReportReason] = useState('Inaccurate Information');
   const [reportComment, setReportComment] = useState('');
   const [reportStatus, setReportStatus] = useState('idle');
+  const [ratingScore, setRatingScore] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [ratingStatus, setRatingStatus] = useState('idle');
 
   // Manage Itinerary state
   const [assignedTourists, setAssignedTourists] = useState([]);
@@ -78,6 +89,41 @@ export default function GuideHome() {
     } catch (e) {
       console.error(e);
       alert('Failed to submit report. Please try again.');
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (ratingScore < 1 || ratingScore > 5) return;
+    try {
+      const res = await axios.post(`http://localhost:5200/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/rate`, {
+        userId: loggedInUserId,
+        ratingScore: ratingScore,
+        reviewText: reviewText
+      });
+      
+      setRatingStatus('success');
+      
+      setSpots(spots.map(s => {
+        if ((s.spotID || s.spotId) === (selectedLocalSpot.spotID || selectedLocalSpot.spotId)) {
+          return {
+            ...s,
+            hasRated: true,
+            averageRating: res.data.averageRating,
+            totalRatings: res.data.totalRatings
+          };
+        }
+        return s;
+      }));
+      
+      setSelectedLocalSpot({
+        ...selectedLocalSpot,
+        hasRated: true,
+        averageRating: res.data.averageRating,
+        totalRatings: res.data.totalRatings
+      });
+    } catch (e) {
+      console.error(e);
+      setRatingStatus('error');
     }
   };
 

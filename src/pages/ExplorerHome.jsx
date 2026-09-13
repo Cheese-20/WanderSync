@@ -3,8 +3,19 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import CreatePostModal from '../components/CreatePostModal';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import logo from '../assets/images/logo.png';
 import '../styles/explorer.css';
+
+const verifiedIcon = L.divIcon({
+  className: 'custom-gradient-pin',
+  html: `<div class="pin-body"></div>`,
+  iconSize: [30, 42],
+  iconAnchor: [15, 42],
+  popupAnchor: [0, -38]
+});
 
 export default function ExplorerHome() {
   const [isLoading, setIsLoading] = useState(true);
@@ -478,7 +489,13 @@ export default function ExplorerHome() {
                         <div style={{ flex: 1 }}></div>
                         <button 
                           className="mint-btn" 
-                          onClick={() => { setSelectedLocalSpot(spot); setIsLocalSpotModalOpen(true); }}
+                          onClick={() => { 
+                            setSelectedLocalSpot(spot); 
+                            setIsLocalSpotModalOpen(true); 
+                            setRatingStatus('idle');
+                            setRatingScore(0);
+                            setReviewText('');
+                          }}
                         >
                           View Details
                         </button>
@@ -786,13 +803,13 @@ export default function ExplorerHome() {
       )}
 
       {isLocalSpotModalOpen && selectedLocalSpot && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', position: 'relative' }}>
+        <div className="modal-overlay" onClick={() => setIsLocalSpotModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center', position: 'relative', padding: '30px' }}>
             <button className="close-btn" onClick={() => setIsLocalSpotModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h2 style={{ margin: '0', fontSize: '1.4rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
+                <h2 style={{ margin: '0', fontSize: '1.6rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
                 <button 
                   onClick={handleOpenReportModal}
                   style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem', fontWeight: 'bold' }}
@@ -802,71 +819,108 @@ export default function ExplorerHome() {
                 </button>
               </div>
               
-              <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
-                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h3>
-                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} • {selectedLocalSpot.location}</p>
+              <div style={{ textAlign: 'left', backgroundColor: '#fff', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.4rem', color: '#111' }}>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h3>
+                    <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '1rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} • {selectedLocalSpot.location}</p>
+                  </div>
+                  {selectedLocalSpot.averageRating > 0 ? (
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#fef3c7', padding: '6px 12px', borderRadius: '16px' }}>
+                      <span style={{ color: '#d97706', fontSize: '1.1rem', marginRight: '6px' }}>★</span>
+                      <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#92400e' }}>{selectedLocalSpot.averageRating.toFixed(1)}</span>
+                      <span style={{ color: '#92400e', fontSize: '0.85rem', marginLeft: '6px', opacity: 0.8 }}>({selectedLocalSpot.totalRatings || 0})</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f3f4f6', padding: '6px 12px', borderRadius: '16px' }}>
+                      <span style={{ color: '#9ca3af', fontSize: '1.1rem', marginRight: '6px' }}>★</span>
+                      <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#6b7280' }}>No ratings yet</span>
+                    </div>
+                  )}
+                </div>
                 
-                {selectedLocalSpot.pictureURL && (
-                  <img src={selectedLocalSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
-                )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '20px' }}>
+                  {selectedLocalSpot.pictureURL && (
+                    <div style={{ flex: '1 1 300px' }}>
+                      <img src={selectedLocalSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '250px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    </div>
+                  )}
+                  
+                  {selectedLocalSpot.latitude && selectedLocalSpot.longitude && (
+                    <div style={{ flex: '1 1 300px', height: '250px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                      <MapContainer 
+                        center={[selectedLocalSpot.latitude, selectedLocalSpot.longitude]} 
+                        zoom={14} 
+                        style={{ height: '100%', width: '100%' }}
+                      >
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                        <Marker position={[selectedLocalSpot.latitude, selectedLocalSpot.longitude]} icon={verifiedIcon} />
+                      </MapContainer>
+                    </div>
+                  )}
+                </div>
                 
-                <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem' }}>Description:</h4>
-                <p style={{ margin: '0 0 15px 0', fontSize: '0.95rem', lineHeight: '1.4' }}>{selectedLocalSpot.description}</p>
+                <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#333' }}>About this spot</h4>
+                  <p style={{ margin: '0', fontSize: '1rem', lineHeight: '1.6', color: '#444' }}>{selectedLocalSpot.description}</p>
+                </div>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #e0e0e0', paddingTop: '10px' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#d4c28c', backgroundImage: `url(${selectedLocalSpot.submitterAvatar || ''})`, backgroundSize: 'cover' }}></div>
-                  <span style={{ fontSize: '0.85rem', color: '#555' }}>Submitted by {selectedLocalSpot.submitterName || 'Explorer'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '15px 0' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#d4c28c', backgroundImage: `url(${selectedLocalSpot.submitterAvatar || ''})`, backgroundSize: 'cover' }}></div>
+                  <span style={{ fontSize: '0.95rem', color: '#555', fontWeight: '500' }}>Submitted by {selectedLocalSpot.submitterName || 'Explorer'}</span>
                 </div>
                 
                 <div style={{ marginTop: '20px', borderTop: '1px solid #e0e0e0', paddingTop: '15px' }}>
                   <h4 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>Rate this Spot</h4>
                   
-                  {selectedLocalSpot.hasRated || ratingStatus === 'success' ? (
-                    <div style={{ backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '8px', color: '#065f46', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {ratingStatus === 'success' ? (
+                    <div style={{ backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '8px', color: '#065f46', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                      Thanks for rating this spot!
+                      Thanks for {selectedLocalSpot.hasRated ? 'updating your' : 'your'} rating!
                     </div>
-                  ) : (
-                    <>
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', justifyContent: 'center' }}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <span 
-                            key={star}
-                            onClick={() => setRatingScore(star)}
-                            style={{ 
-                              cursor: 'pointer', 
-                              fontSize: '2rem', 
-                              color: star <= ratingScore ? '#fbbf24' : '#e5e7eb',
-                              transition: 'color 0.2s'
-                            }}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      
-                      {ratingScore > 0 && (
-                        <div style={{ marginTop: '10px', animation: 'fadeIn 0.3s ease' }}>
-                          <textarea 
-                            value={reviewText}
-                            onChange={(e) => setReviewText(e.target.value)}
-                            placeholder="Add a short review (optional)..."
-                            rows="2"
-                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', resize: 'vertical', marginBottom: '10px' }}
-                          ></textarea>
-                          <button 
-                            className="mint-btn"
-                            onClick={handleSubmitRating}
-                            style={{ width: '100%', padding: '10px', borderRadius: '8px', fontWeight: 'bold' }}
-                          >
-                            Submit Rating
-                          </button>
-                        </div>
-                      )}
-                      {ratingStatus === 'error' && (
-                        <p style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '8px' }}>Failed to submit rating. Please try again.</p>
-                      )}
-                    </>
+                  ) : selectedLocalSpot.hasRated && (
+                    <div style={{ marginBottom: '10px', color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
+                      You have already rated this spot. You can submit a new rating below to update it.
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', justifyContent: 'center' }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span 
+                        key={star}
+                        onClick={() => { setRatingScore(star); setRatingStatus('idle'); }}
+                        style={{ 
+                          cursor: 'pointer', 
+                          fontSize: '2rem', 
+                          color: star <= ratingScore ? '#fbbf24' : '#e5e7eb',
+                          transition: 'color 0.2s'
+                        }}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  
+                  {ratingScore > 0 && (
+                    <div style={{ marginTop: '10px', animation: 'fadeIn 0.3s ease' }}>
+                      <textarea 
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        placeholder="Add a short review (optional)..."
+                        rows="2"
+                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', resize: 'vertical', marginBottom: '10px' }}
+                      ></textarea>
+                      <button 
+                        className="mint-btn"
+                        onClick={handleSubmitRating}
+                        style={{ width: '100%', padding: '10px', borderRadius: '8px', fontWeight: 'bold' }}
+                      >
+                        {selectedLocalSpot.hasRated ? 'Update Rating' : 'Submit Rating'}
+                      </button>
+                    </div>
+                  )}
+                  {ratingStatus === 'error' && (
+                    <p style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '8px' }}>Failed to submit rating. Please try again.</p>
                   )}
                 </div>
               </div>

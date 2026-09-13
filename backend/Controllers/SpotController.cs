@@ -258,31 +258,39 @@ namespace backend.Controllers
                 .FirstOrDefaultAsync(r => r.SpotID == id && r.UserID == request.UserId);
 
             if (existingRating != null)
-                return BadRequest("You have already rated this spot.");
-
-            // Add rating
-            var newRating = new SpotRating
             {
-                SpotID = id,
-                UserID = request.UserId,
-                RatingScore = request.RatingScore,
-                ReviewText = request.ReviewText,
-                SubmittedAt = DateTime.UtcNow
-            };
+                existingRating.RatingScore = request.RatingScore;
+                existingRating.ReviewText = request.ReviewText;
+                existingRating.SubmittedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                var rating = new SpotRating
+                {
+                    SpotID = id,
+                    UserID = request.UserId,
+                    RatingScore = request.RatingScore,
+                    ReviewText = request.ReviewText,
+                    SubmittedAt = DateTime.UtcNow
+                };
+                _context.SpotRatings.Add(rating);
+            }
 
-            _context.SpotRatings.Add(newRating);
             await _context.SaveChangesAsync();
 
-            // Recalculate average
-            var averageRating = await _context.SpotRatings
-                .Where(r => r.SpotID == id)
-                .AverageAsync(r => (double)r.RatingScore);
-                
-            var totalRatings = await _context.SpotRatings
-                .Where(r => r.SpotID == id)
-                .CountAsync();
+            // Calculate new average
+            var allRatings = await _context.SpotRatings.Where(r => r.SpotID == id).ToListAsync();
+            double avg = allRatings.Any() ? allRatings.Average(r => (double)r.RatingScore) : request.RatingScore;
 
-            return Ok(new { message = "Rating submitted successfully.", averageRating, totalRatings });
+            // Update the spot's denormalized rating field if it exists
+            spot.Rating = (decimal)avg;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { 
+                message = "Rating recorded successfully.", 
+                averageRating = avg, 
+                totalRatings = allRatings.Count 
+            });
         }
     }
 
