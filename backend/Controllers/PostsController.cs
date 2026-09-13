@@ -52,35 +52,34 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPosts()
         {
-            var posts = await _context.Posts
-                .Join(_context.Users,
-                      p => p.UserID,
-                      u => u.UserID,
-                      (p, u) => new { p, u })
-                .GroupJoin(_context.Profiles,
-                           pu => pu.u.UserID,
-                           pr => pr.UserID,
-                           (pu, prs) => new { pu.p, pu.u, prs })
-                .SelectMany(
-                    x => x.prs.DefaultIfEmpty(),
-                    (x, profile) => new {
-                          postID       = x.p.PostID,
-                          userID       = x.p.UserID,
-                          content      = x.p.Content,
-                          pictureURL   = x.p.PictureURL,
-                          createdAt    = x.p.CreatedAt,
-                          updatedAt    = x.p.UpdatedAt,
-                          experienceType = x.p.ExperienceType,
-                          taggedUsers  = x.p.TaggedUsers,
-                          alsoAttended = x.p.AlsoAttended,
-                          firstName    = x.u.FirstName,
-                          lastName     = x.u.LastName,
-                          userAvatar   = profile != null ? profile.ProfilePictureLink : null
-                    }
-                )
-                .OrderByDescending(p => p.createdAt)
-                .ToListAsync();
-            return Ok(posts);
+            var posts = await _context.Posts.AsNoTracking().OrderByDescending(p => p.CreatedAt).Take(3).ToListAsync();
+            
+            var userIds = posts.Select(p => p.UserID).Distinct().ToList();
+            var users = await _context.Users.AsNoTracking()
+                .Where(u => userIds.Contains(u.UserID))
+                .Select(u => new { u.UserID, u.FirstName, u.LastName })
+                .ToDictionaryAsync(u => u.UserID);
+            var profiles = await _context.Profiles.AsNoTracking()
+                .Where(p => userIds.Contains(p.UserID))
+                .Select(p => new { p.UserID, p.ProfilePictureLink })
+                .ToDictionaryAsync(p => p.UserID);
+
+            var result = posts.Select(p => new {
+                postID       = p.PostID,
+                userID       = p.UserID,
+                content      = p.Content,
+                pictureURL   = p.PictureURL,
+                createdAt    = p.CreatedAt,
+                updatedAt    = p.UpdatedAt,
+                experienceType = p.ExperienceType,
+                taggedUsers  = p.TaggedUsers,
+                alsoAttended = p.AlsoAttended,
+                firstName    = users.ContainsKey(p.UserID) ? users[p.UserID].FirstName : p.UserName,
+                lastName     = users.ContainsKey(p.UserID) ? users[p.UserID].LastName : p.UserSurname,
+                userAvatar   = profiles.ContainsKey(p.UserID) ? profiles[p.UserID].ProfilePictureLink : null
+            });
+            
+            return Ok(result);
         }
 
         /// <summary>

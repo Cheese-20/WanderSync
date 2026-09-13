@@ -39,6 +39,8 @@ namespace backend.Controllers
                                    description = s.Description,
                                    location = s.Location,
                                    pictureURL = s.PictureURL,
+                                   latitude = s.Latitude,
+                                   longitude = s.Longitude,
                                    submitterName = u != null ? u.FirstName + " " + u.LastName : "Unknown",
                                    submitterAvatar = p != null ? p.ProfilePictureLink : null,
                                    submittedAt = s.SubmittedAt
@@ -47,42 +49,55 @@ namespace backend.Controllers
             return Ok(spots);
         }
 
-        // GET: api/spots/verified
         [HttpGet("verified")]
         public async Task<IActionResult> GetVerifiedSpots([FromQuery] int? userId = null)
         {
-            var spots = await (from s in _context.CuratedSpots
-                               where s.IsVerified == "approved"
-                               join u in _context.Users on s.SubmittedByUserID equals u.UserID into userGroup
-                               from u in userGroup.DefaultIfEmpty()
-                               join p in _context.Profiles on s.SubmittedByUserID equals p.UserID into profileGroup
-                               from p in profileGroup.DefaultIfEmpty()
-                               let upvotesCount = _context.SpotVotes.Count(v => v.SpotID == s.SpotID && v.VoteType == "upvote")
-                               let hasUpvoted = userId.HasValue ? _context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.VoteType == "upvote" && v.GuideID == userId.Value) : false
-                               let averageRating = (double?)s.Rating ?? (_context.SpotRatings.Where(r => r.SpotID == s.SpotID).Average(r => (double?)r.RatingScore) ?? 0.0)
-                               let totalRatings = s.Rating.HasValue ? 1 : _context.SpotRatings.Count(r => r.SpotID == s.SpotID)
-                               let hasRated = userId.HasValue ? _context.SpotRatings.Any(r => r.SpotID == s.SpotID && r.UserID == userId.Value) : false
-                               select new {
-                                   spotID = s.SpotID,
-                                   activityName = s.ActivityName,
-                                   activityType = s.ActivityType,
-                                   description = s.Description,
-                                   location = s.Location,
-                                   pictureURL = s.PictureURL,
-                                   submitterName = u != null ? u.FirstName + " " + u.LastName : (s.SubmittedByName ?? "Unknown"),
-                                   submittedByName = s.SubmittedByName,
-                                   latitude = s.Latitude,
-                                   longitude = s.Longitude,
-                                   submitterAvatar = p != null ? p.ProfilePictureLink : null,
-                                   submittedAt = s.SubmittedAt,
-                                   upvotesCount = upvotesCount,
-                                   hasUpvoted = hasUpvoted,
-                                   averageRating = averageRating,
-                                   totalRatings = totalRatings,
-                                   hasRated = hasRated
-                               }).ToListAsync();
+            var spots = await _context.CuratedSpots
+                .Where(s => s.IsVerified == "approved")
+                .ToListAsync();
 
-            return Ok(spots);
+            var userIds = spots.Select(s => s.SubmittedByUserID).Where(id => id.HasValue).Select(id => id.Value).Distinct().ToList();
+            var users = await _context.Users.Where(u => userIds.Contains(u.UserID)).ToDictionaryAsync(u => u.UserID);
+            var profiles = await _context.Profiles.Where(p => userIds.Contains(p.UserID)).ToDictionaryAsync(p => p.UserID);
+
+            var spotIds = spots.Select(s => s.SpotID).ToList();
+
+            var upvotes = await _context.SpotVotes
+                .Where(v => spotIds.Contains(v.SpotID) && v.VoteType == "upvote")
+                .ToListAsync();
+
+            var ratings = await _context.SpotRatings
+                .Where(r => spotIds.Contains(r.SpotID))
+                .ToListAsync();
+
+            var result = spots.Select(s => {
+                var sUpvotes = upvotes.Where(v => v.SpotID == s.SpotID).ToList();
+                var sRatings = ratings.Where(r => r.SpotID == s.SpotID).ToList();
+                
+                return new {
+                    spotID = s.SpotID,
+                    activityName = s.ActivityName,
+                    activityType = s.ActivityType,
+                    description = s.Description,
+                    location = s.Location,
+                    pictureURL = s.PictureURL,
+                    submitterName = s.SubmittedByUserID.HasValue && users.ContainsKey(s.SubmittedByUserID.Value) ? 
+                        users[s.SubmittedByUserID.Value].FirstName + " " + users[s.SubmittedByUserID.Value].LastName : (s.SubmittedByName ?? "Unknown"),
+                    submittedByName = s.SubmittedByName,
+                    latitude = s.Latitude,
+                    longitude = s.Longitude,
+                    submitterAvatar = s.SubmittedByUserID.HasValue && profiles.ContainsKey(s.SubmittedByUserID.Value) ? 
+                        profiles[s.SubmittedByUserID.Value].ProfilePictureLink : null,
+                    submittedAt = s.SubmittedAt,
+                    upvotesCount = sUpvotes.Count,
+                    hasUpvoted = userId.HasValue ? sUpvotes.Any(v => v.GuideID == userId.Value) : false,
+                    averageRating = (double?)s.Rating ?? (sRatings.Any() ? sRatings.Average(r => (double)r.RatingScore) : 0.0),
+                    totalRatings = s.Rating.HasValue ? 1 : sRatings.Count,
+                    hasRated = userId.HasValue ? sRatings.Any(r => r.UserID == userId.Value) : false
+                };
+            });
+
+            return Ok(result);
         }
 
         public class VoteRequest

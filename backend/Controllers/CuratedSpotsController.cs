@@ -35,6 +35,20 @@ namespace backend.Controllers
             _context.CuratedSpots.Add(spot);
             await _context.SaveChangesAsync();
 
+            if (spot.SubmittedByUserID.HasValue)
+            {
+                var notification = new Notification
+                {
+                    UserID = spot.SubmittedByUserID.Value,
+                    Type = "SpotSubmitted",
+                    Message = $"Your new spot '{spot.ActivityName}' has been successfully submitted and is now pending verification by local guides.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
+            }
+
             return CreatedAtAction(nameof(GetCuratedSpots), new { id = spot.SpotID }, spot);
         }
     }

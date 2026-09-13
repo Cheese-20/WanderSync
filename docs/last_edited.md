@@ -1,5 +1,38 @@
-# Last Edited - Merged report-spot into main
+# Last Edited - Add Spot via Map Pin Feature
 
+## [2026-09-13]
+- **Feature (Full-Stack)**: Users can now pin a new spot directly on the map and submit it for verification by local guides.
+  - **Files modified**: `src/components/MapModal.jsx`, `src/pages/ExplorePage.jsx`, `src/styles/explorer.css`, `backend/Controllers/SpotController.cs`
+  - **Why it changed**: The user requested that users should be able to add spots by pinning on the map, with verification by local guides before spots become visible to all.
+  - **How the change works**:
+    - **MapModal.jsx**: Completely rewritten to support a **pin-drop mode**. Clicking "Add New Spot" enters crosshair mode; clicking the map drops a temporary purple pulsing pin and opens a slide-up form at the bottom. The address field is auto-populated via reverse geocoding (Nominatim API). The photo field is now **mandatory** and uses the system's standard `.cool-image-upload-zone` and `FileReader` (toBase64) pattern, matching the aesthetic of profile and post picture uploads. On submit, the spot is saved as `pending` via `POST /api/curatedspots`. The component also accepts `pendingSpots`, `userId`, `userRole`, and `onSpotAdded` props.
+    - **Pending spots for guides**: When the logged-in user is a guide, pending spots are rendered as **orange pulsing pins** with a distinct popup showing "⏳ Pending Verification" and a note that the spot awaits guide approval.
+    - **Guide Dashboard Verification**: The `GuideHome.jsx` "Review Pending Spot" modal now renders a mini-map (`react-leaflet`) that visualizes the exact coordinates of the dropped pin using the same orange pulsing `pendingIcon`. This allows local guides to visually confirm the spot's location before approving/rejecting it.
+    - **ExplorePage.jsx**: Added `pendingSpots` state. If the user is a guide, fetches `GET /api/spots/pending/{guideId}` and passes results to `<MapModal>` along with `userId`, `userRole`, and `onSpotAdded` callback.
+    - **SpotController.cs**: Added `latitude` and `longitude` to the `GET /api/spots/pending/{guideId}` response projection so pending pins can be shown on the map.
+    - **explorer.css**: Added styles for: pending pins (orange-to-red gradient with pulsing animation), temporary pins (indigo pulsing), pin-drop crosshair cursor, map overlay controls with "Add New Spot" button, pin-drop banner, slide-up frosted-glass form panel with `slideUp` animation, geocoding spinner, and pending popup badges/notes.
+
+# Last Edited - Redesigned Map Popup Cards
+
+## [2026-09-13]
+- **Enhancement (Frontend UI)**: Completely redesigned the map spot popup cards for a premium aesthetic and added the spot address.
+  - **Files modified**: `src/components/MapModal.jsx`, `src/styles/explorer.css`
+  - **Why it changed**: The user requested more aesthetic map popups and wanted the address of each spot to be visible.
+  - **How the change works**:
+    - Removed the old logo-header popup layout and replaced it with a modern card design featuring: a hero image with a dark gradient overlay, a frosted-glass activity type badge (e.g. "ADVENTURE", "CULTURAL"), a 5-star visual rating row, a prominent address line with a teal location pin icon, and a polished footer with the submitter's name.
+    - The close button is now white with a text-shadow so it's visible over images.
+    - The map pins were updated from muted green/gold to a vibrant emerald-to-sky gradient with a hover scale animation.
+    - Images that fail to load gracefully fall back to a placeholder icon instead of breaking the layout.
+
+# Last Edited - Renamed Available Experiences and Added Date Filter
+
+## [2026-09-13]
+- **Enhancement (Frontend UI)**: Changed "Available experiences" section to "Available Tours" and filtered it to only display current and future tours.
+  - **Files modified**: `src/pages/ExplorePage.jsx`
+  - **Why it changed**: The user requested that the section title be updated and past tours be hidden to declutter the UI.
+  - **How the change works**: Renamed the text elements in the JSX. Modified the `visibleTours` memoized value to filter the `tours` array by checking if the tour's date (at midnight) is greater than or equal to the current date (at midnight) before rendering.
+
+# Last Edited - Merged report-spot into main
 ## [2026-09-12]
 - **Repository Sync**: Merged branch `report-spot` (justbobby-web) into `main`.
   - **Files modified**: `docs/use_case_narratives.md`, `src/pages/Dashboard.jsx`, `src/styles/dashboard.css`

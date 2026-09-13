@@ -49,6 +49,7 @@ export default function ExplorePage() {
   // Map Modal State
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [mapSpots, setMapSpots] = useState([]);
+  const [pendingSpots, setPendingSpots] = useState([]);
   
   // Submit New Spot Modal State
   const [showModal, setShowModal] = useState(false);
@@ -156,7 +157,16 @@ export default function ExplorePage() {
       setTours(toursRes.data || []);
       setUserBookings(bookingsRes.data || []);
       setMapSpots(spotsRes.data || []);
-      setUserBookings(bookingsRes.data || []);
+
+      // Fetch pending spots for guides
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if ((user.role || '').toLowerCase() === 'guide' && currentUserId) {
+          const pendingRes = await axios.get(`/api/spots/pending/${currentUserId}`).catch(() => ({ data: [] }));
+          setPendingSpots(pendingRes.data || []);
+        }
+      }
     } catch (err) {
       console.error('Error loading explore data:', err);
       setError('Unable to load data. Please make sure the backend is running.');
@@ -217,9 +227,17 @@ export default function ExplorePage() {
   // While a search is active, only show experiences that belong to a matching guide.
   // Guides are already ranked, so experiences follow that same order.
   const visibleTours = useMemo(() => {
-    if (!appliedQuery) return tours;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const futureTours = tours.filter(t => {
+      const tourDate = new Date(t.date);
+      tourDate.setHours(0, 0, 0, 0);
+      return tourDate >= today;
+    });
+
+    if (!appliedQuery) return futureTours;
     const rank = new Map(filteredGuides.map((g, i) => [g.guideId, i]));
-    return tours
+    return futureTours
       .filter(t => rank.has(getTourGuideId(t)))
       .sort((a, b) => rank.get(getTourGuideId(a)) - rank.get(getTourGuideId(b)));
   }, [tours, filteredGuides, appliedQuery]);
@@ -565,10 +583,10 @@ export default function ExplorePage() {
           {/* Hidden entirely when a search is active and no matching guide has experiences */}
           {(!appliedQuery || visibleTours.length > 0) && (
           <section className="explore-experiences">
-            <div className="explore-section-header"><h2>Available experiences</h2></div>
+            <div className="explore-section-header"><h2>Available Tours</h2></div>
             {appliedQuery && (
               <p className="explore-search-summary">
-                Experiences by guides matching "{appliedQuery}"
+                Tours by guides matching "{appliedQuery}"
               </p>
             )}
             {visibleTours.length > 0 ? (
@@ -659,7 +677,15 @@ export default function ExplorePage() {
       )}
 
       {isMapModalOpen && (
-        <MapModal isOpen={isMapModalOpen} onClose={() => setIsMapModalOpen(false)} spots={mapSpots} />
+        <MapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          spots={mapSpots}
+          pendingSpots={pendingSpots}
+          userId={loggedInUserId}
+          userRole={userRole}
+          onSpotAdded={() => loadData(loggedInUserId)}
+        />
       )}
     </div>
     </>

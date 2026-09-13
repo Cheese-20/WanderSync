@@ -48,36 +48,39 @@ namespace backend.Controllers
             return tour;
         }
 
-        // GET: api/tours
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> GetAllTours()
         {
             var toursWithGuides = await _context.Tours
                 // Exclude private rows: nobody else can book someone's one-on-one session.
                 .Where(t => !TourTypes.Private.Contains(t.Type))
-                .Join(_context.Users, 
-                      t => t.GuideId, 
-                      u => u.UserID, 
-                      (t, u) => new { t, u })
-                .GroupJoin(_context.Bookings,
-                           tu => tu.t.TourId,
-                           b => b.tourID,
-                           (tu, bookings) => new {
-                               tourId = tu.t.TourId, 
-                               title = tu.t.Title, 
-                               description = tu.t.Description, 
-                               date = tu.t.Date, 
-                               price = tu.t.Price, 
-                               maxPeople = tu.t.MaxPeople, 
-                               type = tu.t.Type, 
-                               pictureURL = tu.t.PictureURL, 
-                               location = tu.t.Location,
-                               guideID = tu.t.GuideId,
-                               guideName = tu.u.FirstName + " " + tu.u.LastName,
-                               confirmedBookingsCount = bookings.Where(b => b.status.ToLower() == "accepted").Sum(b => (int?)b.numberOfGuests) ?? 0
-                           })
                 .ToListAsync();
-            return Ok(toursWithGuides);
+
+            var guideIds = toursWithGuides.Select(t => t.GuideId).Distinct().ToList();
+            var users = await _context.Users.Where(u => guideIds.Contains(u.UserID)).ToDictionaryAsync(u => u.UserID);
+
+            var tourIds = toursWithGuides.Select(t => t.TourId).ToList();
+            var bookingsCount = await _context.Bookings
+                .Where(b => tourIds.Contains(b.tourID) && b.status.ToLower() == "accepted")
+                .GroupBy(b => b.tourID)
+                .Select(g => new { TourId = g.Key, Count = g.Sum(b => b.numberOfGuests) })
+                .ToDictionaryAsync(g => g.TourId, g => g.Count);
+
+            var result = toursWithGuides.Select(t => new {
+                tourId = t.TourId, 
+                title = t.Title, 
+                description = t.Description, 
+                date = t.Date, 
+                price = t.Price, 
+                maxPeople = t.MaxPeople, 
+                type = t.Type, 
+                pictureURL = t.PictureURL, 
+                location = t.Location,
+                guideID = t.GuideId,
+                guideName = users.ContainsKey(t.GuideId) ? users[t.GuideId].FirstName + " " + users[t.GuideId].LastName : "Unknown",
+                confirmedBookingsCount = bookingsCount.ContainsKey(t.TourId) ? bookingsCount[t.TourId] : 0
+            });
+            return Ok(result);
         }
 
         // POST: api/Tours
@@ -230,10 +233,32 @@ namespace backend.Controllers
                 return NotFound();
             }
 
+            // Find all active bookings for this tour
+            var activeBookings = await _context.Bookings
+                .Where(b => b.tourID == id && (b.status == "Pending" || b.status == "Accepted" || b.status == "accepted" || b.status == "pending"))
+                .ToListAsync();
+
+            // Notify all users who booked this tour
+            foreach (var booking in activeBookings)
+            {
+                var notification = new Notification
+                {
+                    UserID = booking.userID,
+                    Type = "TourCancelled",
+                    Message = $"Unfortunately, the guide has cancelled the tour '{tour.Title}'. Your booking has been cancelled.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _context.Notifications.Add(notification);
+                
+                // Mark booking as cancelled just in case cascade delete is off
+                booking.status = "Cancelled";
+            }
+
             _context.Tours.Remove(tour);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Activity deleted successfully!" });
+            return Ok(new { message = "Activity deleted successfully and attendees have been notified!" });
         }
 
         private bool TourExists(int id)

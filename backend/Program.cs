@@ -49,11 +49,18 @@ builder.Services.AddDbContext<WanderSyncDbContext>(options =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 // Register background service for booking reminders
 builder.Services.AddHostedService<BookingReminderService>();
 
 var app = builder.Build();
 
+app.UseRouting();
+app.UseResponseCompression();
 app.UseCors("AllowViteApp");
 
 // Ensure database tables exist

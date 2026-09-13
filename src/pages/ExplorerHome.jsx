@@ -438,79 +438,86 @@ export default function ExplorerHome() {
           <h2>Local Favourites</h2>
         </div>
         <div className="tours-grid" ref={spotsScrollRef} style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
-          {spots.slice(0, visibleSpotsCount).map(spot => (
-            <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
-              <div className="tour-image-placeholder">
-                <img src={spot.pictureURL || logo} alt="Spot" />
-              </div>
-              <div className="tour-card-body">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
-                    <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
-                  </div>
-                  {spot.averageRating > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#fef3c7', padding: '4px 8px', borderRadius: '12px' }}>
-                      <span style={{ color: '#d97706', fontSize: '0.9rem', marginRight: '4px' }}>★</span>
-                      <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#92400e' }}>{spot.averageRating.toFixed(1)}</span>
+          {(() => {
+            const localSpots = userLocation ? spots.filter(s => s.location && s.location.toLowerCase().includes(userLocation.toLowerCase())) : spots;
+            return (
+              <>
+                {localSpots.slice(0, visibleSpotsCount).map(spot => (
+                  <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
+                    <div className="tour-image-placeholder">
+                      <img src={spot.pictureURL || logo} alt="Spot" />
                     </div>
-                  )}
-                </div>
-                <div className="tour-meta">
-                  <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    {spot.location || 'Unknown Location'}
-                  </span>
-                </div>
-                <div className="tour-footer">
-                  <button 
-                    className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
-                    onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
-                    title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
-                  >
-                    <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                    {spot.upvotesCount || 0}
-                  </button>
-                  <div style={{ flex: 1 }}></div>
-                  <button 
-                    className="mint-btn" 
-                    onClick={() => { setSelectedLocalSpot(spot); setIsLocalSpotModalOpen(true); }}
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
-          
-          {spots.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
-              <button 
-                onClick={() => {
-                  handleLoadMoreSpots();
-                  if (spotsScrollRef.current) {
-                    setTimeout(() => {
-                      spotsScrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-                    }, 100);
-                  }
-                }} 
-                style={{
-                  width: '50px', height: '50px', borderRadius: '50%', 
-                  backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length) ? '#ccc' : '#a6d8b6', 
-                  color: '#fff', border: 'none', fontSize: '1.5rem', 
-                  cursor: (visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length) ? 'default' : 'pointer', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-                disabled={visibleSpotsCount >= 12 || visibleSpotsCount >= spots.length}
-                title="Load more spots"
-              >
-                &#8594;
-              </button>
-            </div>
-          )}
+                    <div className="tour-card-body">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
+                          <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
+                        </div>
+                        {spot.averageRating > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#fef3c7', padding: '4px 8px', borderRadius: '12px' }}>
+                            <span style={{ color: '#d97706', fontSize: '0.9rem', marginRight: '4px' }}>★</span>
+                            <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#92400e' }}>{spot.averageRating.toFixed(1)}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="tour-meta">
+                        <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          {spot.location || 'Unknown Location'}
+                        </span>
+                      </div>
+                      <div className="tour-footer">
+                        <button 
+                          className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
+                          onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
+                          title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
+                        >
+                          <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                          {spot.upvotesCount || 0}
+                        </button>
+                        <div style={{ flex: 1 }}></div>
+                        <button 
+                          className="mint-btn" 
+                          onClick={() => { setSelectedLocalSpot(spot); setIsLocalSpotModalOpen(true); }}
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+                
+                {localSpots.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
+                    <button 
+                      onClick={() => {
+                        handleLoadMoreSpots();
+                        if (spotsScrollRef.current) {
+                          setTimeout(() => {
+                            spotsScrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+                          }, 100);
+                        }
+                      }} 
+                      style={{
+                        width: '50px', height: '50px', borderRadius: '50%', 
+                        backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= localSpots.length) ? '#ccc' : '#a6d8b6', 
+                        color: '#fff', border: 'none', fontSize: '1.5rem', 
+                        cursor: (visibleSpotsCount >= 12 || visibleSpotsCount >= localSpots.length) ? 'default' : 'pointer', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}
+                      disabled={visibleSpotsCount >= 12 || visibleSpotsCount >= localSpots.length}
+                      title="Load more spots"
+                    >
+                      &#8594;
+                    </button>
+                  </div>
+                )}
 
-          {spots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites yet.</p>}
+                {localSpots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites found for your location ({userLocation || 'Unknown'}).</p>}
+              </>
+            );
+          })()}
         </div>
       </section>
 
@@ -537,9 +544,13 @@ export default function ExplorerHome() {
                 <div style={{ marginLeft: 'auto', position: 'relative' }}>
                   <span
                     onClick={() => toggleMenu(post.postID)}
-                    style={{ cursor: 'pointer', fontSize: '1.2rem', color: '#666', padding: '4px 8px', borderRadius: '4px', lineHeight: '1' }}
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', borderRadius: '4px', color: '#666' }}
                   >
-                    ⋮
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="5" r="1.5"></circle>
+                      <circle cx="12" cy="12" r="1.5"></circle>
+                      <circle cx="12" cy="19" r="1.5"></circle>
+                    </svg>
                   </span>
                   {openMenuId === post.postID && (
                     <div style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: '999', minWidth: '160px', overflow: 'hidden', marginTop: '4px' }}>

@@ -3,9 +3,20 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import CreatePostModal from '../components/CreatePostModal';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import logo from '../assets/images/logo.png';
 import '../styles/explorer.css';
 import '../styles/guide.css';
+
+const pendingIcon = L.divIcon({
+  className: 'custom-gradient-pin pending-pin',
+  html: `<div class="pin-body pending"></div>`,
+  iconSize: [30, 42],
+  iconAnchor: [15, 42],
+  popupAnchor: [0, -38]
+});
 
 export default function GuideHome() {
   const navigate = useNavigate();
@@ -21,6 +32,7 @@ export default function GuideHome() {
   const [selectedLocalSpot, setSelectedLocalSpot] = useState(null);
   const [isLocalSpotModalOpen, setIsLocalSpotModalOpen] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
   const [isReportSpotModalOpen, setIsReportSpotModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState('Inaccurate Information');
   const [reportComment, setReportComment] = useState('');
@@ -102,6 +114,15 @@ export default function GuideHome() {
         axios.get(`http://localhost:5200/api/local-guide/${userId}/assigned-tourists`)
           .then(res => setAssignedTourists(res.data))
           .catch(err => console.error('Error fetching assigned tourists:', err));
+
+        // Fetch the user's profile to get their location
+        axios.get(`http://localhost:5200/api/profile/${userId}`)
+          .then(res => {
+            if (res.data && res.data.location) {
+              setUserLocation(res.data.location);
+            }
+          })
+          .catch(err => console.error('Failed to fetch user profile:', err));
       }
       
       // Fetch verified spots for Local Favourites
@@ -325,69 +346,76 @@ export default function GuideHome() {
           <h2>Local Favourites</h2>
         </div>
         <div className="tours-grid" ref={localSpotsScrollRef} style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
-          {spots.slice(0, visibleLocalSpotsCount).map(spot => (
-            <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
-              <div className="tour-image-placeholder">
-                <img src={spot.pictureURL || logo} alt="Spot" />
-              </div>
-              <div className="tour-card-body">
-                <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
-                <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
-                <div className="tour-meta">
-                  <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    {spot.location || 'Unknown Location'}
-                  </span>
-                </div>
-                <div className="tour-footer">
-                  <button 
-                    className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
-                    onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
-                    title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
-                  >
-                    <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                    {spot.upvotesCount || 0}
-                  </button>
-                  <div style={{ flex: 1 }}></div>
-                  <button 
-                    className="mint-btn" 
-                    onClick={() => { setSelectedLocalSpot(spot); setIsLocalSpotModalOpen(true); }}
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
-          
-          {spots.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
-              <button 
-                onClick={() => {
-                  handleLoadMoreLocalSpots();
-                  if (localSpotsScrollRef.current) {
-                    setTimeout(() => {
-                      localSpotsScrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-                    }, 100);
-                  }
-                }} 
-                style={{
-                  width: '50px', height: '50px', borderRadius: '50%', 
-                  backgroundColor: (visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= spots.length) ? '#ccc' : '#a6d8b6', 
-                  color: '#fff', border: 'none', fontSize: '1.5rem', 
-                  cursor: (visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= spots.length) ? 'default' : 'pointer', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-                disabled={visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= spots.length}
-                title="Load more spots"
-              >
-                &#8594;
-              </button>
-            </div>
-          )}
+          {(() => {
+            const localSpots = userLocation ? spots.filter(s => s.location && s.location.toLowerCase().includes(userLocation.toLowerCase())) : spots;
+            return (
+              <>
+                {localSpots.slice(0, visibleLocalSpotsCount).map(spot => (
+                  <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
+                    <div className="tour-image-placeholder">
+                      <img src={spot.pictureURL || logo} alt="Spot" />
+                    </div>
+                    <div className="tour-card-body">
+                      <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
+                      <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
+                      <div className="tour-meta">
+                        <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          {spot.location || 'Unknown Location'}
+                        </span>
+                      </div>
+                      <div className="tour-footer">
+                        <button 
+                          className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
+                          onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
+                          title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
+                        >
+                          <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                          {spot.upvotesCount || 0}
+                        </button>
+                        <div style={{ flex: 1 }}></div>
+                        <button 
+                          className="mint-btn" 
+                          onClick={() => { setSelectedLocalSpot(spot); setIsLocalSpotModalOpen(true); }}
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+                
+                {localSpots.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
+                    <button 
+                      onClick={() => {
+                        handleLoadMoreLocalSpots();
+                        if (localSpotsScrollRef.current) {
+                          setTimeout(() => {
+                            localSpotsScrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+                          }, 100);
+                        }
+                      }} 
+                      style={{
+                        width: '50px', height: '50px', borderRadius: '50%', 
+                        backgroundColor: (visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= localSpots.length) ? '#ccc' : '#a6d8b6', 
+                        color: '#fff', border: 'none', fontSize: '1.5rem', 
+                        cursor: (visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= localSpots.length) ? 'default' : 'pointer', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}
+                      disabled={visibleLocalSpotsCount >= 12 || visibleLocalSpotsCount >= localSpots.length}
+                      title="Load more spots"
+                    >
+                      &#8594;
+                    </button>
+                  </div>
+                )}
 
-          {spots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites yet.</p>}
+                {localSpots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites found for your location ({userLocation || 'Unknown'}).</p>}
+              </>
+            );
+          })()}
         </div>
       </section>
 
@@ -576,8 +604,8 @@ export default function GuideHome() {
       </section>
 
       {isReviewModalOpen && selectedSpot && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', position: 'relative' }}>
+        <div className="modal-overlay" onClick={() => setIsReviewModalOpen(false)}>
+          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <button className="close-btn" onClick={() => setIsReviewModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
@@ -585,10 +613,21 @@ export default function GuideHome() {
               
               <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
                 <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedSpot.activityName}</h3>
-                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedSpot.activityType} â€¢ {selectedSpot.location}</p>
+                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedSpot.activityType} @ {selectedSpot.location}</p>
                 
                 {selectedSpot.pictureURL && (
                   <img src={selectedSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
+                )}
+
+                {selectedSpot.latitude && selectedSpot.longitude && (
+                  <div style={{ width: '100%', height: '150px', borderRadius: '8px', overflow: 'hidden', marginBottom: '10px' }}>
+                    <MapContainer center={[selectedSpot.latitude, selectedSpot.longitude]} zoom={14} style={{ height: '100%', width: '100%' }}>
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <Marker position={[selectedSpot.latitude, selectedSpot.longitude]} icon={pendingIcon} />
+                    </MapContainer>
+                  </div>
                 )}
                 
                 <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem' }}>Description:</h4>
@@ -621,8 +660,8 @@ export default function GuideHome() {
       )}
 
       {isLocalSpotModalOpen && selectedLocalSpot && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center', position: 'relative' }}>
+        <div className="modal-overlay" onClick={() => setIsLocalSpotModalOpen(false)}>
+          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
             <button className="close-btn" onClick={() => setIsLocalSpotModalOpen(false)}>&times;</button>
             <div style={{ marginBottom: '20px' }}>
               <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
@@ -639,7 +678,7 @@ export default function GuideHome() {
               
               <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
                 <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h3>
-                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} â€¢ {selectedLocalSpot.location}</p>
+                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} @ {selectedLocalSpot.location}</p>
                 
                 {selectedLocalSpot.pictureURL && (
                   <img src={selectedLocalSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
