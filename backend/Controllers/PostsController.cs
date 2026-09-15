@@ -52,7 +52,7 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPosts()
         {
-            var posts = await _context.Posts.AsNoTracking().OrderByDescending(p => p.CreatedAt).Take(3).ToListAsync();
+            var posts = await _context.Posts.AsNoTracking().OrderByDescending(p => p.CreatedAt).ToListAsync();
             
             var userIds = posts.Select(p => p.UserID).Distinct().ToList();
             var users = await _context.Users.AsNoTracking()

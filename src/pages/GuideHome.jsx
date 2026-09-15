@@ -402,8 +402,18 @@ export default function GuideHome() {
                       <img src={spot.pictureURL || logo} alt="Spot" />
                     </div>
                     <div className="tour-card-body">
-                      <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
-                      <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h3 className="tour-title" style={{ marginBottom: '4px' }}>{spot.activityName || spot.name || 'Unnamed Spot'}</h3>
+                          <span style={{ fontSize: '0.85rem', color: '#888', display: 'block', marginBottom: '8px' }}>{spot.activityType || spot.category || 'Experience'}</span>
+                        </div>
+                        {spot.averageRating > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#fef3c7', padding: '4px 8px', borderRadius: '12px' }}>
+                            <span style={{ color: '#d97706', fontSize: '0.9rem', marginRight: '4px' }}>★</span>
+                            <span style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#92400e' }}>{spot.averageRating.toFixed(1)}</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="tour-meta">
                         <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -422,7 +432,13 @@ export default function GuideHome() {
                         <div style={{ flex: 1 }}></div>
                         <button 
                           className="mint-btn" 
-                          onClick={() => { setSelectedLocalSpot(spot); setIsLocalSpotModalOpen(true); }}
+                          onClick={() => { 
+                            setSelectedLocalSpot(spot); 
+                            setIsLocalSpotModalOpen(true); 
+                            setRatingStatus('idle');
+                            setRatingScore(0);
+                            setReviewText('');
+                          }}
                         >
                           View Details
                         </button>
@@ -707,42 +723,148 @@ export default function GuideHome() {
 
       {isLocalSpotModalOpen && selectedLocalSpot && (
         <div className="modal-overlay" onClick={() => setIsLocalSpotModalOpen(false)}>
-          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setIsLocalSpotModalOpen(false)}>&times;</button>
-            <div style={{ marginBottom: '20px' }}>
-              <img src={logo} alt="WanderSync" style={{ width: '60px', height: 'auto', margin: '0 auto 15px auto', display: 'block' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h2 style={{ margin: '0', fontSize: '1.4rem', color: '#1a1a1a' }}>Verified Local Favourite</h2>
-                <button 
-                  onClick={handleOpenReportModal}
-                  style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem', fontWeight: 'bold' }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-                  Report
-                </button>
-              </div>
-              
-              <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
-                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h3>
-                <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '0.9rem' }}>{selectedLocalSpot.activityType || selectedLocalSpot.category} @ {selectedLocalSpot.location}</p>
-                
-                {selectedLocalSpot.pictureURL && (
-                  <img src={selectedLocalSpot.pictureURL} alt="Spot" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
-                )}
-                
-                <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem' }}>Description:</h4>
-                <p style={{ margin: '0 0 15px 0', fontSize: '0.95rem', lineHeight: '1.4' }}>{selectedLocalSpot.description}</p>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #e0e0e0', paddingTop: '10px' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#d4c28c', backgroundImage: `url(${selectedLocalSpot.submitterAvatar || ''})`, backgroundSize: 'cover' }}></div>
-                  <span style={{ fontSize: '0.85rem', color: '#555' }}>Submitted by {selectedLocalSpot.submitterName || 'Explorer'}</span>
+          <div className="spot-detail-modal" onClick={(e) => e.stopPropagation()}>
+
+            {/* ── Hero image header ── */}
+            <div className="spot-modal-hero">
+              <img
+                src={selectedLocalSpot.pictureURL || logo}
+                alt={selectedLocalSpot.activityName}
+                className="spot-modal-hero-img"
+              />
+              <div className="spot-modal-hero-overlay" />
+
+              {/* Close */}
+              <button className="spot-modal-close" onClick={() => setIsLocalSpotModalOpen(false)}>✕</button>
+
+              {/* Category badge */}
+              <span className="spot-modal-badge">
+                {selectedLocalSpot.activityType || selectedLocalSpot.category || 'Experience'}
+              </span>
+
+              {/* Report link */}
+              <button className="spot-modal-report-btn" onClick={handleOpenReportModal}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                Report
+              </button>
+
+              {/* Title block sitting on hero */}
+              <div className="spot-modal-hero-title">
+                <h2>{selectedLocalSpot.activityName || selectedLocalSpot.name}</h2>
+                <div className="spot-modal-location-row">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {selectedLocalSpot.location || 'Unknown location'}
                 </div>
               </div>
             </div>
 
-            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
-              <button className="btn-primary" onClick={() => setIsLocalSpotModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '14px', fontWeight: 'bold' }}>Awesome!</button>
+            {/* ── Scrollable body ── */}
+            <div className="spot-modal-body">
+
+              {/* Rating pill row */}
+              <div className="spot-modal-rating-row">
+                <div className="spot-modal-verified-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Verified Local Favourite
+                </div>
+
+                {selectedLocalSpot.averageRating > 0 ? (
+                  <div className="spot-modal-avg-rating">
+                    <span className="rating-star-icon">★</span>
+                    <span className="rating-score">{selectedLocalSpot.averageRating.toFixed(1)}</span>
+                    <span className="rating-count">({selectedLocalSpot.totalRatings || 0} ratings)</span>
+                  </div>
+                ) : (
+                  <div className="spot-modal-avg-rating spot-modal-avg-rating--empty">
+                    <span className="rating-star-icon">★</span>
+                    <span className="rating-score">Be the first to rate</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="spot-modal-section">
+                <h4 className="spot-modal-section-title">About this spot</h4>
+                <p className="spot-modal-description">{selectedLocalSpot.description || 'No description provided.'}</p>
+              </div>
+
+              {/* Map (only if coords available) */}
+              {selectedLocalSpot.latitude && selectedLocalSpot.longitude && (
+                <div className="spot-modal-section">
+                  <h4 className="spot-modal-section-title">Location on map</h4>
+                  <div className="spot-modal-map-wrapper">
+                    <MapContainer
+                      center={[selectedLocalSpot.latitude, selectedLocalSpot.longitude]}
+                      zoom={14}
+                      style={{ height: '100%', width: '100%' }}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={[selectedLocalSpot.latitude, selectedLocalSpot.longitude]} icon={verifiedIcon} />
+                    </MapContainer>
+                  </div>
+                </div>
+              )}
+
+              {/* Submitter */}
+              <div className="spot-modal-submitter">
+                <div
+                  className="spot-modal-avatar"
+                  style={{ backgroundImage: `url(${selectedLocalSpot.submitterAvatar || ''})` }}
+                />
+                <span>Submitted by <strong>{selectedLocalSpot.submitterName || 'Explorer'}</strong></span>
+              </div>
+
+              {/* ── Rate this Spot ── */}
+              <div className="spot-modal-rate-section">
+                <h4 className="spot-modal-section-title">Rate this Spot</h4>
+
+                {ratingStatus === 'success' ? (
+                  <div className="spot-rate-success">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Thanks for {selectedLocalSpot.hasRated ? 'updating your' : 'your'} rating!
+                  </div>
+                ) : selectedLocalSpot.hasRated && (
+                  <p className="spot-rate-already">You've already rated this spot — submit below to update it.</p>
+                )}
+
+                <div className="spot-rate-stars">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`rate-star ${star <= ratingScore ? 'rate-star--active' : ''}`}
+                      onClick={() => { setRatingScore(star); setRatingStatus('idle'); }}
+                    >★</span>
+                  ))}
+                </div>
+
+                {ratingScore > 0 && (
+                  <div className="spot-rate-form">
+                    <textarea
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      placeholder="Add a short review (optional)…"
+                      rows="2"
+                      className="spot-rate-textarea"
+                    />
+                    <button className="spot-rate-submit-btn" onClick={handleSubmitRating}>
+                      {selectedLocalSpot.hasRated ? 'Update Rating' : 'Submit Rating'}
+                    </button>
+                  </div>
+                )}
+
+                {ratingStatus === 'error' && (
+                  <p className="spot-rate-error">Failed to submit. Please try again.</p>
+                )}
+              </div>
             </div>
+
+            {/* ── Sticky footer ── */}
+            <div className="spot-modal-footer">
+              <button className="spot-modal-close-btn" onClick={() => setIsLocalSpotModalOpen(false)}>
+                Looks great, close
+              </button>
+            </div>
+
           </div>
         </div>
       )}

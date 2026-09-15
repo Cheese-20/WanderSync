@@ -158,6 +158,13 @@
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.user-profile-interests .interest-tag:hover {
+  background: #d8b4fe;
+  transform: translateY(-2px);
 }
 
 /* Responsive */

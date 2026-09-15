@@ -65,6 +65,8 @@ function AuthForm() {
   });
 
   const [registrationModal, setRegistrationModal] = useState({ open: false, success: false, message: '' });
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   const navigate = useNavigate();
 
@@ -83,6 +85,7 @@ function AuthForm() {
   // NOTE: Use a relative `/api` path; on success store token and user and navigate to home
   const submitLogin = async event => {
     event.preventDefault();
+    setIsLoggingIn(true);
 
     try {
       const response = await axios.post('/api/auth/login', {
@@ -112,6 +115,8 @@ function AuthForm() {
         }
       }
       setLoginError(errorMsg);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -138,6 +143,7 @@ function AuthForm() {
       return;
     }
 
+    setIsSigningUp(true);
     try {
       // Send data to C# AuthController
       const response = await axios.post('/api/auth/register', {
@@ -169,6 +175,8 @@ function AuthForm() {
         errorMsg = data.message;
       }
       setRegistrationModal({ open: true, success: false, message: errorMsg });
+    } finally {
+      setIsSigningUp(false);
     }
   };
 
@@ -232,7 +240,9 @@ function AuthForm() {
               </div>
 
               <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
-              <button type="submit" className="btn solid">Sign In</button>
+              <button type="submit" className="btn solid" disabled={isLoggingIn}>
+                {isLoggingIn ? 'Signing In...' : 'Sign In'}
+              </button>
             </form>
           </div>
 
@@ -315,7 +325,9 @@ function AuthForm() {
                 required
               />
 
-              <button type="submit" className="btn">Sign Up</button>
+              <button type="submit" className="btn" disabled={isSigningUp}>
+                {isSigningUp ? 'Signing Up...' : 'Sign Up'}
+              </button>
             </form>
           </div>
 

@@ -9,7 +9,12 @@
     - Imported the `logo` asset and added states (`isBookingModalOpen`, `selectedTour`, `guestCount`, `bookingStatus`, etc.) to support the modal.
     - Rendered the booking modal at the end of `ExplorePage.jsx`, allowing users to select the number of guests up to the remaining capacity of the tour before submitting the booking request.
 - **Bug Fix (Frontend)**: Updated the tour cards in the "Available Tours" section to display the actual tour price instead of the hardcoded `R--/person` placeholder.
-- **Enhancement (Frontend UI)**: Replaced the red pushpin emoji on the "Verified Guides" cards with a standard, clean SVG location map pin to improve visual consistency.
+- **Enhancement (Frontend UI)**: Replaced the red pushpin emoji on the "Verified Guides" cards, Guide Profile pages, and Discover page with a standard, clean SVG location map pin to improve visual consistency.
+- **Bug Fix (Backend)**: Removed the `.Take(3)` limit from the `/api/posts` endpoint in `PostsController.cs`. This was artificially restricting the frontend from receiving all posts and causing the "See more" pagination button to fail despite there being older posts in the database.
+- **Enhancement (Frontend UI & UX)**: Added an `isSaving` state to `Profile.jsx` to disable all actionable buttons (Save Profile, Delete Account, Logout, tabs, and guide application buttons) while a profile save is in progress, preventing duplicate submissions or conflicting actions.
+- **Enhancement (Frontend UI)**: Updated the "Interests" tags styling across `discover.css`, `match.css`, and `userprofile.css` to feature white text for better contrast, and added a subtle upward lift hover animation (`transform: translateY(-2px)`) for a more dynamic and interactive feel.
+- **Enhancement (Frontend UI)**: Aligned the "Local Favourites" card design and the "View Details" popup modal in the local guide dashboard (`GuideHome.jsx`) to exactly match the explorer dashboard (`ExplorerHome.jsx`), restoring missing elements such as the rating badge display, the verified pin, and resetting rating states properly.
+- **Enhancement (Frontend UI & UX)**: Added loading states (`isLoggingIn` and `isSigningUp`) to `AuthForm.jsx` to disable the "Sign In" and "Sign Up" buttons while the authentication requests are processing, preventing duplicate submissions and giving users visual feedback.
 
 ## [2026-09-15]
   - **Files modified**: `src/pages/ExplorerHome.jsx`, `src/styles/explorer.css`

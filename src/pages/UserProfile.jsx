@@ -84,7 +84,7 @@ export default function UserProfile() {
             {profile.job && <p className="user-profile-job">{profile.job}</p>}
             {profile.location && (
               <p className="user-profile-location">
-                <span className="location-icon">&#x1F4CD;</span> {profile.location}
+                <span className="location-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span> {profile.location}
               </p>
             )}
             {profile.age > 0 && <p className="user-profile-age">{profile.age} years old</p>}

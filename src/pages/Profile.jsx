@@ -52,11 +52,11 @@ export default function Profile() {
   const fileRef = useRef(null);
   const navigate = useNavigate();
 
-  // Role is kept in state so an admin decision made after login can be picked up below.
   const [accountRole, setAccountRole] = useState(roleOf());
   const [activeMode, setActiveModeState] = useState(getActiveMode);
   const [guideActionError, setGuideActionError] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const isGuideAccount = accountRole === MODE_GUIDE;
   const isAwaitingGuideApproval = accountRole === 'pendingguide';
@@ -320,6 +320,8 @@ export default function Profile() {
       createdAt: form.createdAt
     };
 
+    setIsSaving(true);
+
     try {
       const userJson = localStorage.getItem('user');
       if (userJson) {
@@ -365,6 +367,8 @@ export default function Profile() {
     } catch (err) {
       console.warn('Could not save profile to backend, payload:', payload, err);
       setStatusModal({ open: true, success: false, message: 'Profile was not saved. Please try again.' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -380,19 +384,22 @@ export default function Profile() {
           <button 
             className={`tab-button ${activeTab === 'info' ? 'active' : ''}`}
             onClick={() => setActiveTab('info')}
+            disabled={isSaving}
           >
             Profile Info
           </button>
           <button 
             className={`tab-button ${activeTab === 'bookings' ? 'active' : ''}`}
             onClick={() => setActiveTab('bookings')}
+            disabled={isSaving}
           >
             Bookings
           </button>
           <button 
             className="delete button logout-btn" 
             onClick={handleLogout}
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: 'auto', opacity: isSaving ? 0.5 : 1 }}
+            disabled={isSaving}
           >
             Logout
           </button>
@@ -479,11 +486,14 @@ export default function Profile() {
                   type="button"
                   onClick={() => setDeleteModal(d => ({ ...d, open: true, password: '', confirmText: '' }))}
                   className="delete button"
-                  style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', fontWeight: 600, cursor: 'pointer' }}
+                  style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', fontWeight: 600, cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.5 : 1 }}
+                  disabled={isSaving}
                 >
                   Delete Account
                 </button>
-                <button type="submit" className="save button">Save Profile</button>
+                <button type="submit" className="save button" disabled={isSaving} style={{ cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.7 : 1 }}>
+                  {isSaving ? 'Saving...' : 'Save Profile'}
+                </button>
               </div>
             </form>
 
@@ -504,6 +514,8 @@ export default function Profile() {
                       className={`mode-switch-option ${activeMode === MODE_EXPLORER ? 'active' : ''}`}
                       onClick={() => handleSwitchMode(MODE_EXPLORER)}
                       aria-pressed={activeMode === MODE_EXPLORER}
+                      disabled={isSaving}
+                      style={{ opacity: isSaving ? 0.5 : 1 }}
                     >
                       Login as Explorer
                     </button>
@@ -512,6 +524,8 @@ export default function Profile() {
                       className={`mode-switch-option ${activeMode === MODE_GUIDE ? 'active' : ''}`}
                       onClick={() => handleSwitchMode(MODE_GUIDE)}
                       aria-pressed={activeMode === MODE_GUIDE}
+                      disabled={isSaving}
+                      style={{ opacity: isSaving ? 0.5 : 1 }}
                     >
                       Login as Guide
                     </button>
@@ -530,6 +544,8 @@ export default function Profile() {
                       type="button"
                       className="apply-guide-button"
                       onClick={() => navigate('/apply-guide')}
+                      disabled={isSaving}
+                      style={{ opacity: isSaving ? 0.5 : 1 }}
                     >
                       View Application
                     </button>
@@ -537,7 +553,8 @@ export default function Profile() {
                       type="button"
                       className="cancel-application-button"
                       onClick={handleWithdrawApplication}
-                      disabled={isWithdrawing}
+                      disabled={isWithdrawing || isSaving}
+                      style={{ opacity: (isWithdrawing || isSaving) ? 0.5 : 1 }}
                     >
                       {isWithdrawing ? 'Cancelling...' : 'Cancel Application'}
                     </button>
@@ -548,6 +565,8 @@ export default function Profile() {
                   type="button"
                   className="apply-guide-button"
                   onClick={() => navigate('/apply-guide')}
+                  disabled={isSaving}
+                  style={{ opacity: isSaving ? 0.5 : 1 }}
                 >
                   Apply to be a Local Guide
                 </button>

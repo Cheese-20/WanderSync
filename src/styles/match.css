@@ -262,6 +262,13 @@
   border-radius: 20px;
   font-size: 0.95rem;
   font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.interest-tag:hover {
+  transform: translateY(-2px);
+  filter: brightness(0.95);
 }
 
 .interest-tag.primary {
