@@ -9,6 +9,7 @@
     - Imported the `logo` asset and added states (`isBookingModalOpen`, `selectedTour`, `guestCount`, `bookingStatus`, etc.) to support the modal.
     - Rendered the booking modal at the end of `ExplorePage.jsx`, allowing users to select the number of guests up to the remaining capacity of the tour before submitting the booking request.
 - **Bug Fix (Frontend)**: Updated the tour cards in the "Available Tours" section to display the actual tour price instead of the hardcoded `R--/person` placeholder.
+- **Enhancement (Frontend UI)**: Replaced the red pushpin emoji on the "Verified Guides" cards with a standard, clean SVG location map pin to improve visual consistency.
 
 ## [2026-09-15]
   - **Files modified**: `src/pages/ExplorerHome.jsx`, `src/styles/explorer.css`

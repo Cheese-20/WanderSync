@@ -692,7 +692,7 @@ export default function ExplorePage() {
                       </div>
                       <div className="verified-guide-name-block"><h3>{guide.firstName} {guide.lastName}</h3><span className="verified-tag">Verified</span></div>
                     </div>
-                    {guide.location && <p className="verified-guide-location">&#x1F4CD; {guide.location}</p>}
+                    {guide.location && <p className="verified-guide-location" style={{ display: 'flex', alignItems: 'center' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> {guide.location}</p>}
                     <p className="verified-guide-bio">{guide.description || 'Passionate local guide ready to show you the best experiences.'}</p>
                   </div>
                 ))}
