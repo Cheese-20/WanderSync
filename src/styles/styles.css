@@ -317,13 +317,17 @@ button:active {
   color: #166534;
 }
 
+.mobile-toggle {
+  display: none;
+}
+
 @media (max-width: 860px) {
   .signin-signup-container {
-    min-height: unset;
+    min-height: 750px;
   }
 
   .signin-signup {
-    min-height: unset;
+    min-height: 710px;
   }
 
   .form-container,
@@ -335,11 +339,31 @@ button:active {
   .sign-in-container,
   .sign-up-container {
     width: 100%;
-    transform: translateX(0);
+    transform: translateX(0) !important;
+    transition: opacity 0.4s ease;
+  }
+
+  .sign-in-container {
+    opacity: 1;
+    z-index: 2;
   }
 
   .sign-up-container {
+    opacity: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .sign-up-mode .sign-in-container {
+    opacity: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .sign-up-mode .sign-up-container {
     opacity: 1;
+    z-index: 2;
+    pointer-events: auto;
   }
 
   .overlay-container {
@@ -348,6 +372,23 @@ button:active {
 
   .input-grid-two {
     grid-template-columns: 1fr;
+  }
+  
+  .mobile-toggle {
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 40px;
+    font-size: 0.9rem;
+    color: #6b7280;
+  }
+  
+  .mobile-toggle button {
+    background: none;
+    border: none;
+    color: #1f6f3a;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
   }
 }
 

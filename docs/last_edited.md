@@ -1,6 +1,21 @@
 # Last Edited - Mobile Responsiveness Refactor
 
 ## [2026-09-15]
+- **Enhancement (Frontend UI)**: Adjusted the layout of community posts on mobile screens to maintain the horizontal avatar and name alignment.
+  - **Files modified**: `src/styles/explorer.css`
+  - **Why it changed**: The user provided a screenshot showing that the avatar profile picture and the user details (name, date) were stacking vertically on mobile view. They requested that the details sit to the right of the picture, matching standard desktop layout.
+  - **How the change works**: Removed the `flex-direction: column` override in the mobile `@media` query for the `.c-post-header` class. This forces the avatar and the text information to remain perfectly aligned in a row on all screen sizes.
+
+- **Enhancement (Frontend UI)**: Polished the mobile Sign In / Sign Up toggle links on the login page.
+  - **Files modified**: `src/styles/styles.css`
+  - **Why it changed**: The user requested that the mobile toggle links be green instead of purple to match the brand color, and that they have more whitespace below them.
+  - **How the change works**: Updated the `.mobile-toggle button` CSS rule to use the `#1f6f3a` WanderSync green color. Added `margin-bottom: 40px` to `.mobile-toggle` to provide ample whitespace below the link on mobile screens.
+
+- **Bug Fix (Frontend UI)**: Fixed the collapsed layout of the Login/Sign Up page on mobile devices.
+  - **Files modified**: `src/pages/AuthForm.jsx`, `src/styles/styles.css`
+  - **Why it changed**: The user provided a screenshot showing that the auth forms were completely collapsed/hidden on mobile view. This was caused by CSS rules zeroing out `min-height` on absolute-positioned form containers. Additionally, the sliding mode-switcher overlay was `display: none` on mobile, trapping the user on the login screen with no way to register.
+  - **How the change works**: Reinstated a minimum height constraint in the `@media (max-width: 860px)` breakpoint in `styles.css`. Changed the `.sign-in-container` and `.sign-up-container` to stack using `opacity` and `pointer-events` transitions on mobile rather than horizontal `transform` translations. Finally, added a `.mobile-toggle` link to the bottom of the forms in `AuthForm.jsx` that is only visible on mobile, allowing users to switch between Sign In and Sign Up modes.
+
 - **Bug Fix (Frontend UI)**: Fixed Local Guide application success message appearing as an error (red text) on the Profile screen.
   - **Files modified**: `src/pages/Profile.jsx`
   - **Why it changed**: The user pointed out that the "Local Guide application submitted successfully!" modal on the profile page had red text instead of green.

@@ -243,6 +243,10 @@ function AuthForm() {
               <button type="submit" className="btn solid" disabled={isLoggingIn}>
                 {isLoggingIn ? 'Signing In...' : 'Sign In'}
               </button>
+              
+              <p className="mobile-toggle">
+                Don't have an account? <button type="button" className="text-btn" onClick={() => setIsSignUpActive(true)}>Sign Up</button>
+              </p>
             </form>
           </div>
 
@@ -328,6 +332,10 @@ function AuthForm() {
               <button type="submit" className="btn" disabled={isSigningUp}>
                 {isSigningUp ? 'Signing Up...' : 'Sign Up'}
               </button>
+
+              <p className="mobile-toggle">
+                Already have an account? <button type="button" className="text-btn" onClick={() => setIsSignUpActive(false)}>Sign In</button>
+              </p>
             </form>
           </div>
 

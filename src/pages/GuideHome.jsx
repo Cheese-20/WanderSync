@@ -941,9 +941,9 @@ export default function GuideHome() {
       {errorModal.show && (
         <div className="modal-overlay" style={{ zIndex: 10000 }}>
           <div className="status-modal" style={{ textAlign: 'center', padding: '30px', maxWidth: '400px' }}>
-            <h3 style={{ marginBottom: '15px' }}>Notice</h3>
+            <img src={logo} alt="WanderSync logo" className="modal-logo" />
             <p style={{ marginBottom: '20px' }}>{errorModal.message}</p>
-            <button onClick={() => setErrorModal({ show: false, message: '' })} style={{ padding: '8px 24px', borderRadius: '20px', backgroundColor: '#6200EE', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
+            <button className="mint-btn" onClick={() => setErrorModal({ show: false, message: '' })} style={{ padding: '6px 20px', borderRadius: '20px', backgroundColor: '#a6d8b6', color: '#fff', border: 'none', fontSize: '0.9rem', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
           </div>
         </div>
       )}

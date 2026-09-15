@@ -2131,11 +2131,6 @@ button:disabled {
     max-width: 100%;
   }
   
-  .c-post-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
   .experience-options {
     flex-direction: column;
   }
