@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
 import MapModal from '../components/MapModal';
+import logo from '../assets/images/logo.png';
 import '../styles/explore.css';
 
 const ACTIVITY_TYPES = [
@@ -69,6 +70,13 @@ export default function ExplorePage() {
   const [bookingFeedback, setBookingFeedback] = useState(null);
   const [bookingTourId, setBookingTourId] = useState(null);
   const bookingFeedbackBtnRef = useRef(null);
+
+  // Booking Modal States
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [bookingStatus, setBookingStatus] = useState('idle');
+  const [guestCount, setGuestCount] = useState(1);
+  const [requestedTourIds, setRequestedTourIds] = useState([]);
 
   // Tour IDs whose cover photo failed to load, so the card can fall back to the label.
   const [brokenImages, setBrokenImages] = useState({});
@@ -616,16 +624,40 @@ export default function ExplorePage() {
                         <p className="experience-guide-name"><span className="guide-dot"></span> {tour.guideName}</p>
                         <div className="experience-meta"><span>{new Date(tour.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span><span>Max {tour.maxPeople} people</span></div>
                         <div className="experience-card-footer">
-                          <span className="experience-price">R--/person</span>
-                          <button
-                            className="experience-book-btn"
-                            onClick={(e) => handleBookTour(tour, e)}
-                            disabled={bookingTourId !== null || userBookings.some(b => b.tourId === (tour.tourId || tour.tourID) || b.tourID === (tour.tourId || tour.tourID))}
-                          >
-                            {userBookings.some(b => b.tourId === (tour.tourId || tour.tourID) || b.tourID === (tour.tourId || tour.tourID))
-                              ? 'Already booked'
-                              : (bookingTourId === (tour.tourId || tour.tourID) ? 'Booking...' : 'Book')}
-                          </button>
+                          <span className="experience-price">R{tour.price != null ? tour.price : '--'}/person</span>
+                          {(() => {
+                            const isRequested = requestedTourIds.includes(tour.tourId || tour.tourID) || userBookings.some(b => b.tourId === (tour.tourId || tour.tourID) || b.tourID === (tour.tourId || tour.tourID));
+                            const isFull = (tour.confirmedBookingsCount || 0) >= tour.maxPeople;
+                            const isDisabled = isRequested || isFull;
+                            let btnText = 'Book';
+                            if (isRequested) btnText = 'Already booked';
+                            else if (isFull) btnText = 'Full';
+
+                            return (
+                              <button 
+                                className="experience-book-btn" 
+                                disabled={isDisabled}
+                                style={{ 
+                                  backgroundColor: isDisabled ? '#d3d3d3' : '',
+                                  color: isDisabled ? '#888' : '',
+                                  cursor: isDisabled ? 'not-allowed' : 'pointer'
+                                }}
+                                onClick={(e) => { 
+                                  e.stopPropagation();
+                                  if (!loggedInUserId) {
+                                    navigate('/login', { state: { message: 'Please login to book a tour' } });
+                                    return;
+                                  }
+                                  setSelectedTour(tour); 
+                                  setBookingStatus('idle'); 
+                                  setGuestCount(1); 
+                                  setIsBookingModalOpen(true); 
+                                }}
+                              >
+                                {btnText}
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -674,6 +706,83 @@ export default function ExplorePage() {
             <button className="btn-view-all" onClick={() => navigate('/my-activities')}>View My Activities & Rate Guides</button>
           </section>
         </>
+      )}
+
+      {isBookingModalOpen && selectedTour && (
+        <div className="modal-overlay" onClick={() => setIsBookingModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center', position: 'relative', padding: '30px', background: 'white', borderRadius: '12px' }}>
+            <button className="close-btn" onClick={() => setIsBookingModalOpen(false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666' }}>&times;</button>
+            <div style={{ marginBottom: '20px' }}>
+              {bookingStatus === 'idle' && (
+                <h2 style={{ margin: '0', fontSize: '1.2rem', color: '#1a1a1a' }}>How many people are going?</h2>
+              )}
+            </div>
+
+            {bookingStatus === 'idle' && (
+              <>
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedTour.maxPeople - (selectedTour.confirmedBookingsCount || 0)}
+                    value={guestCount}
+                    onChange={(e) => setGuestCount(Number(e.target.value))}
+                    style={{ width: '100%', padding: '14px', border: '2px solid #e0e0e0', borderRadius: '16px', fontSize: '1.1rem', textAlign: 'center', backgroundColor: '#fff', color: '#000', outline: 'none' }}
+                  />
+                </div>
+
+                <div className="modal-actions" style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => setIsBookingModalOpen(false)} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold', background: '#f0f0f0', color: '#333', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                  <button disabled={bookingStatus === 'submitting'} style={{ flex: 1, borderRadius: '24px', padding: '14px', fontWeight: 'bold', background: '#a6d8b6', color: 'white', border: 'none', cursor: 'pointer' }} onClick={async () => {
+                    try {
+                      setBookingStatus('submitting');
+                      const userStr = localStorage.getItem('user');
+                      const userObj = userStr ? JSON.parse(userStr) : {};
+                      await axios.post('http://localhost:5200/api/bookings', {
+                        userID: loggedInUserId,
+                        tourID: selectedTour.tourId || selectedTour.tourID,
+                        bookingDate: selectedTour.date || new Date().toISOString(),
+                        timeOfBooking: selectedTour.date ? new Date(selectedTour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+                        numberOfGuests: guestCount,
+                        bookingType: "Standard",
+                        userName: userObj.name || '',
+                        userSurname: userObj.surname || '',
+                        tourName: selectedTour.title || selectedTour.name || '',
+                        tourLocation: selectedTour.location || selectedTour.city || ''
+                      });
+                      setRequestedTourIds([...requestedTourIds, selectedTour.tourId || selectedTour.tourID]);
+                      setBookingStatus('success');
+                    } catch (e) {
+                      console.error(e);
+                      alert('Error creating booking');
+                      setBookingStatus('idle');
+                    }
+                  }}>
+                    {bookingStatus === 'submitting' ? 'Submitting...' : 'Submit Request'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {bookingStatus === 'submitting' && (
+              <div style={{ padding: '30px 0' }}>
+                <div className="loading-spinner" style={{ margin: '0 auto', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #1a8f66', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ marginTop: '20px', color: '#666', fontSize: '1.1rem' }}>Updating ...</p>
+              </div>
+            )}
+
+            {bookingStatus === 'success' && (
+              <div>
+                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1a8f66', marginBottom: '20px' }}>
+                  Success, sending request to guide
+                </p>
+                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button onClick={() => setIsBookingModalOpen(false)} style={{ width: '100%', borderRadius: '24px', padding: '14px', fontWeight: 'bold', background: '#a6d8b6', color: 'white', border: 'none', cursor: 'pointer' }}>OK</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {isMapModalOpen && (

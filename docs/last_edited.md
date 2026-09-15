@@ -1,7 +1,16 @@
 # Last Edited - Premium Redesign of Local Spot Detail Modal
 
 ## [2026-09-15]
-- **Enhancement (Frontend UI)**: Completely redesigned the "View Details" popup for Local Favourite spots to match the system's design language.
+- **Enhancement (Frontend UI & Logic)**: Updated the "Book" button in the "Available Tours" section of the `ExplorePage` to match the behavior of the "Join" button in the `ExplorerHome` "Tours happening lately" section.
+  - **Files modified**: `src/pages/ExplorePage.jsx`
+  - **Why it changed**: The user requested that the "Book" button should have the same functionality as the "Join" button, meaning it should allow users to specify the number of guests rather than immediately attempting to book for 1 person.
+  - **How the change works**:
+    - Replaced the direct API call in the button's `onClick` handler with logic to open a booking modal.
+    - Imported the `logo` asset and added states (`isBookingModalOpen`, `selectedTour`, `guestCount`, `bookingStatus`, etc.) to support the modal.
+    - Rendered the booking modal at the end of `ExplorePage.jsx`, allowing users to select the number of guests up to the remaining capacity of the tour before submitting the booking request.
+- **Bug Fix (Frontend)**: Updated the tour cards in the "Available Tours" section to display the actual tour price instead of the hardcoded `R--/person` placeholder.
+
+## [2026-09-15]
   - **Files modified**: `src/pages/ExplorerHome.jsx`, `src/styles/explorer.css`
   - **Why it changed**: The user requested the popup be made more aesthetic and consistent with the system's colour palette (mint `#a6d8b6`, sage `#c9cfa9`, olive `#6d6f46`, gold `#d4c28c`).
   - **How the change works**:
