@@ -1724,3 +1724,400 @@ button:disabled {
   border: 1px solid #fde68a;
   line-height: 1.4;
 }
+
+/* ============================================================
+   Spot Detail Modal — Premium Redesign
+   System colours: mint #a6d8b6, sage #c9cfa9, olive #6d6f46,
+   gold #d4c28c, dark #1f2937
+   ============================================================ */
+
+.spot-detail-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  width: min(760px, 94vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.28);
+  animation: spotModalIn 0.28s cubic-bezier(0.34,1.32,0.64,1) both;
+}
+
+@keyframes spotModalIn {
+  from { opacity: 0; transform: scale(0.92) translateY(24px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+/* ── Hero ── */
+.spot-modal-hero {
+  position: relative;
+  height: 240px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+}
+
+.spot-modal-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.spot-modal-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.08) 0%,
+    rgba(0,0,0,0.55) 100%
+  );
+}
+
+/* Close button */
+.spot-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 2;
+}
+.spot-modal-close:hover { background: rgba(255,255,255,0.38); }
+
+/* Category badge */
+.spot-modal-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(166, 216, 182, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #1f3a28;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  z-index: 2;
+}
+
+/* Report button */
+.spot-modal-report-btn {
+  position: absolute;
+  bottom: 60px;
+  right: 14px;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  z-index: 2;
+  transition: background 0.2s;
+}
+.spot-modal-report-btn:hover { background: rgba(220,53,69,0.55); }
+
+/* Title on hero */
+.spot-modal-hero-title {
+  position: absolute;
+  bottom: 18px;
+  left: 20px;
+  right: 20px;
+  z-index: 2;
+}
+
+.spot-modal-hero-title h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.4);
+  line-height: 1.2;
+}
+
+.spot-modal-location-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.88);
+}
+
+/* ── Scrollable body ── */
+.spot-modal-body {
+  overflow-y: auto;
+  padding: 22px 24px 0 24px;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #d4c28c transparent;
+}
+.spot-modal-body::-webkit-scrollbar { width: 5px; }
+.spot-modal-body::-webkit-scrollbar-thumb { background: #d4c28c; border-radius: 4px; }
+
+/* Rating + verified pill row */
+.spot-modal-rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.spot-modal-verified-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #c9cfa9, #a6d8b6);
+  color: #1f3a28;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+
+.spot-modal-avg-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+.spot-modal-avg-rating--empty {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.rating-star-icon { color: #d97706; font-size: 1rem; }
+.spot-modal-avg-rating--empty .rating-star-icon { color: #9ca3af; }
+
+.rating-score {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #92400e;
+}
+.spot-modal-avg-rating--empty .rating-score {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.rating-count {
+  font-size: 0.78rem;
+  color: #a86e1e;
+  opacity: 0.85;
+}
+
+/* Sections */
+.spot-modal-section {
+  margin-bottom: 20px;
+}
+
+.spot-modal-section-title {
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6d6f46;
+}
+
+.spot-modal-description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #374151;
+  background: #f8faf5;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border-left: 3px solid #a6d8b6;
+}
+
+/* Map */
+.spot-modal-map-wrapper {
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+/* Submitter row */
+.spot-modal-submitter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0 18px 0;
+  border-top: 1px solid #eff0eb;
+  font-size: 0.88rem;
+  color: #4b5563;
+}
+
+.spot-modal-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #d4c28c;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  border: 2px solid #a6d8b6;
+}
+
+/* Rate section */
+.spot-modal-rate-section {
+  border-top: 1px solid #eff0eb;
+  padding: 18px 0 22px 0;
+  margin-top: 2px;
+}
+
+.spot-rate-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.spot-rate-already {
+  font-size: 0.82rem;
+  color: #6d6f46;
+  background: #f8faf5;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 0 0 10px 0;
+  border: 1px dashed #c9cfa9;
+}
+
+/* Star row */
+.spot-rate-stars {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 0 8px 0;
+}
+
+.rate-star {
+  font-size: 2.2rem;
+  color: #d1d5db;
+  cursor: pointer;
+  transition: color 0.18s, transform 0.12s;
+  user-select: none;
+  line-height: 1;
+}
+
+.rate-star:hover,
+.rate-star--active {
+  color: #d4a928;
+  transform: scale(1.18);
+}
+
+/* Rate form */
+.spot-rate-form {
+  animation: fadeIn 0.25s ease;
+}
+
+.spot-rate-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  color: #1f2937;
+  background: #fafafa;
+  transition: border-color 0.2s;
+  margin-bottom: 10px;
+}
+.spot-rate-textarea:focus {
+  outline: none;
+  border-color: #a6d8b6;
+  box-shadow: 0 0 0 3px rgba(166,216,182,0.25);
+}
+
+.spot-rate-submit-btn {
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #a6d8b6, #6d9e82);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: 0 4px 14px rgba(109,158,130,0.35);
+}
+.spot-rate-submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.spot-rate-error {
+  color: #dc3545;
+  font-size: 0.82rem;
+  margin: 6px 0 0 0;
+  text-align: center;
+}
+
+/* ── Sticky footer ── */
+.spot-modal-footer {
+  padding: 16px 24px 20px 24px;
+  background: #fff;
+  border-top: 1px solid #eff0eb;
+  flex-shrink: 0;
+}
+
+.spot-modal-close-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #c9cfa9 0%, #d4c28c 100%);
+  color: #3a3d24;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(180,170,110,0.3);
+}
+.spot-modal-close-btn:hover {
+  opacity: 0.92;
+  box-shadow: 0 6px 22px rgba(180,170,110,0.42);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

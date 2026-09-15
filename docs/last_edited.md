@@ -1,3 +1,41 @@
+# Last Edited - Premium Redesign of Local Spot Detail Modal
+
+## [2026-09-15]
+- **Enhancement (Frontend UI)**: Completely redesigned the "View Details" popup for Local Favourite spots to match the system's design language.
+  - **Files modified**: `src/pages/ExplorerHome.jsx`, `src/styles/explorer.css`
+  - **Why it changed**: The user requested the popup be made more aesthetic and consistent with the system's colour palette (mint `#a6d8b6`, sage `#c9cfa9`, olive `#6d6f46`, gold `#d4c28c`).
+  - **How the change works**:
+    - **Hero image header**: The spot's photo now bleeds edge-to-edge at the top of the modal with a dark-to-transparent gradient overlay. The spot title and location are rendered on top of the hero in white text.
+    - **Glassmorphic elements**: A frosted-glass category badge (top-left) and a frosted report button (bottom-right of hero) sit over the image using `backdrop-filter: blur`.
+    - **Spring entry animation**: The modal scales in from 92% with a spring cubic-bezier (`spotModalIn` keyframe) for a premium feel.
+    - **Verified pill + rating pill row**: Below the hero, two pills sit side by side — a sage-to-mint gradient "Verified Local Favourite" pill and an amber rating pill (or "Be the first to rate" if unrated).
+    - **Description section**: Text is displayed inside a `#f8faf5` card with a mint left-border accent.
+    - **Submitter row**: Avatar has a mint ring border matching the brand.
+    - **Rate this Spot section**: Stars are large (2.2rem), grey by default, animating to amber gold on hover/select with a 1.18x scale. The textarea focuses with a mint ring. The submit button uses the mint-to-forest gradient with a box-shadow lift.
+    - **Sticky footer**: A sage-to-gold gradient "Looks great, close" button is pinned to the bottom of the modal outside the scroll area, so it's always accessible.
+    - **Custom scrollbar**: The scrollable body uses a thin gold scrollbar (`#d4c28c`) consistent with the brand.
+
+---
+
+# Last Edited - Restored Rate Spot Feature in Local Favourites (Bug Investigation)
+
+## [2026-09-15]
+- **Bug Fix (Backend Model)**: Fixed a broken navigation property in `SpotRating.cs` that referenced the wrong entity type.
+  - **Files modified**: `backend/Models/SpotRating.cs`
+  - **Why it changed**: The `SpotRating` model had a navigation property `public Spot Spot { get; set; }` pointing to the `Spots` table, but the feature uses the `curatedSpots` table via the `CuratedSpot` entity. This mismatch would cause EF Core to fail when resolving the relationship.
+  - **How the change works**: Changed the navigation property from `Spot` to `CuratedSpot?` and made both navigation properties nullable (consistent with nullable reference type conventions used elsewhere in the project).
+
+- **Investigation Finding**: The "Rate Spot" feature (originally pushed by justbobby-web in commit `e590ad2`) was found to be **fully present** in the codebase. No frontend or backend code was missing.
+  - The `SpotRatings` database table migration (`20260826110229_CleanSpotRatings`) is **already applied** to the live Aiven MySQL database.
+  - The feature includes:
+    - ★ average rating badge on each spot card in the "Local Favourites" section (ExplorerHome.jsx).
+    - "Rate this Spot" section inside the spot detail modal with an interactive 5-star picker, optional review textarea, and Submit/Update Rating button.
+    - Optimistic UI updates that reflect the new average immediately after submitting.
+    - Backend `POST /api/spots/{id}/rate` endpoint that prevents duplicate ratings (upsert logic).
+  - The likely cause of the feature appearing "gone" was a stale browser session or the backend not running at the time of inspection.
+
+---
+
 # Last Edited - Add Spot via Map Pin Feature
 
 ## [2026-09-13]
@@ -809,3 +847,20 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 - Added `_context.ChangeTracker.Clear()` to properly clean state on retries.
 - Added `_logger.LogError(...)` inside the `catch` block to make future booking failures debuggable.
 - Updated `MapModal.jsx` to swap the text star with a custom SVG polygon, and tweaked `.spot-popup-title` margin and `.spot-popup-rating` typography in `explorer.css`.
+
+## 2026-09-13: Local Favourites Rating Enhancements
+
+**What has been changed:**
+- Modified `ExplorerHome.jsx` to reset the rating input state whenever a user opens a new "Verified Local Favourite" spot modal.
+- Updated the "Verified Local Favourite" modal in `ExplorerHome.jsx` to always display the spot's average rating (or "No ratings yet") in the header next to the title.
+- Allowed users to re-rate (update their existing rating) for a spot from the frontend instead of hiding the rating input completely.
+- Refactored `backend/Controllers/SpotController.cs` `RateSpot` endpoint to upsert (update if exists, insert if new) a `SpotRating` instead of returning a 400 BadRequest when a user tries to rate a spot they have already rated.
+- Reverted unintentional modal changes made to `GuideHome.jsx` to preserve the original view details layout for Local Guides.
+
+**Why it has changed:**
+- The user noticed that the popup was retaining the "Thanks for rating this spot!" state across different spots if they clicked sequentially.
+- The user requested the ability to see the spot's average rating in the modal and to retain the option to rate it even if they had previously rated it.
+
+**How the change works:**
+- Replaced the conditional rendering in `ExplorerHome.jsx` that hid the rating stars based on `selectedLocalSpot.hasRated` with UI that always shows the stars and a label clarifying that submitting a new rating will update the old one.
+- In `SpotController.cs`, `RateSpot` now checks for `existingRating != null` and updates its fields, along with recalculating and updating the denormalized `Rating` property on the `CuratedSpot` entity.
