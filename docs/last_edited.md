@@ -1,6 +1,24 @@
 # Last Edited - Mobile Responsiveness Refactor
 
 ## [2026-09-15]
+- **Bug Fix (Frontend UI)**: Fixed Local Guide application success message appearing as an error (red text) on the Profile screen.
+  - **Files modified**: `src/pages/Profile.jsx`
+  - **Why it changed**: The user pointed out that the "Local Guide application submitted successfully!" modal on the profile page had red text instead of green.
+  - **How the change works**: The `useEffect` that listens for `location.state.message` in `Profile.jsx` was hardcoded to `success: false`. Updated this to dynamically check if `location.state.success === true` or if the message string `.includes('success')`, ensuring success messages correctly trigger the `.modal-success` CSS class (green text).
+
+- **Enhancement (Frontend UI)**: Replaced native browser alerts with custom centered modal popups for the "I Was There" feature.
+  - **Files modified**: `src/pages/ExplorerHome.jsx`, `src/pages/GuideHome.jsx`
+  - **Why it changed**: The user provided feedback that clicking the "I Was There" button on group posts was triggering an ugly native browser `alert()` stating "You must be matched with the author to use this feature." They requested a centered popup instead.
+  - **How the change works**: Replaced `alert()` calls in `handleIWasThere` with a new `errorModal` state object. Rendered a custom `.modal-overlay` and `.status-modal` at the bottom of the components, which presents the exact same API error message in a much cleaner, consistent WanderSync aesthetic.
+
+- **Enhancement (Frontend Logic)**: Implemented mobile swiping mechanism, strict location filtering, and an empty state modal for the Match page.
+  - **Files modified**: `src/pages/Match.jsx`
+  - **Why it changed**: The user requested that the "Find Your Travel Buddy" matching cards be swipeable on mobile devices (left to reject, right to accept), that the system only present users who are in a similar location to the logged-in user, and that a centered popup should notify them when they have no matches left.
+  - **How the change works**: 
+    - **Location Filtering**: During the initial fetch, the current user's profile location is stored. The API response for matches is then filtered client-side, using a case-insensitive substring comparison, to strictly retain matches that share a location with the current user.
+    - **Swipe Mechanism**: Added React touch event handlers (`onTouchStart`, `onTouchMove`, `onTouchEnd`) and mouse event handlers to `.match-card`. Tracked the drag distance (`swipeOffset`) in state and applied it via an inline `transform: translateX(...) rotate(...)` style for real-time 1-to-1 visual feedback. Releasing the drag past a 100px threshold triggers the existing `handleAccept` (right) or `handleReject` (left) functions.
+    - **Empty State Modal**: Replaced the inline "no-more-matches" div with a centered `modal-overlay` and `status-modal` popup that appears when `!currentMatch`, providing a clear notification that there are no more matches and a button to update their profile.
+
 - **Enhancement (Frontend UI)**: Adjusted the mobile layout for the Match page to pull the title closer to the navbar and hide the subtitle.
   - **Files modified**: `src/styles/match.css`
   - **Why it changed**: The user requested that on phone view, the "Connect with travelers..." subtitle be hidden and the "Find Your Travel Buddy" title sit closer to the navigation bar for better spacing.

@@ -15,6 +15,11 @@ export default function Match() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUserInterests, setCurrentUserInterests] = useState([]);
 
+  // Swiping state
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+
   useEffect(() => {
     const fetchMatches = async () => {
       try {
@@ -50,7 +55,16 @@ export default function Match() {
           // Fetch matches
           const response = await axios.get(`/api/profile/matches/${userId}`);
           if (response.data) {
-            setMatches(response.data);
+            let filtered = response.data;
+            if (p && p.location) {
+              const userLoc = p.location.toLowerCase();
+              filtered = filtered.filter(m => {
+                if (!m.location) return false;
+                const matchLoc = m.location.toLowerCase();
+                return matchLoc.includes(userLoc) || userLoc.includes(matchLoc);
+              });
+            }
+            setMatches(filtered);
           } else {
             setMatches([]);
           }
@@ -115,6 +129,28 @@ export default function Match() {
 
   const handleReject = () => handleAction('left');
   const handleAccept = () => handleAction('right');
+
+  const handleTouchStart = (e) => {
+    setIsDragging(true);
+    setStartX(e.touches ? e.touches[0].clientX : e.clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const currentX = e.touches ? e.touches[0].clientX : e.clientX;
+    setSwipeOffset(currentX - startX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (swipeOffset > 100) {
+      handleAccept();
+    } else if (swipeOffset < -100) {
+      handleReject();
+    }
+    setSwipeOffset(0);
+  };
 
   const currentMatch = matches[currentIndex];
 
@@ -197,7 +233,17 @@ export default function Match() {
           <div className="swipe-area">
             <div className="card-container">
               {currentMatch ? (
-                <div className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}>
+                <div 
+                  className={`match-card ${animatingDir ? `swipe-${animatingDir}` : ''}`}
+                  style={(isDragging && !animatingDir) ? { transform: `translateX(${swipeOffset}px) rotate(${swipeOffset * 0.05}deg)`, transition: 'none' } : {}}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onMouseDown={handleTouchStart}
+                  onMouseMove={handleTouchMove}
+                  onMouseUp={handleTouchEnd}
+                  onMouseLeave={handleTouchEnd}
+                >
                   <div className="card-image-section">
                     <img className="card-image-bg" src={currentMatch.profilePictureLink || logo} alt="Match Background" />
                     <div className="shared-interests-badge">
@@ -227,13 +273,19 @@ export default function Match() {
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="no-more-matches">
-                  <h3>No more matches available right now!</h3>
-                  <p>Check back later or update your preferences.</p>
-                </div>
-              )}
+              ) : null}
             </div>
+
+            {!currentMatch && (
+              <div className="modal-overlay">
+                <div className="status-modal">
+                  <img src={logo} alt="WanderSync" className="modal-logo" />
+                  <p style={{fontWeight: 'bold'}}>No more matches available right now!</p>
+                  <p style={{fontSize: '0.9rem', color: '#666'}}>Check back later or update your preferences.</p>
+                  <button onClick={() => navigate('/profile')}>Update Profile</button>
+                </div>
+              </div>
+            )}
 
             {currentMatch && (
               <div className="action-buttons">

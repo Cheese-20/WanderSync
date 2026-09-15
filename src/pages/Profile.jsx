@@ -120,7 +120,8 @@ export default function Profile() {
 
   useEffect(() => {
     if (locationHook.state && locationHook.state.message) {
-      setStatusModal({ open: true, success: false, message: locationHook.state.message });
+      const isSuccess = locationHook.state.success === true || locationHook.state.message.toLowerCase().includes('success');
+      setStatusModal({ open: true, success: isSuccess, message: locationHook.state.message });
       // Clear the state so the message doesn't persist on subsequent reloads
       window.history.replaceState({}, document.title);
     }

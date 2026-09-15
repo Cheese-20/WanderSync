@@ -48,6 +48,7 @@ export default function GuideHome() {
   const [ratingScore, setRatingScore] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [ratingStatus, setRatingStatus] = useState('idle');
+  const [errorModal, setErrorModal] = useState({ show: false, message: '' });
 
   // Manage Itinerary state
   const [assignedTourists, setAssignedTourists] = useState([]);
@@ -257,11 +258,11 @@ export default function GuideHome() {
         ));
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.message || 'Could not mark attendance.');
+        setErrorModal({ show: true, message: err.message || 'Could not mark attendance.' });
         setPosts(originalPosts); // Revert
       }
     } catch (e) {
-      alert('Network error.');
+      setErrorModal({ show: true, message: 'Network error.' });
       setPosts(originalPosts); // Revert
     }
   };
@@ -936,6 +937,17 @@ export default function GuideHome() {
         onPostCreated={handlePostCreated}
         editPost={editingPost}
       />
+
+      {errorModal.show && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="status-modal" style={{ textAlign: 'center', padding: '30px', maxWidth: '400px' }}>
+            <h3 style={{ marginBottom: '15px' }}>Notice</h3>
+            <p style={{ marginBottom: '20px' }}>{errorModal.message}</p>
+            <button onClick={() => setErrorModal({ show: false, message: '' })} style={{ padding: '8px 24px', borderRadius: '20px', backgroundColor: '#6200EE', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
+          </div>
+        </div>
+      )}
+
     </div>
     </>
   );
