@@ -896,3 +896,11 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
   - Reset Entity Framework migrations and created a fresh `InitialCreate` migration.
   - Applied the EF migration to build all tables including previously missing ones (`Spots`, `UserSubmittedLocations`).
   - Executed a Python script to populate the database via a comprehensive SQL script containing 15 high-quality, South African-themed records for every table (Users, Tours, Profiles, Spots, Bookings, Matches, etc.).
+
+## 2026-09-15 Login Suspension Check
+- **Action**: Modified `AuthController.cs` to block suspended users from logging in.
+- **Why**: Prevent suspended users from accessing their accounts, as per user request.
+- **How**:
+  - Added a check in the `Login` endpoint: if `user.AccountStatus == "suspended"`, it returns a `403 Forbidden` status code along with a message indicating the suspension. 
+  - If a `SuspendedUntil` date is set, the message includes the exact date and time the suspension lifts.
+  - The frontend (`AuthForm.jsx`) automatically catches this error message and displays it in the existing error popup modal.

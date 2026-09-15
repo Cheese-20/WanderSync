@@ -172,6 +172,16 @@ namespace backend.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
+            if (string.Equals(user.AccountStatus, "suspended", StringComparison.OrdinalIgnoreCase))
+            {
+                string suspensionMsg = "Your account has been suspended.";
+                if (user.SuspendedUntil.HasValue)
+                {
+                    suspensionMsg += $" You are suspended until {user.SuspendedUntil.Value:yyyy-MM-dd HH:mm}.";
+                }
+                return StatusCode(403, new { message = suspensionMsg });
+            }
+
             bool passwordMatches = BCrypt.Net.BCrypt.Verify(model.Password, user.HashedPword);
             if (!passwordMatches)
             {
