@@ -1,6 +1,14 @@
 # Last Edited - Premium Redesign of Local Spot Detail Modal
 
 ## [2026-09-15]
+- **Documentation (UI Expansion)**: Significantly expanded the UI design system document (`docs/ui.md`) to be extremely detailed, explicitly stating the app's purpose, what each page does, and detailing strict layout requirements for both Desktop and Mobile views.
+  - **Files modified**: `docs/ui.md`
+  - **Why it changed**: The user requested a highly detailed explanation of what each component is for, what it does, and how the layout should be structured, with a strong emphasis on ensuring the app is viewable and works perfectly on mobile phones.
+  - **How the change works**: Rewrote `ui.md` to include comprehensive sections on Mobile-First mandates, detailed page-by-page breakdowns (Authentication, Explorer Home, Explore Page, Dashboard, Match, Messages, Profile), and specific responsive UX considerations like bottom sheets, hamburger menus, and touch-friendly tap targets.
+- **Documentation (UI)**: Generated a highly detailed UI design system document (`docs/ui.md`) detailing the look, feel, structure, and aesthetics of the entire frontend, capturing layout strategies, colour palettes, and core component designs.
+  - **Files created**: `docs/ui.md`
+  - **Why it changed**: The user requested a very detailed documentation of the entire system's UI and how it looks, saved in a new doc called UI.
+  - **How the change works**: Compiled design observations from `styles.css` and various page components to detail the shared styles (gradients, rounded corners, typography), page-specific layouts (Auth, Explorer, Guide Dashboard), and interactive features (animations, modals, buttons).
 - **Enhancement (Frontend UI & Logic)**: Updated the "Book" button in the "Available Tours" section of the `ExplorePage` to match the behavior of the "Join" button in the `ExplorerHome` "Tours happening lately" section.
   - **Files modified**: `src/pages/ExplorePage.jsx`
   - **Why it changed**: The user requested that the "Book" button should have the same functionality as the "Join" button, meaning it should allow users to specify the number of guests rather than immediately attempting to book for 1 person.
@@ -879,3 +887,12 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 **How the change works:**
 - Replaced the conditional rendering in `ExplorerHome.jsx` that hid the rating stars based on `selectedLocalSpot.hasRated` with UI that always shows the stars and a label clarifying that submitting a new rating will update the old one.
 - In `SpotController.cs`, `RateSpot` now checks for `existingRating != null` and updates its fields, along with recalculating and updating the denormalized `Rating` property on the `CuratedSpot` entity.
+
+## 2026-09-15 Backend Database Seeding
+- **Action**: Reset database schema and seeded 15 real-world records per table.
+- **Why**: User requested realistic testing data with exactly 15 records per table and no null values.
+- **How**:
+  - Dropped all tables in the Aiven MySQL database to ensure a clean slate.
+  - Reset Entity Framework migrations and created a fresh `InitialCreate` migration.
+  - Applied the EF migration to build all tables including previously missing ones (`Spots`, `UserSubmittedLocations`).
+  - Executed a Python script to populate the database via a comprehensive SQL script containing 15 high-quality, South African-themed records for every table (Users, Tours, Profiles, Spots, Bookings, Matches, etc.).

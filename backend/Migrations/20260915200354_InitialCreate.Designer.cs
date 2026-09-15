@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
@@ -11,16 +12,18 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(WanderSyncDbContext))]
-    [Migration("20260826110229_CleanSpotRatings")]
-    partial class CleanSpotRatings
+    [Migration("20260915200354_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("backend.Models.Admin", b =>
                 {
@@ -28,6 +31,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("adminID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AdminID"));
 
                     b.Property<string>("HashedPassword")
                         .IsRequired()
@@ -49,6 +54,8 @@ namespace backend.Migrations
                     b.Property<int>("bookingID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("bookingID"));
 
                     b.Property<DateTime>("bookingDate")
                         .HasColumnType("datetime(6)");
@@ -74,8 +81,22 @@ namespace backend.Migrations
                     b.Property<int>("tourID")
                         .HasColumnType("int");
 
+                    b.Property<string>("tourLocation")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("tourName")
+                        .HasColumnType("longtext")
+                        .HasColumnName("tourName");
+
                     b.Property<int>("userID")
                         .HasColumnType("int");
+
+                    b.Property<string>("userName")
+                        .HasColumnType("longtext")
+                        .HasColumnName("userName");
+
+                    b.Property<string>("userSurname")
+                        .HasColumnType("longtext");
 
                     b.HasKey("bookingID");
 
@@ -88,6 +109,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("spotID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SpotID"));
 
                     b.Property<string>("ActivityName")
                         .HasMaxLength(200)
@@ -108,17 +131,33 @@ namespace backend.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("isVerified");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double")
+                        .HasColumnName("latitude");
+
                     b.Property<string>("Location")
                         .HasColumnType("longtext")
                         .HasColumnName("location");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double")
+                        .HasColumnName("longitude");
 
                     b.Property<string>("PictureURL")
                         .HasColumnType("longtext")
                         .HasColumnName("pictureURL");
 
+                    b.Property<decimal?>("Rating")
+                        .HasColumnType("decimal(4,2)")
+                        .HasColumnName("rating");
+
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("submittedAt");
+
+                    b.Property<string>("SubmittedByName")
+                        .HasColumnType("longtext")
+                        .HasColumnName("submittedByName");
 
                     b.Property<int?>("SubmittedByUserID")
                         .HasColumnType("int")
@@ -136,6 +175,8 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("reviewID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RatingId"));
+
                     b.Property<string>("Comment")
                         .HasColumnType("longtext")
                         .HasColumnName("comment");
@@ -147,6 +188,22 @@ namespace backend.Migrations
                     b.Property<int>("GuideId")
                         .HasColumnType("int")
                         .HasColumnName("guideID");
+
+                    b.Property<string>("GuideName")
+                        .HasColumnType("longtext")
+                        .HasColumnName("guideName");
+
+                    b.Property<string>("GuideSurname")
+                        .HasColumnType("longtext")
+                        .HasColumnName("guideSurname");
+
+                    b.Property<string>("ReviewerName")
+                        .HasColumnType("longtext")
+                        .HasColumnName("reviewerName");
+
+                    b.Property<string>("ReviewerSurname")
+                        .HasColumnType("longtext")
+                        .HasColumnName("reviewerSurname");
 
                     b.Property<int>("Score")
                         .HasColumnType("int")
@@ -167,6 +224,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("applicationID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ApplicationID"));
 
                     b.Property<string>("Bio")
                         .HasMaxLength(250)
@@ -190,6 +249,16 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("userID");
 
+                    b.Property<string>("UserName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("userName");
+
+                    b.Property<string>("UserSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("userSurname");
+
                     b.HasKey("ApplicationID");
 
                     b.HasIndex("UserID");
@@ -204,6 +273,8 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("mID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("MID"));
+
                     b.Property<int>("MatchID")
                         .HasColumnType("int")
                         .HasColumnName("matchID");
@@ -212,13 +283,38 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("receiverID");
 
+                    b.Property<string>("ReceiverName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("recieverName");
+
+                    b.Property<string>("ReceiverSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("recieverSurname");
+
                     b.Property<int>("SenderID")
                         .HasColumnType("int")
                         .HasColumnName("senderID");
 
+                    b.Property<string>("SenderName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("senderName");
+
+                    b.Property<string>("SenderSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("senderSurname");
+
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("sentAt");
+
+                    b.Property<string>("StatusMatch")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("statusMatch");
 
                     b.Property<string>("TextMessage")
                         .IsRequired()
@@ -236,6 +332,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("notificationID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationID"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
@@ -280,6 +378,12 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("postID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PostID"));
+
+                    b.Property<string>("AlsoAttended")
+                        .HasColumnType("longtext")
+                        .HasColumnName("alsoAttended");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("longtext")
@@ -299,6 +403,10 @@ namespace backend.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("pictureURL");
 
+                    b.Property<string>("TaggedUsers")
+                        .HasColumnType("longtext")
+                        .HasColumnName("taggedUsers");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("updatedAt");
@@ -306,6 +414,16 @@ namespace backend.Migrations
                     b.Property<int>("UserID")
                         .HasColumnType("int")
                         .HasColumnName("userID");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("userName");
+
+                    b.Property<string>("UserSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("userSurname");
 
                     b.HasKey("PostID");
 
@@ -318,6 +436,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("pID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PID"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
@@ -343,9 +463,24 @@ namespace backend.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("profilePictureLink");
 
+                    b.Property<string>("UserEmail")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("userEmail");
+
                     b.Property<int>("UserID")
                         .HasColumnType("int")
                         .HasColumnName("userID");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("userName");
+
+                    b.Property<string>("UserSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("userSurname");
 
                     b.HasKey("PID");
 
@@ -361,6 +496,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("reportID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ReportID"));
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -400,6 +537,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("spotID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SpotID"));
 
                     b.Property<string>("ActivityName")
                         .IsRequired()
@@ -452,6 +591,8 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("ratingID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RatingID"));
+
                     b.Property<int>("RatingScore")
                         .HasColumnType("int")
                         .HasColumnName("ratingScore");
@@ -488,6 +629,8 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("spotReportID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SpotReportID"));
+
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasColumnType("longtext")
@@ -521,13 +664,35 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("voteID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VoteID"));
+
                     b.Property<int>("GuideID")
                         .HasColumnType("int")
                         .HasColumnName("guideID");
 
+                    b.Property<string>("GuideName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("guideName");
+
+                    b.Property<string>("GuideSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("guideSurname");
+
                     b.Property<int>("SpotID")
                         .HasColumnType("int")
                         .HasColumnName("spotID");
+
+                    b.Property<string>("SpotLocation")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("spotLoaction");
+
+                    b.Property<string>("SpotName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("spotName");
 
                     b.Property<string>("VoteType")
                         .IsRequired()
@@ -550,6 +715,8 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("tourID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("TourId"));
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("date");
@@ -562,6 +729,16 @@ namespace backend.Migrations
                     b.Property<int>("GuideId")
                         .HasColumnType("int")
                         .HasColumnName("guideID");
+
+                    b.Property<string>("GuideName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("guideName");
+
+                    b.Property<string>("GuideSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("guideSurname");
 
                     b.Property<string>("Location")
                         .HasColumnType("longtext")
@@ -596,12 +773,25 @@ namespace backend.Migrations
                     b.ToTable("Tours");
                 });
 
+            modelBuilder.Entity("backend.Models.TravelGuide", b =>
+                {
+                    b.Property<int>("UserID")
+                        .HasColumnType("int")
+                        .HasColumnName("userID");
+
+                    b.HasKey("UserID");
+
+                    b.ToTable("TravelGuide");
+                });
+
             modelBuilder.Entity("backend.Models.User", b =>
                 {
                     b.Property<int>("UserID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("userID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("UserID"));
 
                     b.Property<string>("AccountStatus")
                         .IsRequired()
@@ -658,6 +848,8 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("matchID");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("MatchID"));
+
                     b.Property<string>("CommonInterests")
                         .HasColumnType("longtext")
                         .HasColumnName("commonInterests");
@@ -670,9 +862,29 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("receiverID");
 
+                    b.Property<string>("ReceiverName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("recieverName");
+
+                    b.Property<string>("ReceiverSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("recieverSurname");
+
                     b.Property<int>("RequesterID")
                         .HasColumnType("int")
                         .HasColumnName("requesterID");
+
+                    b.Property<string>("RequesterName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("requesterName");
+
+                    b.Property<string>("RequesterSurname")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("requesterSurname");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -694,6 +906,8 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("locationID");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("LocationID"));
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -832,7 +1046,7 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Models.SpotRating", b =>
                 {
-                    b.HasOne("backend.Models.Spot", "Spot")
+                    b.HasOne("backend.Models.CuratedSpot", "CuratedSpot")
                         .WithMany()
                         .HasForeignKey("SpotID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -844,7 +1058,7 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Spot");
+                    b.Navigation("CuratedSpot");
 
                     b.Navigation("User");
                 });
