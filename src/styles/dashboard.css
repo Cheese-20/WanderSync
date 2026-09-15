@@ -761,3 +761,77 @@
   box-shadow: 0 2px 8px rgba(220,38,38,0.2);
 }
 
+@media (max-width: 768px) {
+  .dashboard-tabs {
+    flex-direction: column;
+    border-radius: 12px;
+  }
+  
+  .dashboard-tab {
+    width: 100%;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .dashboard-tab:last-child {
+    border-bottom: none;
+  }
+  
+  .dashboard-tab.active::after {
+    left: 0;
+    right: 0;
+    height: 100%;
+    background-color: rgba(207, 209, 160, 0.2);
+    z-index: -1;
+  }
+  
+  .summary-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .summary-card {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .experience-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .exp-image {
+    width: 100%;
+    height: 160px;
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .exp-actions {
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .b-card-middle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .b-card-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .spot-card {
+    grid-template-columns: 1fr;
+  }
+  
+  .spot-card-img-wrapper {
+    height: 200px;
+    min-height: 200px;
+  }
+}
+

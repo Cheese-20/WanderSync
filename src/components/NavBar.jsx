@@ -15,6 +15,7 @@ export default function NavBar() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // Nav is driven by the mode the user logged in as, not by the account role,
   // so a guide browsing as an explorer sees the explorer nav.
   const [activeMode, setActiveModeState] = useState(getActiveMode);
@@ -54,6 +55,11 @@ export default function NavBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Close mobile menu on navigate
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [navigate]);
+
   const handleNotificationClick = async (notif) => {
     if (!notif.isRead) {
       try {
@@ -89,7 +95,25 @@ export default function NavBar() {
         <img src={logo} alt="WanderSync logo" className="brand-logo" />
         <div className="ws-brand">WanderSync</div>
       </div>
-      <ul className="ws-nav-list">
+      
+      <button className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {isMobileMenuOpen ? (
+            <>
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </>
+          ) : (
+            <>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </>
+          )}
+        </svg>
+      </button>
+
+      <ul className={`ws-nav-list ${isMobileMenuOpen ? 'open' : ''}`}>
         <li><NavLink to="/home" className={navLinkClass}><img src={homeIcon} alt="Home" className="nav-icon" />Home</NavLink></li>
         <li><NavLink to="/explore" className={navLinkClass}><img src={magnifyIcon} alt="Explore" className="nav-icon" />Explore</NavLink></li>
         <li><NavLink to="/match" className={navLinkClass}><img src={usersIcon} alt="Match" className="nav-icon" />Match</NavLink></li>

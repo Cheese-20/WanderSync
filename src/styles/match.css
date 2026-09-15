@@ -370,9 +370,18 @@
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 768px) {
+  .match-page-content {
+    padding-top: 16px;
+  }
+
   .swipe-header h2 {
     font-size: 1.8rem;
+    margin-bottom: 16px;
+  }
+
+  .swipe-header p {
+    display: none;
   }
 
   .card-image-section {

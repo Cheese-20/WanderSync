@@ -1,3 +1,22 @@
+# Last Edited - Mobile Responsiveness Refactor
+
+## [2026-09-15]
+- **Enhancement (Frontend UI)**: Adjusted the mobile layout for the Match page to pull the title closer to the navbar and hide the subtitle.
+  - **Files modified**: `src/styles/match.css`
+  - **Why it changed**: The user requested that on phone view, the "Connect with travelers..." subtitle be hidden and the "Find Your Travel Buddy" title sit closer to the navigation bar for better spacing.
+  - **How the change works**: Updated the mobile media query (`max-width: 768px`) in `match.css` to set `display: none` on `.swipe-header p` and reduced the `padding-top` on `.match-page-content` from 40px to 16px.
+
+- **Enhancement (Frontend UI)**: Implemented full mobile responsiveness across the entire WanderSync application.
+  - **Files modified**: `src/components/NavBar.jsx`, `src/styles/nav.css`, `src/styles/styles.css`, `src/styles/dashboard.css`, `src/styles/discover.css`, `src/styles/explore.css`, `src/styles/explorer.css`, `src/styles/profile.css`, `src/styles/userprofile.css`, `src/styles/messages.css`, `src/styles/localGuide.css`
+  - **Why it changed**: The user requested that the entire system adapt and work perfectly on cellphones, as the UI was previously optimized mostly for large screens.
+  - **How the change works**:
+    - **Navigation**: Introduced a hamburger menu toggle in `NavBar.jsx` and updated `nav.css` to hide the navigation list behind a dropdown on mobile screens (max-width: 768px).
+    - **Core Styles**: Adjusted paddings and border-radii in `styles.css` for smaller viewports.
+    - **Page Layouts**: Added `@media (max-width: 768px)` queries to all major page stylesheets (`dashboard.css`, `explorer.css`, `profile.css`, etc.) to change flex layouts from horizontal rows to vertical columns (`flex-direction: column`).
+    - **Messages**: Adjusted the chat layout in `messages.css` to stack the contacts sidebar above the chat area on mobile screens to preserve usability.
+
+---
+
 # Last Edited - Premium Redesign of Local Spot Detail Modal
 
 ## [2026-09-15]

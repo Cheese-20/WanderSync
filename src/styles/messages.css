@@ -223,3 +223,21 @@
 .messages-spacer-auto {
   margin-top: auto;
 }
+
+@media (max-width: 768px) {
+  .messages-layout {
+    flex-direction: column;
+  }
+  
+  .contacts-sidebar {
+    width: 100%;
+    max-height: 250px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .chat-area {
+    flex: 1;
+  }
+}
+

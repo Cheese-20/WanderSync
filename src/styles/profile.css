@@ -480,3 +480,42 @@
     font-size: 0.85rem;
     margin: 12px 0 0;
 }
+
+@media (max-width: 768px) {
+  .profile-form {
+    padding: 20px 16px;
+  }
+  
+  .field-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .actions-row {
+    justify-content: center;
+  }
+  
+  .button {
+    width: 100%;
+  }
+  
+  .booking-modal-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  
+  .booking-modal-content {
+    padding: 1.5rem;
+  }
+  
+  .mode-switch {
+    flex-direction: column;
+    width: 100%;
+    border-radius: 12px;
+  }
+  
+  .mode-switch-option {
+    width: 100%;
+  }
+}
+

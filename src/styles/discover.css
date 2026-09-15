@@ -497,7 +497,7 @@
   gap: 16px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .one-on-one-row {
     grid-template-columns: 1fr;
   }
