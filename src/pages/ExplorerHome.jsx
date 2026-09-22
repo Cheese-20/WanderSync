@@ -135,6 +135,8 @@ export default function ExplorerHome() {
 
   const handleReport = (type, post) => {
     setOpenMenuId(null);
+    // Users cannot report their own post or account
+    if (Number(loggedInUserId) === Number(post.userID)) return;
     navigate('/report', { state: { reportType: type, reportedUserID: post.userID, postID: post.postID } });
   };
 
@@ -560,24 +562,27 @@ export default function ExplorerHome() {
                   </span>
                   <span className="c-post-time" style={{ color: '#888', fontSize: '0.85rem' }}>{new Date(post.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                  <span
-                    onClick={() => toggleMenu(post.postID)}
-                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', borderRadius: '4px', color: '#666' }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="5" r="1.5"></circle>
-                      <circle cx="12" cy="12" r="1.5"></circle>
-                      <circle cx="12" cy="19" r="1.5"></circle>
-                    </svg>
-                  </span>
-                  {openMenuId === post.postID && (
-                    <div style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: '999', minWidth: '160px', overflow: 'hidden', marginTop: '4px' }}>
-                      <button onClick={() => handleReport('account', post)} style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #eee', fontSize: '0.9rem' }}>Report Account</button>
-                      <button onClick={() => handleReport('content', post)} style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}>Report Content</button>
-                    </div>
-                  )}
-                </div>
+                {/* Report menu — only for posts authored by someone else */}
+                {loggedInUserId && Number(loggedInUserId) !== Number(post.userID) && (
+                  <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                    <span
+                      onClick={() => toggleMenu(post.postID)}
+                      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', borderRadius: '4px', color: '#666' }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="5" r="1.5"></circle>
+                        <circle cx="12" cy="12" r="1.5"></circle>
+                        <circle cx="12" cy="19" r="1.5"></circle>
+                      </svg>
+                    </span>
+                    {openMenuId === post.postID && (
+                      <div style={{ position: 'absolute', right: '0', top: '100%', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: '999', minWidth: '160px', overflow: 'hidden', marginTop: '4px' }}>
+                        <button onClick={() => handleReport('account', post)} style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #eee', fontSize: '0.9rem' }}>Report Account</button>
+                        <button onClick={() => handleReport('content', post)} style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}>Report Content</button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <p className="c-post-text" style={{ marginTop: '10px' }}>{post.content}</p>
