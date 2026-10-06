@@ -95,7 +95,7 @@ namespace backend.Controllers
                 CellNumber = model.PhoneNumber, 
                 Age = model.Age,
                 HashedPword = passwordHash,     // Maps the hashed password to MySQL 'hashedPword'
-                Role = "Explorer",                  // Default role for new signups
+                Role = string.Equals(model.Role, "guide", StringComparison.OrdinalIgnoreCase) ? "Guide" : "Explorer",
                 AccountStatus = "Active"        // Default status for new signups
             };
 

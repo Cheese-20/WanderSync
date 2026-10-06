@@ -57,6 +57,7 @@ function AuthForm() {
     age: '',
     password: '',
     confirmPassword: '',
+    role: 'explorer',
   });
 
   const [signupStatus, setSignupStatus] = useState({
@@ -153,7 +154,8 @@ function AuthForm() {
         phoneNumber: signupValues.number,
         age: parseInt(signupValues.age, 10),
         password: signupValues.password,
-        confirmPassword: signupValues.confirmPassword
+        confirmPassword: signupValues.confirmPassword,
+        role: signupValues.role
       });
 
       setRegistrationModal({ open: true, success: true, message: 'Account created successfully! You can now sign in.' });
@@ -328,6 +330,31 @@ function AuthForm() {
                 placeholder="Confirm Password"
                 required
               />
+
+              <div className="role-grid">
+                <label className="radio-label">
+                  <input
+                    id="signup-role-explorer"
+                    type="radio"
+                    name="role"
+                    value="explorer"
+                    checked={signupValues.role === 'explorer'}
+                    onChange={handleSignupChange}
+                  />
+                  Explorer
+                </label>
+                <label className="radio-label">
+                  <input
+                    id="signup-role-guide"
+                    type="radio"
+                    name="role"
+                    value="guide"
+                    checked={signupValues.role === 'guide'}
+                    onChange={handleSignupChange}
+                  />
+                  Guide
+                </label>
+              </div>
 
               <button type="submit" className="btn" disabled={isSigningUp}>
                 {isSigningUp ? 'Signing Up...' : 'Sign Up'}

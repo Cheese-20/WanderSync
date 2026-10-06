@@ -1,3 +1,25 @@
+# Last Edited — 2026-10-06 (Mobile View Radio Buttons & Signup Role Selection)
+
+## What Changed
+- **Mobile Radio Buttons Layout (`src/styles/styles.css`)**:
+  - Updated `.role-grid` within `@media (max-width: 860px)` to use `flex-direction: column` and `align-items: stretch`.
+  - Set `.radio-label` width to `100%` and `min-width: unset` on mobile view so radio buttons stack vertically and stretch cleanly across mobile screens.
+  - Added CSS `:has(input:checked)` highlight styling to `.radio-label` for smooth selection state feedback (`#eaf5ee` background, `#1f6f3a` border and text).
+- **Signup Role Selection (`src/pages/AuthForm.jsx`, `backend/Models/RegisterModel.cs`, `backend/Controllers/AuthController.cs`)**:
+  - Added `role: 'explorer'` to `signupValues` state and rendered `.role-grid` on the Sign Up form (Explorer vs Guide).
+  - Added `public string? Role { get; set; }` to `RegisterModel.cs`.
+  - Updated `Register` endpoint in `AuthController.cs` to map incoming `Role` string ("Guide" or "Explorer") when creating new `User` entities.
+
+## Why
+1. On narrow mobile screens (under 860px width), side-by-side radio buttons in `.role-grid` exceeded the available viewport width or clipped awkwardly against container paddings.
+2. Users requested that role selection radio buttons fit mobile screens properly by arranging vertically, and work consistently across both Sign In and Sign Up screens.
+
+## How it works
+1. **Vertical Mobile Stacking**: The `@media (max-width: 860px)` CSS query forces `.role-grid` to stack its label children vertically (`flex-direction: column`) with a `10px` gap and `width: 100%`, eliminating horizontal overflow on mobile view.
+2. **Registration Role Handling**: Users can pick "Explorer" or "Guide" during account registration. `AuthForm.jsx` submits the `role` field in the `/api/auth/register` payload, which `AuthController.cs` saves to the `User` table upon account creation.
+
+---
+
 # Last Edited — 2026-10-06 (Railway Production Hosting & Deployment Configuration)
 
 ## What Changed

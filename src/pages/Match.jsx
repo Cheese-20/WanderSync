@@ -15,13 +15,11 @@ export default function Match() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUserInterests, setCurrentUserInterests] = useState([]);
 
-  // Swiping state
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMatches = async () => {
+    const loadData = async () => {
+      setIsLoading(true);
       try {
         const userJson = localStorage.getItem('user');
         let userId = 0;
@@ -53,11 +51,14 @@ export default function Match() {
             }
           }
 
-          // Fetch matches
-          const response = await axios.get(`/api/profile/matches/${userId}`);
-          if (response.data) {
-            let matchesList = response.data;
-            // Prioritize travelers in the same location first, but retain all available profiles
+          // Fetch matches and pending requests concurrently
+          const [matchesRes, pendingRes] = await Promise.allSettled([
+            axios.get(`/api/profile/matches/${userId}`),
+            axios.get(`/api/profile/pending/${userId}`)
+          ]);
+
+          if (matchesRes.status === 'fulfilled' && matchesRes.value.data) {
+            let matchesList = matchesRes.value.data;
             if (p && p.location) {
               const userLoc = p.location.toLowerCase().trim();
               matchesList = [...matchesList].sort((a, b) => {
@@ -74,36 +75,22 @@ export default function Match() {
           } else {
             setMatches([]);
           }
+
+          if (pendingRes.status === 'fulfilled' && pendingRes.value.data) {
+            setPendingRequests(pendingRes.value.data);
+          }
         } else {
           setMatches([]);
         }
       } catch (err) {
         console.warn('Could not fetch matches', err);
         setMatches([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-
-    const fetchPending = async () => {
-      try {
-        const userJson = localStorage.getItem('user');
-        if (userJson) {
-          const user = JSON.parse(userJson);
-          const userId = user.id || user.userID || 0;
-          if (userId) {
-            const res = await axios.get(`/api/profile/pending/${userId}`);
-            if (res.data) {
-              setPendingRequests(res.data);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Could not fetch pending requests', err);
-      }
-    };
-
-    fetchMatches();
-    fetchPending();
+    loadData();
   }, []);
 
 
@@ -208,6 +195,18 @@ export default function Match() {
     sharedInterestsCount = currentMatchInterests.filter(i => currentUserInterests.includes(i.toLowerCase())).length;
   }
 
+  if (isLoading) {
+    return (
+      <div className="match-page">
+        <NavBar />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', gap: '16px' }}>
+          <div className="explorer-spinner" style={{ width: '48px', height: '48px' }}></div>
+          <p style={{ color: '#1f6f3a', fontWeight: 'bold', fontSize: '1.05rem' }}>Finding travel buddies for you...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="match-page">
       <NavBar />
@@ -283,7 +282,7 @@ export default function Match() {
               ) : null}
             </div>
 
-            {!currentMatch && (
+            {!isLoading && !currentMatch && (
               <div className="modal-overlay">
                 <div className="status-modal">
                   <img src={logo} alt="WanderSync" className="modal-logo" />
