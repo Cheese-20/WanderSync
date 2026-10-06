@@ -1,3 +1,17 @@
+# Last Edited — 2026-10-06 (Mobile Sign Up Form Visibility & Transform Reset Fix)
+
+## What Changed
+- **Mobile Form Container Transform Reset (`src/styles/styles.css`)**:
+  - Added `transform: none;` to `.form-container`, `.sign-in-container`, `.sign-up-container`, `.sign-up-mode .sign-in-container`, and `.sign-up-mode .sign-up-container` inside the `@media (max-width: 860px)` breakpoint.
+
+## Why
+1. On mobile view, tapping "Sign Up" applied the `.sign-up-mode` class, which inherited desktop CSS rule `.sign-up-mode .sign-up-container { transform: translateX(100%); }`. Because `transform` was not overridden in mobile media queries, the entire signup form and textboxes translated 100% offscreen to the right inside an `overflow: hidden` container, displaying a blank container.
+
+## How it works
+1. **Reset Mobile Offsets**: Setting `transform: none;` on `.sign-up-mode .sign-up-container` inside mobile media queries prevents the sliding offset, positioning the Sign Up form and textboxes in place at `(0, 0)` with full visibility.
+
+---
+
 # Last Edited — 2026-10-06 (Form Button Whitespace & Bottom Spacing Polish)
 
 ## What Changed

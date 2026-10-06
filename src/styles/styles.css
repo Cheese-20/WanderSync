@@ -396,6 +396,7 @@ button:active {
     width: 100%;
     left: 0;
     top: 0;
+    transform: none;
     transition: opacity 0.3s ease;
   }
 
@@ -406,6 +407,7 @@ button:active {
     visibility: visible;
     pointer-events: auto;
     height: auto;
+    transform: none;
   }
 
   .sign-up-container {
@@ -418,6 +420,7 @@ button:active {
     pointer-events: none;
     visibility: hidden;
     height: auto;
+    transform: none;
   }
 
   .sign-up-mode .sign-in-container {
@@ -429,15 +432,19 @@ button:active {
     z-index: 1;
     pointer-events: none;
     visibility: hidden;
+    transform: none;
   }
 
   .sign-up-mode .sign-up-container {
     position: relative;
+    top: auto;
+    left: auto;
     opacity: 1;
     z-index: 2;
     pointer-events: auto;
     visibility: visible;
     height: auto;
+    transform: none;
   }
 
   .overlay-container {
