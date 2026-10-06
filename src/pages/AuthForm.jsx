@@ -200,10 +200,11 @@ function AuthForm() {
               <input
                 id="login-email"
                 name="email"
-                type="text"
+                type="email"
                 value={loginValues.email}
                 onChange={handleLoginChange}
-                placeholder="Email"
+                placeholder="Email address"
+                autoComplete="username"
                 required
               />
               <input
@@ -213,6 +214,7 @@ function AuthForm() {
                 value={loginValues.password}
                 onChange={handleLoginChange}
                 placeholder="Password"
+                autoComplete="current-password"
                 required
               />
 
@@ -226,7 +228,7 @@ function AuthForm() {
                     checked={loginValues.role === 'explorer'}
                     onChange={handleLoginChange}
                   />
-                  Explorer
+                  <span>Explorer</span>
                 </label>
                 <label className="radio-label">
                   <input
@@ -237,7 +239,7 @@ function AuthForm() {
                     checked={loginValues.role === 'guide'}
                     onChange={handleLoginChange}
                   />
-                  Guide
+                  <span>Guide</span>
                 </label>
               </div>
 
@@ -265,6 +267,7 @@ function AuthForm() {
                   value={signupValues.name}
                   onChange={handleSignupChange}
                   placeholder="Name"
+                  autoComplete="given-name"
                   required
                 />
                 <input
@@ -274,6 +277,7 @@ function AuthForm() {
                   value={signupValues.surname}
                   onChange={handleSignupChange}
                   placeholder="Surname"
+                  autoComplete="family-name"
                   required
                 />
               </div>
@@ -285,6 +289,7 @@ function AuthForm() {
                 value={signupValues.email}
                 onChange={handleSignupChange}
                 placeholder="Email"
+                autoComplete="email"
                 required
               />
               <input
@@ -294,6 +299,7 @@ function AuthForm() {
                 value={signupValues.number}
                 onChange={handleSignupChange}
                 placeholder="Phone number"
+                autoComplete="tel"
                 required
               />
               <input
@@ -315,6 +321,7 @@ function AuthForm() {
                 value={signupValues.password}
                 onChange={handleSignupChange}
                 placeholder="Password"
+                autoComplete="new-password"
                 aria-describedby="signup-password-hint"
                 required
               />
@@ -328,6 +335,7 @@ function AuthForm() {
                 value={signupValues.confirmPassword}
                 onChange={handleSignupChange}
                 placeholder="Confirm Password"
+                autoComplete="new-password"
                 required
               />
 
@@ -341,7 +349,7 @@ function AuthForm() {
                     checked={signupValues.role === 'explorer'}
                     onChange={handleSignupChange}
                   />
-                  Explorer
+                  <span>Explorer</span>
                 </label>
                 <label className="radio-label">
                   <input
@@ -352,11 +360,11 @@ function AuthForm() {
                     checked={signupValues.role === 'guide'}
                     onChange={handleSignupChange}
                   />
-                  Guide
+                  <span>Guide</span>
                 </label>
               </div>
 
-              <button type="submit" className="btn" disabled={isSigningUp}>
+              <button type="submit" className="btn solid" disabled={isSigningUp}>
                 {isSigningUp ? 'Signing Up...' : 'Sign Up'}
               </button>
 

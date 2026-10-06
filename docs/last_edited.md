@@ -1,3 +1,31 @@
+# Last Edited — 2026-10-06 (Login Form & Mobile Radio Buttons Formatting Fix)
+
+## What Changed
+- **Radio Buttons 2-Column Responsive Layout (`src/styles/styles.css`)**:
+  - Replaced mobile vertical block stacking with a responsive 2-column grid (`display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%;`).
+  - Implemented custom-styled radio buttons (`appearance: none`, `::before` pseudo-element radio check indicator, `#f0fdf4` background highlight on selection, `#1f6f3a` border & dot) to eliminate unstyled browser default radio circles.
+  - Set label container min-height (`46px`) and flex alignment for optimal mobile touch targets.
+- **Mobile Container Responsiveness & Height Clipping Fix (`src/styles/styles.css`)**:
+  - Updated `@media (max-width: 860px)` container queries so `.signin-signup-container` and `.signin-signup` use dynamic height (`min-height: auto; height: auto; max-width: 480px; margin: 0 auto;`).
+  - Changed active `.form-container` on mobile from `position: absolute; height: 100%` to relative flow (`position: relative; display: block; height: auto;`) and hidden forms to `display: none`.
+- **Form Inputs & iOS Safari Auto-Zoom Prevention (`src/pages/AuthForm.jsx`, `src/styles/styles.css`)**:
+  - Added explicit `font-size: 1rem` (16px) to `.form input` to stop iOS mobile browsers from forcibly zooming in on focus.
+  - Added modern input focus indicators (`border-color: #1f6f3a`, subtle ring shadow) and full-width primary submit buttons (`width: 100%`).
+  - Added standard `autoComplete` attributes (`username`, `current-password`, `new-password`, `given-name`, `family-name`, `email`, `tel`) across sign-in and sign-up input fields.
+
+## Why
+1. Vertical stacking on small phone screens stretched the two role radio choices into large block elements, consuming vertical viewport height and pushing sign-in buttons off-screen.
+2. Raw unstyled radio inputs looked small, misaligned, and inconsistent across mobile browser engines (iOS Safari vs. Android Chrome).
+3. Absolute positioning (`position: absolute; height: 100%`) with `overflow: hidden` on mobile devices caused long forms to clip vertically, hiding buttons and fields on smaller phone viewports (e.g. iPhone SE / 375px screens).
+4. Inputs without explicit 16px font sizes triggered native iOS auto-zoom on field focus, breaking screen layout.
+
+## How it works
+1. **Side-by-side 2-Column Grid**: Setting `.role-grid` to `grid-template-columns: repeat(2, minmax(0, 1fr))` ensures "Explorer" and "Guide" sit side-by-side cleanly in equal-width pill cards across phone sizes.
+2. **Custom CSS Radio Controls**: Customizing `input[type="radio"]` with `appearance: none` and `::before` dot scaling ensures pixel-perfect radio checked states across all mobile devices.
+3. **Dynamic Viewport Height**: Converting active mobile form containers to relative document flow (`position: relative; height: auto`) allows forms to expand to their exact content height naturally, preventing input cutoff and scroll bugs.
+
+---
+
 # Last Edited — 2026-10-06 (React Rules of Hooks Fix on Home Page)
 
 ## What Changed
