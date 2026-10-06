@@ -1,3 +1,53 @@
+# Last Edited — 2026-10-06 (Form Button Whitespace & Bottom Spacing Polish)
+
+## What Changed
+- **Sign Up / Sign In Button Whitespace (`src/styles/styles.css`)**:
+  - Added `margin-bottom: 20px;` to `.btn.solid` to create clean vertical whitespace below the primary submit buttons.
+  - Increased `.form` bottom padding on desktop (`padding: 44px 38px 48px;`) for a balanced, spacious card layout.
+
+## Why
+1. User requested additional whitespace below the signup button to improve visual padding and prevent crowding at the bottom of the form card.
+
+## How it works
+1. **Vertical Breathing Room**: Adding explicit bottom margin on `.btn.solid` creates consistent whitespace below the action buttons regardless of whether status messages or mobile toggle links are rendered below.
+
+---
+
+# Last Edited — 2026-10-06 (Standard Native Radio Controls Restoration)
+
+## What Changed
+- **Standard Native Radio Controls (`src/styles/styles.css`)**:
+  - Removed custom `appearance: none` and `::before` pseudo-element hacks on `.radio-label input[type="radio"]`.
+  - Configured standard native browser radio controls using `accent-color: #1f6f3a`, standard `16px × 16px` sizing, and `cursor: pointer`.
+
+## Why
+1. User confirmed preference for standard/normal native radio buttons for consistent browser rendering and form control behavior.
+
+## How it works
+1. **Native Accessibility & Sizing**: Using `accent-color: #1f6f3a` leverages native OS and browser radio controls, matching standard forms with a clean 16px radio dot.
+
+---
+
+# Last Edited — 2026-10-06 (Compact & Uniform Radio Button Circle Styling)
+
+## What Changed
+- **Radio Button Circle & Dot Proportions (`src/styles/styles.css`)**:
+  - Reduced radio outer circle dimensions from `18px × 18px` to `14px × 14px` with a crisp `1.5px` border for a cleaner, modern look.
+  - Scaled the inner checked indicator dot down from `9px × 9px` to `6px × 6px`, keeping it perfectly centered within the outer circle.
+  - Added `box-sizing: border-box` and `aspect-ratio: 1 / 1` to `input[type="radio"]` to guarantee perfect circular uniformity across all viewports and browsers.
+- **Pill Container Balance (`src/styles/styles.css`)**:
+  - Refined `.radio-label` min-height from `48px` to `44px` (`40px` on mobile screens) and gap to `8px`.
+  - Adjusted font size to `0.84rem` with `letter-spacing: 0.03em` for optimal typography harmony with sign-in input fields.
+
+## Why
+1. User requested making the radio button circle smaller and more uniform relative to the text and surrounding form inputs.
+
+## How it works
+1. **Compact Aspect-Ratio Centering**: Specifying explicit `14px` circle bounds with `aspect-ratio: 1 / 1` and `display: grid; place-content: center;` prevents flex distortion and keeps the `6px` inner dot centered and uniform.
+2. **Harmonious Form Dimensions**: Reducing pill height (`44px`) and gap (`8px`) aligns the radio toggle pills perfectly with the text inputs above them in the sign-in modal.
+
+---
+
 # Last Edited — 2026-10-06 (Signup Role Removal & Radio Dot Label Proximity Fix)
 
 ## What Changed
