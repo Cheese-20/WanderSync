@@ -25,7 +25,7 @@ namespace backend.Controllers
         {
             // Get all pending spots that the guide hasn't voted on yet
             var spots = await (from s in _context.CuratedSpots
-                               where s.IsVerified == "pending" && 
+                               where s.IsVerified != null && s.IsVerified.ToLower() == "pending" && 
                                      s.SubmittedByUserID != guideId &&
                                      !_context.SpotVotes.Any(v => v.SpotID == s.SpotID && v.GuideID == guideId)
                                join u in _context.Users on s.SubmittedByUserID equals u.UserID into userGroup

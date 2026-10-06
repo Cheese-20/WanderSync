@@ -32,7 +32,6 @@ namespace backend.Data
         public DbSet<CuratedSpot> CuratedSpots { get; set; }
         public DbSet<SpotVote> SpotVotes { get; set; }
         public DbSet<LocalGuideApplication> LocalGuideApplications { get; set; }
-        public DbSet<UserSubmittedLocation> UserSubmittedLocations { get; set; }
         public DbSet<GuideRating> GuideRatings { get; set; }
         public DbSet<SpotRating> SpotRatings { get; set; }
         public DbSet<Admin> Admins { get; set; }

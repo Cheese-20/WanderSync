@@ -1366,3 +1366,20 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
 
 ### How the change works
 - As verified previously in `AuthController.cs`, admin passwords are not hashed and are compared as plaintext. Thus, inserting the plaintext password directly allows the new admin account to successfully log in.
+
+## Removed Legacy UserSubmittedLocations and Enforced SubmittedByName
+**Date**: 2026-10-06 22:33:08
+
+### What has been changed
+- Deleted `UserSubmittedLocationsController.cs` and `UserSubmittedLocation.cs` entirely, as they were redundant.
+- Removed the `UserSubmittedLocations` DbSet from `WanderSyncDbContext`.
+- Modified `CuratedSpotsController.cs` to automatically retrieve the submitting user from the database and populate the `SubmittedByName` field (first and last name) before saving the new curated spot.
+
+### Why it has changed
+- The frontend `ExplorePage` and `MapModal` were already directly submitting to `CuratedSpots`, making `UserSubmittedLocations` unused dead code.
+- While the frontend attempted to send `SubmittedByName` in the payload, fetching it directly on the backend ensures the name is always accurate, populated correctly, and secure (preventing a user from spoofing another user`s name).
+
+### How the change works
+- When a `POST /api/curatedspots` request is received, if `spot.SubmittedByUserID` is present, the backend looks up that `User` in the database.
+- It then sets `spot.SubmittedByName = user.FirstName + " " + user.LastName`.
+- The spot is saved to the `curatedSpots` table. 

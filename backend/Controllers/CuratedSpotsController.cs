@@ -32,6 +32,15 @@ namespace backend.Controllers
         {
             spot.IsVerified = "pending"; // Default to pending for new submissions
 
+            if (spot.SubmittedByUserID.HasValue)
+            {
+                var user = await _context.Users.FindAsync(spot.SubmittedByUserID.Value);
+                if (user != null)
+                {
+                    spot.SubmittedByName = $"{user.FirstName} {user.LastName}";
+                }
+            }
+
             _context.CuratedSpots.Add(spot);
             await _context.SaveChangesAsync();
 
