@@ -301,12 +301,19 @@ namespace backend.Controllers
 
                 if (existingMatch == null)
                 {
+                    var requesterUser = await _context.Users.FindAsync(request.RequesterID);
+                    var receiverUser = await _context.Users.FindAsync(request.ReceiverID);
+
                     var match = new backend.Models.UserMatch {
                         RequesterID = request.RequesterID,
                         ReceiverID = request.ReceiverID,
                         CommonInterests = request.CommonInterests,
                         Status = request.Status == "accepted" ? "pending" : "rejected",
-                        DateMatched = DateTime.UtcNow
+                        DateMatched = DateTime.UtcNow,
+                        RequesterName = requesterUser?.FirstName,
+                        RequesterSurname = requesterUser?.LastName,
+                        ReceiverName = receiverUser?.FirstName,
+                        ReceiverSurname = receiverUser?.LastName
                     };
                     _context.Matches.Add(match);
                     

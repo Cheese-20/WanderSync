@@ -1271,3 +1271,98 @@ These were a series of UI tweaks and bug fixes requested by the user to polish t
   - Added a check in the `Login` endpoint: if `user.AccountStatus == "suspended"`, it returns a `403 Forbidden` status code along with a message indicating the suspension. 
   - If a `SuspendedUntil` date is set, the message includes the exact date and time the suspension lifts.
   - The frontend (`AuthForm.jsx`) automatically catches this error message and displays it in the existing error popup modal.
+
+## Updated Booking Creation to Capture Denormalized Fields
+**Date**: 2026-10-06 21:49:00
+
+### What has been changed
+- Modified `CreateBooking` in `backend/Controllers/BookingsController.cs` to populate `userName`, `userSurname`, `tourName`, and `tourLocation`.
+- Modified `CreateOneOnOneBooking` in `backend/Controllers/BookingsController.cs` to populate the same fields.
+
+### Why it has changed
+- The `Bookings` table already had these denormalized columns (`userName`, `userSurname`, `tourName`, `tourLocation`), but they were not being populated when new bookings were created.
+- Storing these directly on the booking row improves performance for listing bookings and satisfies the requirements when a user makes a booking.
+
+### How the change works
+- When saving a new `Booking`, the controller already fetches the `User` (to verify they exist) and the `Tour` (to check capacity, guide, etc.).
+- We extract `FirstName` and `LastName` from the `User` object, and `Title` and `Location` from the `Tour` object.
+- These fields are then mapped directly to the `userName`, `userSurname`, `tourName`, and `tourLocation` properties on the new `Booking` object before it is saved to the database.
+
+## Updated Guide Application Creation to Capture Denormalized Fields
+**Date**: 2026-10-06 21:51:23
+
+### What has been changed
+- Modified `Apply` in `backend/Controllers/LocalGuideController.cs` to populate `UserName` and `UserSurname` on `LocalGuideApplication`.
+
+### Why it has changed
+- The `GuideApplication` table already had `userName` and `userSurname` columns, but they were not being populated when new guide applications were submitted.
+- Storing these ensures we have the necessary denormalized user information directly in the guide application record.
+
+### How the change works
+- When a new `LocalGuideApplication` is created, the controller already fetches the `User` to verify they exist.
+- We map `FirstName` to `UserName` and `LastName` to `UserSurname` on the new `LocalGuideApplication` object before it is saved to the database.
+
+## Updated Match Creation to Capture Denormalized Fields
+**Date**: 2026-10-06 21:53:50
+
+### What has been changed
+- Modified `Swipe` in `backend/Controllers/ProfileController.cs` to populate `RequesterName`, `RequesterSurname`, `ReceiverName`, and `ReceiverSurname` on `UserMatch`.
+- Modified `AcceptBooking` in `backend/Controllers/BookingsController.cs` to populate the same fields when an automatic match is created upon booking acceptance.
+
+### Why it has changed
+- The `Matches` table already had columns for `requesterName`, `requesterSurname`, `recieverName`, and `recieverSurname` to improve querying and caching.
+- However, when a new match was being generated, these values were not being assigned. Assigning them here ensures the system has quick access to match participant names without joining the `Users` table.
+
+### How the change works
+- When a `UserMatch` is created (either from swiping or accepting a booking), the backend uses `_context.Users.FindAsync(id)` for both the requester and receiver.
+- It maps the `FirstName` to the name property and `LastName` to the surname property of the respective role (Requester/Receiver) on the `UserMatch` entity before adding it to the context and saving it to the database.
+
+## Updated Review Creation/Backfill to Capture Denormalized Fields
+**Date**: 2026-10-06 21:57:50
+
+### What has been changed
+- Verified that new reviews (`GuideRating`) created in `backend/Controllers/LocalGuideController.cs` already correctly populate `GuideName`, `GuideSurname`, `ReviewerName`, and `ReviewerSurname`.
+- Added logic to `PopulateAllDenormalizedData` in `backend/Controllers/DatabaseBackfillController.cs` to backfill these fields for any pre-existing reviews.
+
+### Why it has changed
+- The `Reviews` (mapped to `GuideRating` in code) table has denormalized name columns which make it easier and faster to retrieve review details without needing to join the `Users` table twice (for both guide and reviewer).
+- The backfill ensures consistency for older data before the columns were being populated.
+
+### How the change works
+- In the `DatabaseBackfillController.cs`, we fetch all existing `GuideRatings`.
+- For each rating, we retrieve both the guide and the reviewer `User` objects.
+- We then map the `FirstName` and `LastName` to the respective name/surname properties on the review and save it to the database, bringing legacy data up-to-date.
+
+## Updated Tour Creation to Capture Denormalized Guide Name Fields
+**Date**: 2026-10-06 22:01:20
+
+### What has been changed
+- Modified `ToursController.cs` (normal tour creation) to assign `GuideName` and `GuideSurname` when creating a new `Tour`.
+- Modified `BookingsController.cs` (one-on-one booking creation) to assign `GuideName` and `GuideSurname` when generating the associated private `Tour`.
+- Modified `LocalGuideController.cs` (custom itinerary creation) to fetch the guide and assign `GuideName` and `GuideSurname` when creating a new custom `Tour`.
+
+### Why it has changed
+- The `Tours` table includes denormalized columns (`guideName`, `guideSurname`) to improve listing efficiency, avoiding frequent joins on the `Users` table. 
+- However, when a new `Tour` was inserted, these fields were not being populated, causing new tours to miss this information despite it being present in older/backfilled tours.
+
+### How the change works
+- In all three endpoints where a new `Tour` is instantiated, the backend already either holds a reference to the `User` (guide) object or has their `guideId`.
+- If the object was missing (as in `LocalGuideController.cs`), it is now fetched via `_context.Users.FindAsync(guideId)`.
+- The `FirstName` and `LastName` from the guide `User` record are mapped to `GuideName` and `GuideSurname` on the new `Tour` object before it is added to the database.
+
+## Manual Admin Account Creation
+**Date**: 2026-10-06 22:09:54
+
+### Implementation Plan
+1. Connect directly to the Aiven Cloud MySQL database using the `mysql` CLI.
+2. Run an `INSERT` statement into the `Admin` table.
+3. The values inserted will be the requested username `s229274056@wandersync.com` and password `Admin1234`.
+
+### What has been changed
+- Inserted a new admin record into the `Admin` table with username `s229274056@wandersync.com` and password `Admin1234`.
+
+### Why it has changed
+- Required by the user to grant them an administrative login to the system.
+
+### How the change works
+- As verified previously in `AuthController.cs`, admin passwords are not hashed and are compared as plaintext. Thus, inserting the plaintext password directly allows the new admin account to successfully log in.

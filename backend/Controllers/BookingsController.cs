@@ -116,7 +116,11 @@ namespace backend.Controllers
                 status = "Pending", // Pending for guide approval
                 bookingDate = request.BookingDate != default ? request.BookingDate : DateTime.UtcNow,
                 timeOfBooking = request.TimeOfBooking ?? string.Empty,
-                numberOfGuests = guests
+                numberOfGuests = guests,
+                userName = user.FirstName,
+                userSurname = user.LastName,
+                tourName = tour.Title,
+                tourLocation = tour.Location
             };
 
             try
@@ -263,7 +267,9 @@ namespace backend.Controllers
                         // No published rate exists for a private session: the guide agrees it in chat.
                         Price = 0m,
                         Location = tourLocation,
-                        PictureURL = null
+                        PictureURL = null,
+                        GuideName = guide.FirstName,
+                        GuideSurname = guide.LastName
                     };
                     _context.Tours.Add(tour);
                     await _context.SaveChangesAsync();
@@ -277,7 +283,11 @@ namespace backend.Controllers
                         status = "Pending",
                         bookingDate = startsAt,
                         timeOfBooking = time,
-                        numberOfGuests = guests
+                        numberOfGuests = guests,
+                        userName = user.FirstName,
+                        userSurname = user.LastName,
+                        tourName = tour.Title,
+                        tourLocation = tour.Location
                     };
                     _context.Bookings.Add(booking);
                     await _context.SaveChangesAsync();
@@ -414,12 +424,19 @@ namespace backend.Controllers
 
                 if (existingMatch == null)
                 {
+                    var requesterUser = await _context.Users.FindAsync(booking.userID);
+                    var receiverUser = await _context.Users.FindAsync(tour.GuideId);
+
                     existingMatch = new UserMatch
                     {
                         RequesterID = booking.userID,
                         ReceiverID = tour.GuideId,
                         Status = "accepted",
-                        DateMatched = DateTime.UtcNow
+                        DateMatched = DateTime.UtcNow,
+                        RequesterName = requesterUser?.FirstName,
+                        RequesterSurname = requesterUser?.LastName,
+                        ReceiverName = receiverUser?.FirstName,
+                        ReceiverSurname = receiverUser?.LastName
                     };
                     _context.Matches.Add(existingMatch);
                 }

@@ -142,6 +142,24 @@ namespace backend.Controllers
                     }
                 }
 
+                // 10. Reviews (GuideRatings)
+                var reviews = await _context.GuideRatings.ToListAsync();
+                foreach (var review in reviews)
+                {
+                    var guide = await _context.Users.FindAsync(review.GuideId);
+                    var reviewer = await _context.Users.FindAsync(review.UserId);
+                    if (guide != null)
+                    {
+                        review.GuideName = guide.FirstName;
+                        review.GuideSurname = guide.LastName;
+                    }
+                    if (reviewer != null)
+                    {
+                        review.ReviewerName = reviewer.FirstName;
+                        review.ReviewerSurname = reviewer.LastName;
+                    }
+                }
+
                 // Save changes
                 await _context.SaveChangesAsync();
 

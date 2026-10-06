@@ -124,7 +124,9 @@ namespace backend.Controllers
                 Reason = request.Reason ?? string.Empty,
                 Location = request.Location ?? string.Empty,
                 Bio = string.IsNullOrEmpty(request.Bio) ? string.Empty : request.Bio.Length > 250 ? request.Bio.Substring(0, 250) : request.Bio,
-                UserID = request.UserID
+                UserID = request.UserID,
+                UserName = user.FirstName,
+                UserSurname = user.LastName
             };
 
             try
@@ -723,6 +725,8 @@ namespace backend.Controllers
 
                 if (booking == null)
                 {
+                    var guide = await _context.Users.FindAsync(guideId);
+
                     // Create an empty itinerary
                     var newTour = new Tour
                     {
@@ -733,7 +737,9 @@ namespace backend.Controllers
                         Date = DateTime.UtcNow.Date,
                         MaxPeople = 1,
                         Price = 0,
-                        Location = "Various"
+                        Location = "Various",
+                        GuideName = guide?.FirstName,
+                        GuideSurname = guide?.LastName
                     };
 
                     _context.Tours.Add(newTour);

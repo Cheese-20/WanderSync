@@ -163,7 +163,9 @@ namespace backend.Controllers
                     MaxPeople = request.MaxPeople,
                     Price = request.Price,
                     PictureURL = string.IsNullOrWhiteSpace(request.PictureURL) ? null : request.PictureURL,
-                    Location = string.IsNullOrWhiteSpace(request.Location) ? null : request.Location.Trim()
+                    Location = string.IsNullOrWhiteSpace(request.Location) ? null : request.Location.Trim(),
+                    GuideName = guide.FirstName,
+                    GuideSurname = guide.LastName
                 };
 
                 _context.Tours.Add(tour);
