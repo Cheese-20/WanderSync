@@ -1,3 +1,24 @@
+# Last Edited — 2026-10-06 (Match Page Bugfix & Database Query Optimization)
+
+## What Changed
+- **Frontend Match Page State Initialization (`src/pages/Match.jsx`)**:
+  - Added missing `isDragging`, `startX`, and `swipeOffset` state hooks (`useState`) used by touch/mouse event listeners (`handleTouchStart`, `handleTouchMove`, `handleTouchEnd`).
+  - Updated profile checking logic to safely extract user interests without hard-redirecting users to `/profile` if optional fields were null or pending.
+- **Backend Match Query Optimization (`backend/Controllers/ProfileController.cs`)**:
+  - Updated `GetMatches` SQL query from `JOIN Profile p` to `LEFT JOIN Profile p ON u.userID = p.userID`.
+  - Added null-safe fallbacks for reader fields (`isDBNull` handling for `firstName`, `lastName`, `age`, `job`, `location`, `interests`, and `description`).
+
+## Why
+1. Touch and mouse dragging handlers in `Match.jsx` were referencing undeclared setters (`setIsDragging`, `setStartX`, `setSwipeOffset`), throwing a runtime `ReferenceError` whenever a user interacted with a match card.
+2. The strict profile check forced a redirect to `/profile` if any profile field was null, preventing users from viewing the match stack.
+3. The SQL query previously required an existing `Profile` table row for every match card, hiding registered users who had not yet customized their profile.
+
+## How it works
+1. **Drag Handlers**: Initializing `isDragging`, `startX`, and `swipeOffset` in `Match.jsx` state allows touch and mouse drag gestures to calculate swipe translations without runtime errors.
+2. **Left Join Matches**: Using `LEFT JOIN Profile p ON u.userID = p.userID` allows all registered users in the `User` table to appear as potential travel buddies, pulling default role/name information even if a full `Profile` row has not been created yet.
+
+---
+
 # Last Edited — 2026-10-06 (Mobile View Radio Buttons & Signup Role Selection)
 
 ## What Changed

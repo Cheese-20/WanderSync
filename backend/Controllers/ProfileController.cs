@@ -227,25 +227,26 @@ namespace backend.Controllers
                 command.CommandText = @"
                     SELECT 
                         p.pID, 
-                        p.userID, 
+                        u.userID, 
                         u.firstName, 
                         u.lastName, 
                         u.age, 
-                        CONCAT('/api/profile/', p.userID, '/picture'), 
+                        CONCAT('/api/profile/', u.userID, '/picture'), 
                         p.interests, 
                         p.description, 
                         p.location, 
-                        p.job
-                    FROM Profile p
-                    JOIN User u ON p.userID = u.userID
-                    WHERE p.userID != @userId
+                        p.job,
+                        u.role
+                    FROM User u
+                    LEFT JOIN Profile p ON u.userID = p.userID
+                    WHERE u.userID != @userId
                       AND NOT EXISTS (
                           SELECT 1 FROM Matches m 
-                          WHERE m.requesterID = @userId AND m.receiverID = p.userID
+                          WHERE m.requesterID = @userId AND m.receiverID = u.userID
                       )
                       AND NOT EXISTS (
                           SELECT 1 FROM Matches m 
-                          WHERE m.receiverID = @userId AND m.requesterID = p.userID
+                          WHERE m.receiverID = @userId AND m.requesterID = u.userID
                       )
                 ";
 
@@ -259,16 +260,16 @@ namespace backend.Controllers
                 while (await reader.ReadAsync())
                 {
                     matches.Add(new {
-                        pID = reader.GetInt32(0),
+                        pID = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
                         userID = reader.GetInt32(1),
-                        firstName = reader.GetString(2),
-                        lastName = reader.GetString(3),
-                        age = reader.GetInt32(4),
+                        firstName = reader.IsDBNull(2) ? "Traveler" : reader.GetString(2),
+                        lastName = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                        age = reader.IsDBNull(4) ? 25 : reader.GetInt32(4),
                         profilePictureLink = reader.GetString(5),
                         interests = reader.IsDBNull(6) ? null : reader.GetString(6),
                         description = reader.IsDBNull(7) ? null : reader.GetString(7),
                         location = reader.IsDBNull(8) ? null : reader.GetString(8),
-                        job = reader.IsDBNull(9) ? null : reader.GetString(9)
+                        job = reader.IsDBNull(9) ? (reader.IsDBNull(10) ? "Explorer" : reader.GetString(10)) : reader.GetString(9)
                     });
                 }
 

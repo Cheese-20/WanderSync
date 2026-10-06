@@ -16,6 +16,9 @@ export default function Match() {
   const [currentUserInterests, setCurrentUserInterests] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -35,20 +38,12 @@ export default function Match() {
           try {
             const profileRes = await axios.get(`/api/profile/${userId}`);
             p = profileRes.data;
-            if (!p || !p.profilePictureLink || !p.interests || !p.description || !p.location) {
-              navigate('/profile', { state: { message: "You must complete your profile before matching! All fields except Job are required." } });
-              return;
-            }
-            if (p.interests) {
+            if (p && p.interests) {
               const userInterests = p.interests.split(',').map(i => i.trim().toLowerCase());
               setCurrentUserInterests(userInterests);
             }
           } catch (e) {
             console.warn("Could not fetch user profile for interests");
-            if (e.response && e.response.status === 404) {
-              navigate('/profile', { state: { message: "You must complete your profile before matching! All fields except Job are required." } });
-              return;
-            }
           }
 
           // Fetch matches and pending requests concurrently
