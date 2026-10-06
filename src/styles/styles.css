@@ -244,7 +244,7 @@ button:active {
 .role-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   margin: 16px 0;
 }
@@ -254,21 +254,29 @@ button:active {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 12px 18px;
   width: 100%;
-  min-height: 46px;
-  border-radius: 14px;
+  min-height: 48px;
+  border-radius: 999px;
   border: 1.5px solid #e2e8f0;
   background: #f8fafc;
   color: #475569;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  letter-spacing: 0.01em;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   cursor: pointer;
   user-select: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.radio-label span {
+  flex: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
 }
 
 .radio-label:hover {
@@ -419,7 +427,8 @@ button:active {
     position: relative;
     opacity: 1;
     z-index: 2;
-    display: block;
+    visibility: visible;
+    pointer-events: auto;
     height: auto;
   }
 
@@ -427,10 +436,11 @@ button:active {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
     opacity: 0;
     z-index: 1;
     pointer-events: none;
-    display: none;
+    visibility: hidden;
     height: auto;
   }
 
@@ -438,10 +448,11 @@ button:active {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
     opacity: 0;
     z-index: 1;
     pointer-events: none;
-    display: none;
+    visibility: hidden;
   }
 
   .sign-up-mode .sign-up-container {
@@ -449,7 +460,8 @@ button:active {
     opacity: 1;
     z-index: 2;
     pointer-events: auto;
-    display: block;
+    visibility: visible;
+    height: auto;
   }
 
   .overlay-container {
@@ -457,29 +469,29 @@ button:active {
   }
 
   .form {
-    padding: 32px 24px 28px;
+    padding: 28px 20px 24px;
     height: auto;
   }
 
   .input-grid-two {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 0px;
   }
 
   .role-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
   }
 
   .radio-label {
-    min-height: 46px;
+    min-height: 44px;
     padding: 10px 12px;
     font-size: 0.88rem;
   }
   
   .mobile-toggle {
     display: block;
-    margin-top: 20px;
+    margin-top: 18px;
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: #6b7280;
@@ -495,7 +507,6 @@ button:active {
     padding: 0;
   }
 }
-
 
 /* Forgot Password Overlay */
 .forgot-overlay {

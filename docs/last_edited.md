@@ -1,3 +1,62 @@
+# Last Edited — 2026-10-06 (Signup Role Removal & Radio Dot Label Proximity Fix)
+
+## What Changed
+- **Signup Form Role Picker Removal (`src/pages/AuthForm.jsx`)**:
+  - Completely removed the role selection radio grid (`.role-grid`) from the Sign Up form, so new account creation defaults to standard registration without role radio buttons.
+- **Radio Dot & Text Proximity Adjustment (`src/styles/styles.css`)**:
+  - Updated `.radio-label` with `display: flex; align-items: center; justify-content: center; gap: 10px;`.
+  - Added explicit reset `.radio-label span { flex: none; margin: 0; padding: 0; text-align: left; }` to ensure the radio dot circle is on the left and the role label text ("EXPLORER" / "GUIDE") sits immediately adjacent to it with tight `10px` spacing, eliminating space-between stretching across the pill button.
+
+## Why
+1. User requested removing role radio buttons from the Sign Up form.
+2. User provided a screenshot showing the radio dot in the center and the label text pushed far over to the right edge. Adjusting flex item behavior groups the dot and text tightly together.
+
+## How it works
+1. **Tight Flex Alignment**: `flex: none` on `.radio-label span` prevents text from expanding across the flex container, keeping the radio circle dot and text tightly paired side-by-side inside the pill button.
+
+---
+
+# Last Edited — 2026-10-06 (Clean Radio Buttons - Emoji Removal & Focused Styling)
+
+## What Changed
+- **Emoji Removal & Simplified Markup (`src/pages/AuthForm.jsx`)**:
+  - Removed all emoji icons (`🧭`, `🚩`) and section label wrappers.
+  - Restored clean standard label text ("Explorer" and "Guide") for role selection radio buttons.
+- **Clean 2-Column Radio Styling (`src/styles/styles.css`)**:
+  - Kept `.role-grid` as a clean 2-column grid (`display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%;`).
+  - Retained custom-styled radio indicators (`appearance: none` with `#1f6f3a` selection dot, `#f0fdf4` background tint on selection, `#1f6f3a` border & text) without any emojis.
+
+## Why
+1. Per user instruction ("no emojis and only change the radio button nothing else"), emoji badges were removed while preserving clean radio button alignment and green active state feedback.
+
+## How it works
+1. **Clean Radio Grid**: The 2-column grid aligns "Explorer" and "Guide" side-by-side with brand green check dots and soft selection highlights.
+
+---
+
+# Last Edited — 2026-10-06 (Mobile Signup Form Visibility & Segmented Role Selector Polish)
+
+## What Changed
+- **Mobile Signup Form Visibility Fix (`src/styles/styles.css`)**:
+  - Replaced hard `display: none` / `display: block` rules with `visibility: hidden` / `visibility: visible` and `position: relative` flow under `@media (max-width: 860px)`.
+  - When `isSignUpActive` is toggled on mobile, `.sign-up-container` transitions into active document flow (`position: relative; visibility: visible; height: auto`), allowing all signup input fields (Name, Surname, Email, Phone, Age, Password, Role Picker) to render fully without cutoff.
+  - Adjusted `.input-grid-two` on mobile to stack smoothly with consistent spacing.
+- **Segmented Role Selector UI (`src/pages/AuthForm.jsx`, `src/styles/styles.css`)**:
+  - Wrapped role choices in a `.role-selection-wrapper` featuring an uppercase section title (`"SELECT ACCOUNT TYPE"` / `"I AM JOINING AS"`).
+  - Added role icon badges (🧭 **Explorer**, 🚩 **Guide**).
+  - Transformed `.role-grid` into an inset segmented container (`#f1f5f9` inset background with `border-radius: 16px`).
+  - Selected role state transforms into an elevated white pill card (`#ffffff`) with brand green border (`#1f6f3a`), bold green text, soft drop shadow, and clean radio check dot.
+
+## Why
+1. On mobile view, using `display: none` on `.sign-up-container` collapsed the container height or prevented the mobile signup view from showing properly when toggled.
+2. The role radio buttons previously felt detached from the form inputs without a section header or role icons.
+
+## How it works
+1. **Dynamic Container Flow**: Switching mobile active container rules to `position: relative` ensures the signup form dictates container height naturally, preventing form truncation.
+2. **Segmented Tab Control**: The inset `#f1f5f9` container with elevated active cards gives role selection an interactive, native app toggle feel.
+
+---
+
 # Last Edited — 2026-10-06 (Login Form & Mobile Radio Buttons Formatting Fix)
 
 ## What Changed

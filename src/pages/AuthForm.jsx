@@ -339,31 +339,6 @@ function AuthForm() {
                 required
               />
 
-              <div className="role-grid">
-                <label className="radio-label">
-                  <input
-                    id="signup-role-explorer"
-                    type="radio"
-                    name="role"
-                    value="explorer"
-                    checked={signupValues.role === 'explorer'}
-                    onChange={handleSignupChange}
-                  />
-                  <span>Explorer</span>
-                </label>
-                <label className="radio-label">
-                  <input
-                    id="signup-role-guide"
-                    type="radio"
-                    name="role"
-                    value="guide"
-                    checked={signupValues.role === 'guide'}
-                    onChange={handleSignupChange}
-                  />
-                  <span>Guide</span>
-                </label>
-              </div>
-
               <button type="submit" className="btn solid" disabled={isSigningUp}>
                 {isSigningUp ? 'Signing Up...' : 'Sign Up'}
               </button>
