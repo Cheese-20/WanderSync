@@ -318,7 +318,14 @@ export default function Profile() {
       interests: form.interests,
       description: form.description,
       location: form.location,
-      createdAt: form.createdAt
+      createdAt: form.createdAt,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      userName: form.firstName,
+      userSurname: form.lastName,
+      userEmail: form.email,
+      fullName: `${form.firstName} ${form.lastName}`.trim()
     };
 
     setIsSaving(true);
@@ -364,7 +371,11 @@ export default function Profile() {
         }
       } catch (e) {}
 
-      setStatusModal({ open: true, success: true, message: 'User profile saved successfully.' });
+      setStatusModal({ 
+        open: true, 
+        success: true, 
+        message: 'Profile created & saved successfully! Your details (Name, Surname, and Email) are updated and you can now match with travel buddies.' 
+      });
     } catch (err) {
       console.warn('Could not save profile to backend, payload:', payload, err);
       setStatusModal({ open: true, success: false, message: 'Profile was not saved. Please try again.' });

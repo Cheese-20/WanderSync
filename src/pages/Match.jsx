@@ -32,10 +32,11 @@ export default function Match() {
         }
 
         if (userId) {
-          // Fetch current user profile to get their interests for comparison
+          // Fetch current user profile to get their interests + location for comparison
+          let p = null;
           try {
             const profileRes = await axios.get(`/api/profile/${userId}`);
-            const p = profileRes.data;
+            p = profileRes.data;
             if (!p || !p.profilePictureLink || !p.interests || !p.description || !p.location) {
               navigate('/profile', { state: { message: "You must complete your profile before matching! All fields except Job are required." } });
               return;
@@ -55,16 +56,21 @@ export default function Match() {
           // Fetch matches
           const response = await axios.get(`/api/profile/matches/${userId}`);
           if (response.data) {
-            let filtered = response.data;
+            let matchesList = response.data;
+            // Prioritize travelers in the same location first, but retain all available profiles
             if (p && p.location) {
-              const userLoc = p.location.toLowerCase();
-              filtered = filtered.filter(m => {
-                if (!m.location) return false;
-                const matchLoc = m.location.toLowerCase();
-                return matchLoc.includes(userLoc) || userLoc.includes(matchLoc);
+              const userLoc = p.location.toLowerCase().trim();
+              matchesList = [...matchesList].sort((a, b) => {
+                const aLoc = (a.location || '').toLowerCase();
+                const bLoc = (b.location || '').toLowerCase();
+                const aMatch = aLoc && (aLoc.includes(userLoc) || userLoc.includes(aLoc));
+                const bMatch = bLoc && (bLoc.includes(userLoc) || userLoc.includes(bLoc));
+                if (aMatch && !bMatch) return -1;
+                if (!aMatch && bMatch) return 1;
+                return 0;
               });
             }
-            setMatches(filtered);
+            setMatches(matchesList);
           } else {
             setMatches([]);
           }
@@ -76,6 +82,7 @@ export default function Match() {
         setMatches([]);
       }
     };
+
 
     const fetchPending = async () => {
       try {

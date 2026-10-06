@@ -70,6 +70,12 @@ namespace backend.Controllers
             public string? Job { get; set; }
             public string? CreatedAt { get; set; }
             public string? FullName { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public string? Email { get; set; }
+            public string? UserName { get; set; }
+            public string? UserSurname { get; set; }
+            public string? UserEmail { get; set; }
             public int? Age { get; set; }
         }
 
@@ -101,6 +107,22 @@ namespace backend.Controllers
                 createdAt = DateTime.UtcNow.Date;
             }
 
+            string? fName = request.UserName ?? request.FirstName;
+            if (string.IsNullOrWhiteSpace(fName) && !string.IsNullOrWhiteSpace(request.FullName))
+            {
+                var names = request.FullName.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                fName = names.Length > 0 ? names[0] : "";
+            }
+
+            string? lName = request.UserSurname ?? request.LastName;
+            if (string.IsNullOrWhiteSpace(lName) && !string.IsNullOrWhiteSpace(request.FullName))
+            {
+                var names = request.FullName.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                lName = names.Length > 1 ? names[1] : "";
+            }
+
+            string? email = request.UserEmail ?? request.Email;
+
             try
             {
                 if (existingProfile != null)
@@ -111,6 +133,9 @@ namespace backend.Controllers
                     existingProfile.Location = request.Location ?? string.Empty;
                     existingProfile.Job = request.Job ?? string.Empty;
                     existingProfile.CreatedAt = createdAt;
+                    if (!string.IsNullOrWhiteSpace(fName)) existingProfile.UserName = fName;
+                    if (!string.IsNullOrWhiteSpace(lName)) existingProfile.UserSurname = lName;
+                    if (!string.IsNullOrWhiteSpace(email)) existingProfile.UserEmail = email;
                     _context.Profiles.Update(existingProfile);
                 }
                 else
@@ -123,31 +148,23 @@ namespace backend.Controllers
                         Description = request.Description ?? string.Empty,
                         Location = request.Location ?? string.Empty,
                         Job = request.Job ?? string.Empty,
-                        CreatedAt = createdAt
+                        CreatedAt = createdAt,
+                        UserName = fName,
+                        UserSurname = lName,
+                        UserEmail = email
                     };
                     _context.Profiles.Add(profile);
                 }
 
-                // Update User table if FullName or Age are provided
-                if (!string.IsNullOrWhiteSpace(request.FullName) || request.Age.HasValue)
+                // Update User table
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
+                if (user != null)
                 {
-                    var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
-                    if (user != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(request.FullName))
-                        {
-                            var names = request.FullName.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
-                            user.FirstName = names.Length > 0 ? names[0] : "";
-                            user.LastName = names.Length > 1 ? names[1] : "";
-                        }
-                        
-                        if (request.Age.HasValue)
-                        {
-                            user.Age = request.Age.Value;
-                        }
-                        
-                        _context.Users.Update(user);
-                    }
+                    if (!string.IsNullOrWhiteSpace(fName)) user.FirstName = fName;
+                    if (!string.IsNullOrWhiteSpace(lName)) user.LastName = lName;
+                    if (!string.IsNullOrWhiteSpace(email)) user.Email = email;
+                    if (request.Age.HasValue && request.Age.Value > 0) user.Age = request.Age.Value;
+                    _context.Users.Update(user);
                 }
 
                 await _context.SaveChangesAsync();
@@ -176,6 +193,8 @@ namespace backend.Controllers
                     return NotFound(new { message = "Profile not found for user." });
                 }
 
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
+
                 return Ok(new
                 {
                     pID = profile.PID,
@@ -185,6 +204,9 @@ namespace backend.Controllers
                     description = profile.Description,
                     location = profile.Location,
                     job = profile.Job,
+                    userName = profile.UserName ?? user?.FirstName,
+                    userSurname = profile.UserSurname ?? user?.LastName,
+                    userEmail = profile.UserEmail ?? user?.Email,
                     createdAt = profile.CreatedAt.ToString("yyyy-MM-dd")
                 });
             }

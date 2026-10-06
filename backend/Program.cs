@@ -187,6 +187,21 @@ using (var scope = app.Services.CreateScope())
         try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` ADD COLUMN `loaction` varchar(100) NULL;"); } catch { }
         try { context.Database.ExecuteSqlRaw("ALTER TABLE `GuideApplication` MODIFY COLUMN `IDno` bigint NOT NULL;"); } catch { }
 
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS `SpotReports` (
+                `spotReportID` int NOT NULL AUTO_INCREMENT,
+                `spotID` int NOT NULL,
+                `reporterID` int NOT NULL,
+                `reason` longtext NOT NULL,
+                `sentAt` datetime(6) NULL,
+                PRIMARY KEY (`spotReportID`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        try { context.Database.ExecuteSqlRaw("ALTER TABLE `SpotReports` DROP FOREIGN KEY `FK_SpotReports_Spots_spotID`;"); } catch { }
+        try { context.Database.ExecuteSqlRaw("ALTER TABLE `SpotReports` DROP FOREIGN KEY `FK_SpotReports_Spot_spotID`;"); } catch { }
+        try { context.Database.ExecuteSqlRaw("ALTER TABLE `SpotReports` ADD CONSTRAINT `FK_SpotReports_curatedSpots_spotID` FOREIGN KEY (`spotID`) REFERENCES `curatedSpots` (`spotID`) ON DELETE CASCADE;"); } catch { }
+
         string[] profileColumnSqls = new[]
         {
             "ALTER TABLE `Tours` ADD COLUMN `location` longtext NULL;",

@@ -228,18 +228,39 @@ namespace backend.Controllers
         [HttpPost("{id}/report")]
         public async Task<IActionResult> ReportSpot(int id, [FromBody] SpotReportRequest request)
         {
-            var report = new SpotReport
+            int reporterId = request.ReporterId > 0 ? request.ReporterId : request.ReporterID;
+            if (reporterId <= 0)
             {
-                SpotID = id,
-                ReporterID = request.ReporterId,
-                Reason = request.Reason,
-                SentAt = DateTime.UtcNow
-            };
+                return BadRequest("Valid reporterId is required.");
+            }
 
-            _context.SpotReports.Add(report);
-            await _context.SaveChangesAsync();
+            var spot = await _context.CuratedSpots.FindAsync(id);
+            if (spot == null)
+            {
+                return NotFound("Spot not found.");
+            }
 
-            return Ok(new { message = "Spot reported successfully." });
+            try
+            {
+                var report = new SpotReport
+                {
+                    SpotID = id,
+                    ReporterID = reporterId,
+                    Reason = request.Reason ?? string.Empty,
+                    SentAt = DateTime.UtcNow
+                };
+
+                _context.SpotReports.Add(report);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Spot reported successfully.", spotReportID = report.SpotReportID });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving spot report for spotID {id}: {ex}");
+                var detail = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Error saving spot report: " + detail });
+            }
         }
 
         // POST: api/spots/{id}/rate
@@ -297,6 +318,7 @@ namespace backend.Controllers
     public class SpotReportRequest
     {
         public int ReporterId { get; set; }
+        public int ReporterID { get; set; }
         public string Reason { get; set; } = string.Empty;
     }
 

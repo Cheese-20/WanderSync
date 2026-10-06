@@ -24,9 +24,9 @@ namespace backend.Models
         public DateTime? SentAt { get; set; }
 
         [ForeignKey("SpotID")]
-        public Spot Spot { get; set; }
+        public CuratedSpot? Spot { get; set; }
 
         [ForeignKey("ReporterID")]
-        public User Reporter { get; set; }
+        public User? Reporter { get; set; }
     }
 }

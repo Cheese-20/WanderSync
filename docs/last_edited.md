@@ -1,4 +1,68 @@
+# Last Edited — 2026-10-06 (Report Submission & Database Table Fix)
+
+## What Changed
+- **Spot Reports & Database Constraint Fix (`backend/Models/SpotReport.cs`, `backend/Program.cs`, `backend/Controllers/SpotController.cs`, `src/pages/ExplorerHome.jsx`, `src/pages/GuideHome.jsx`)**:
+  - Dropped legacy `FK_SpotReports_Spots_spotID` constraint in MySQL database which previously caused foreign key constraint failure when reporting curated spots.
+  - Added constraint `FK_SpotReports_curatedSpots_spotID` referencing `curatedSpots(spotID)`.
+  - Updated `SpotReport.cs` navigation property from `Spot` (unused table) to `CuratedSpot?` (`curatedSpots` table) to map to active curated spots.
+  - Added startup DDL in `Program.cs` to ensure `SpotReports` table is created cleanly and legacy foreign key constraints pointing to `Spots` are dropped automatically on startup.
+  - Updated `ReportSpot` endpoint in `SpotController.cs` with try-catch logging and support for both `ReporterId` and `ReporterID`.
+  - Updated `handleSubmitReport` in `ExplorerHome.jsx` and `GuideHome.jsx` to robustly extract logged-in user ID (`user.id || user.userID`).
+- **Account & Content Reports Fix (`backend/Controllers/ReportsController.cs`, `src/pages/ReportForm.jsx`)**:
+  - Updated `ReportForm.jsx` to fall back to `currentUser.userID` when `currentUser.id` is not present, preventing `JSON.stringify` from omitting `reporterID`.
+  - Updated `ReportsController.cs` `ReportDto` to accept both `ReporterID`/`ReporterId` and `ReportedUserID`/`ReportedUserId`.
+
+## Why
+1. Submitting a spot report was throwing an Entity Framework / MySQL exception (`An error occurred while saving the entity changes`) due to `FK_SpotReports_Spots_spotID` pointing to the legacy `Spots` table instead of `curatedSpots` where live spots are stored.
+2. Account & Content reports submitted via `ReportForm.jsx` were omitting `reporterID` when `currentUser.id` was `undefined`, causing backend 400 Bad Request errors.
+
+## How it works
+1. **Spot Reports**: `FK_SpotReports_Spots_spotID` was dropped and replaced with `FK_SpotReports_curatedSpots_spotID`. When a user reports a spot, `SpotController.cs` creates a `SpotReport` record referencing the `spotID` of the `CuratedSpot` in the `SpotReports` table.
+2. **Account/Content Reports**: `ReportForm.jsx` extracts the valid logged-in user ID and sends a POST request to `/api/reports`, creating a record in the `Reports` table that displays in `AdminHome` under Reported Accounts.
+
+---
+
+# Last Edited — 2026-10-06 (Connections Match Page & Profile User Info Updates)
+
+## What Changed
+- **Match / Connections Page (`src/pages/Match.jsx`)**:
+  - Updated card matching logic so profiles are sorted by location match first rather than strictly discarding profiles from other locations.
+- **Profile Saving & User Info (`backend/Controllers/ProfileController.cs`, `src/pages/Profile.jsx`)**:
+  - Enhanced `SaveProfile` in `ProfileController.cs` and `ProfileRequest` DTO to accept and store `userName`, `userSurname`, and `userEmail` in the `Profile` database table while synchronizing `firstName`, `lastName`, and `email` in the `User` table.
+  - Updated `GetProfile` in `ProfileController.cs` to return `userName`, `userSurname`, and `userEmail`.
+  - Updated `handleSubmit` in `src/pages/Profile.jsx` to pass `firstName`, `lastName`, `email`, `userName`, `userSurname`, `userEmail`, and `fullName` in the profile save request.
+  - Added a clear, descriptive success modal popup in `src/pages/Profile.jsx` confirming to the user that their profile has been created/updated successfully with their details saved.
+
+## Why
+1. Users were previously unable to see connection cards on the Match/Connections page if no other profiles had the exact same location string, causing an empty card stack.
+2. User profile records were not persisting `userName`, `userSurname`, and `userEmail` explicitly in the `Profile` table upon saving, and users lacked clear feedback confirming that their profile had been created.
+
+## How it works
+1. **Connections Matching**: `Match.jsx` sorts the matches list so that users in the same location appear at the top of the stack, but retains all other potential travel buddies so the match queue is never empty when profiles exist.
+2. **Profile Names & Confirmation**: When saving a profile, `ProfileController.cs` updates both `Profile` (`userName`, `userSurname`, `userEmail`) and `User` (`firstName`, `lastName`, `email`) tables. Upon completion, `Profile.jsx` displays a confirmation modal confirming that their profile details are saved and they are ready to connect.
+
+---
+
+# Last Edited — 2026-10-06 (Database Backup Folder)
+
+## What Changed
+- Created `database/` folder in the project root
+- Moved SQL dump → `database/wandersync_backup.sql`
+- Updated `backend/dump_cloud_db.py` and `setup_local.sh` to use the new path
+- Added `database/README.md` with import/export instructions
+
+## Why
+Keeps the project root clean and gives the database backup a dedicated folder that's easy for markers to find.
+
+## How it works
+- `database/wandersync_backup.sql` — import this into MySQL to set up locally
+- `bash setup_local.sh` — automates the import + backend `.env` config
+- `backend/dump_cloud_db.py` — re-run to refresh the backup from cloud
+
+---
+
 # Last Edited - Mobile Responsiveness Refactor
+
 
 ## [2026-09-15]
 - **Enhancement (Frontend UI)**: Adjusted the layout of community posts on mobile screens to maintain the horizontal avatar and name alignment.

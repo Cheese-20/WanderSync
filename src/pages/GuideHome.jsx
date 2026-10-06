@@ -80,16 +80,38 @@ export default function GuideHome() {
   };
 
   const handleSubmitReport = async () => {
+    let reporterId = loggedInUserId;
+    if (!reporterId) {
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          reporterId = user.id || user.userID;
+        }
+      } catch (e) {}
+    }
+
+    if (!reporterId) {
+      alert('Please log in to report a spot.');
+      return;
+    }
+
+    const spotId = selectedLocalSpot?.spotID || selectedLocalSpot?.spotId;
+    if (!spotId) {
+      alert('Invalid spot selected.');
+      return;
+    }
+
     try {
       const fullReason = reportComment ? `${reportReason} - ${reportComment}` : reportReason;
-      await axios.post(`http://localhost:5200/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/report`, {
-        reporterId: loggedInUserId,
+      await axios.post(`/api/spots/${spotId}/report`, {
+        reporterId: Number(reporterId),
         reason: fullReason
       });
       setReportStatus('success');
     } catch (e) {
-      console.error(e);
-      alert('Failed to submit report. Please try again.');
+      console.error('Error submitting spot report:', e);
+      alert(e.response?.data?.message || e.response?.data || 'Failed to submit report. Please try again.');
     }
   };
 

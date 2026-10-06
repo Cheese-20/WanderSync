@@ -33,13 +33,20 @@ export default function ReportForm() {
       ? `[Content Report] ${reason}`
       : reason;
 
+    const reporterId = currentUser.id || currentUser.userID || 0;
+    if (!reporterId) {
+      setError('You must be logged in to submit a report.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:5200/api/reports', {
+      const response = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reporterID: currentUser.id,
-          reportedUserID: reportedUserID,
+          reporterID: Number(reporterId),
+          reportedUserID: Number(reportedUserID),
           reason: reportReason
         })
       });
