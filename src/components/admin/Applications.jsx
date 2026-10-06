@@ -13,7 +13,7 @@ export default function Applications() {
 
   const fetchApplications = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/admin/applications');
+      const response = await fetch('/api/admin/applications');
       if (response.ok) {
         const data = await response.json();
         setApplications(data);

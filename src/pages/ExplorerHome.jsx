@@ -74,7 +74,7 @@ export default function ExplorerHome() {
   const handleSubmitRating = async () => {
     if (ratingScore < 1 || ratingScore > 5) return;
     try {
-      const res = await axios.post(`http://localhost:5200/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/rate`, {
+      const res = await axios.post(`/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/rate`, {
         userId: loggedInUserId,
         ratingScore: ratingScore,
         reviewText: reviewText
@@ -167,7 +167,7 @@ export default function ExplorerHome() {
       const promises = [];
 
       promises.push(
-        fetch('http://localhost:5200/api/posts')
+        fetch('/api/posts')
           .then(res => {
             if (res.ok) return res.json();
             throw new Error('Failed to fetch posts');
@@ -188,7 +188,7 @@ export default function ExplorerHome() {
       );
 
       promises.push(
-        axios.get(`http://localhost:5200/api/spots/verified?userId=${loggedInUserId || ''}`)
+        axios.get(`/api/spots/verified?userId=${loggedInUserId || ''}`)
           .then(res => setSpots(res.data))
           .catch(err => console.error('Error fetching spots:', err))
       );
@@ -203,7 +203,7 @@ export default function ExplorerHome() {
           
           // Fetch the user's bookings to persist the "Requested" state for tours
           promises.push(
-            axios.get(`http://localhost:5200/api/bookings/user/${userId}`)
+            axios.get(`/api/bookings/user/${userId}`)
               .then(res => {
                 if (Array.isArray(res.data)) {
                   setRequestedTourIds(res.data.map(b => b.tourID));
@@ -214,7 +214,7 @@ export default function ExplorerHome() {
 
           // Fetch the user's profile to get their location
           promises.push(
-            axios.get(`http://localhost:5200/api/profile/${userId}`)
+            axios.get(`/api/profile/${userId}`)
               .then(res => {
                 if (res.data && res.data.location) {
                   setUserLocation(res.data.location);
@@ -251,7 +251,7 @@ export default function ExplorerHome() {
     }));
 
     try {
-      await axios.post(`http://localhost:5200/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
+      await axios.post(`/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
     } catch (e) {
       console.error('Error upvoting spot:', e);
       alert(e.response?.data?.message || e.response?.data || 'Failed to upvote spot.');
@@ -295,7 +295,7 @@ export default function ExplorerHome() {
   const handleDeleteClick = async (post) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       try {
-        const response = await fetch(`http://localhost:5200/api/posts/${post.postID}?userId=${loggedInUserId}`, {
+        const response = await fetch(`/api/posts/${post.postID}?userId=${loggedInUserId}`, {
           method: 'DELETE',
         });
         if (response.ok) {
@@ -327,7 +327,7 @@ export default function ExplorerHome() {
     }));
 
     try {
-      const res = await fetch(`http://localhost:5200/api/posts/${post.postID}/also-attended`, {
+      const res = await fetch(`/api/posts/${post.postID}/also-attended`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userID: loggedInUserId }),
@@ -784,7 +784,7 @@ export default function ExplorerHome() {
                       setBookingStatus('submitting');
                       const userStr = localStorage.getItem('user');
                       const userObj = userStr ? JSON.parse(userStr) : {};
-                      await axios.post('http://localhost:5200/api/bookings', {
+                      await axios.post('/api/bookings', {
                         userID: loggedInUserId,
                         tourID: selectedTour.tourId || selectedTour.tourID,
                         bookingDate: selectedTour.date,

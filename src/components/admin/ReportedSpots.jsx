@@ -12,7 +12,7 @@ export default function ReportedSpots() {
 
   const fetchReportedSpots = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/admin/reported-spots');
+      const response = await fetch('/api/admin/reported-spots');
       if (response.ok) {
         const data = await response.json();
         setSpots(data);

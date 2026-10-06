@@ -77,7 +77,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
     const user = JSON.parse(userStr);
     const userId = user.id || user.userID;
     setLoadingMatches(true);
-    fetch(`http://localhost:5200/api/posts/matches/${userId}`)
+    fetch(`/api/posts/matches/${userId}`)
       .then(r => r.ok ? r.json() : [])
       .then(data => setMatches(Array.isArray(data) ? data : []))
       .catch(() => setMatches([]))
@@ -108,8 +108,8 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, editPo
 
       const isEdit = !!editPost;
       const url = isEdit
-        ? `http://localhost:5200/api/posts/${editPost.postID || editPost.postId}`
-        : 'http://localhost:5200/api/posts';
+        ? `/api/posts/${editPost.postID || editPost.postId}`
+        : '/api/posts';
 
       const payload = {
         userID: userId,

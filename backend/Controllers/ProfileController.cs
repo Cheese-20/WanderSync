@@ -199,7 +199,7 @@ namespace backend.Controllers
                 {
                     pID = profile.PID,
                     userID = profile.UserID,
-                    profilePictureLink = "http://localhost:5200/api/profile/" + profile.UserID + "/picture",
+                    profilePictureLink = "/api/profile/" + profile.UserID + "/picture",
                     interests = profile.Interests,
                     description = profile.Description,
                     location = profile.Location,
@@ -231,7 +231,7 @@ namespace backend.Controllers
                         u.firstName, 
                         u.lastName, 
                         u.age, 
-                        CONCAT('http://localhost:5200/api/profile/', p.userID, '/picture'), 
+                        CONCAT('/api/profile/', p.userID, '/picture'), 
                         p.interests, 
                         p.description, 
                         p.location, 
@@ -386,7 +386,7 @@ namespace backend.Controllers
                     lastName = user.LastName,
                     email = user.Email,
                     age = user.Age,
-                    profilePictureLink = "http://localhost:5200/api/profile/" + user.UserID + "/picture",
+                    profilePictureLink = "/api/profile/" + user.UserID + "/picture",
                     interests = profile?.Interests,
                     description = profile?.Description,
                     location = profile?.Location,
@@ -414,7 +414,7 @@ namespace backend.Controllers
                                      select new {
                                          id = m.RequesterID,
                                          name = u.FirstName,
-                                         image = "http://localhost:5200/api/profile/" + u.UserID + "/picture",
+                                         image = "/api/profile/" + u.UserID + "/picture",
                                          commonInterests = m.CommonInterests
                                      }).ToListAsync();
                 return Ok(pending);

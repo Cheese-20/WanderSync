@@ -1,3 +1,25 @@
+# Last Edited — 2026-10-06 (Railway Production Hosting & Deployment Configuration)
+
+## What Changed
+- **Backend Railway Port & CORS Setup (`backend/Program.cs`)**:
+  - Bound ASP.NET Core to `0.0.0.0:${PORT}` using Railway's environment variable (`PORT`), allowing Railway proxy to route traffic.
+  - Updated CORS policy to `policy.AllowAnyOrigin()` so production origins are not blocked by localhost-only constraints.
+  - Enabled static file serving (`UseDefaultFiles()`, `UseStaticFiles()`) and SPA fallback routing (`MapFallbackToFile("index.html")`).
+- **Frontend & Backend Hardcoded URL Cleanup (`backend/Controllers/ProfileController.cs`, `backend/Controllers/MessageController.cs`, `src/*`)**:
+  - Replaced hardcoded `http://localhost:5200` URLs across all frontend components and backend controller image endpoints with relative `/api/...` endpoints.
+- **Docker & Deployment Config (`Dockerfile`, `.dockerignore`)**:
+  - Created a multi-stage `Dockerfile` that builds the React Vite frontend into `dist`, embeds it into ASP.NET Core's `wwwroot`, and packages the entire full-stack app into a single container for Railway.
+
+## Why
+1. Hardcoded `http://localhost:5200` URLs in the frontend failed in production because user browsers were attempting to query their local machine instead of the Railway production server.
+2. `builder.WebHost.UseUrls("http://localhost:5200")` bound the backend exclusively to 127.0.0.1, making the container unreachable by Railway's HTTP proxy.
+
+## How it works
+1. **Container Build**: When pushed to Railway, Railway uses the multi-stage `Dockerfile` to build the Vite frontend, place static assets into `backend/wwwroot`, compile .NET 8, and start the application on `0.0.0.0:${PORT}`.
+2. **Unified Routing**: Railway serves both the web UI and API endpoints (`/api/...`) from a single link without CORS issues or separate frontend hosting.
+
+---
+
 # Last Edited — 2026-10-06 (Report Submission & Database Table Fix)
 
 ## What Changed

@@ -553,7 +553,7 @@ export default function GuideDetail() {
                       const userObj = userJson ? JSON.parse(userJson) : {};
                       const loggedInUserId = userObj.id || userObj.userID || null;
 
-                      await axios.post('http://localhost:5200/api/bookings', {
+                      await axios.post('/api/bookings', {
                         userID: loggedInUserId,
                         tourID: selectedTour.tourId || selectedTour.tourID,
                         bookingDate: selectedTour.date,

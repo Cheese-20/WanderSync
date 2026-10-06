@@ -18,7 +18,7 @@ export default function Activities() {
       } catch (e) {}
     }
 
-    fetch(`http://localhost:5200/api/tours/guide/${userId}`)
+    fetch(`/api/tours/guide/${userId}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -35,7 +35,7 @@ export default function Activities() {
   const handleDelete = (tourId) => {
     if (window.confirm("Are you sure you want to delete this activity?")) {
       setIsDeleting(true);
-      fetch(`http://localhost:5200/api/tours/${tourId}`, {
+      fetch(`/api/tours/${tourId}`, {
         method: 'DELETE',
       })
       .then(res => {

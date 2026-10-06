@@ -41,7 +41,7 @@ export default function ReportedAccounts() {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/admin/reported-accounts');
+      const response = await fetch('/api/admin/reported-accounts');
       if (response.ok) {
         const data = await response.json();
         setReports(data);

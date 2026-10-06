@@ -738,7 +738,7 @@ export default function ExplorePage() {
                       setBookingStatus('submitting');
                       const userStr = localStorage.getItem('user');
                       const userObj = userStr ? JSON.parse(userStr) : {};
-                      await axios.post('http://localhost:5200/api/bookings', {
+                      await axios.post('/api/bookings', {
                         userID: loggedInUserId,
                         tourID: selectedTour.tourId || selectedTour.tourID,
                         bookingDate: selectedTour.date || new Date().toISOString(),

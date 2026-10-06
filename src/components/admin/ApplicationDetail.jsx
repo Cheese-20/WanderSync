@@ -12,7 +12,7 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:5200/api/admin/applications/${application.applicationID}/approve`,
+        `/api/admin/applications/${application.applicationID}/approve`,
         { method: 'PATCH' }
       );
       if (response.ok) {
@@ -34,7 +34,7 @@ export default function ApplicationDetail({ application, onBack, onProcessed }) 
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:5200/api/admin/applications/${application.applicationID}/reject`,
+        `/api/admin/applications/${application.applicationID}/reject`,
         { method: 'DELETE' }
       );
       if (response.ok) {

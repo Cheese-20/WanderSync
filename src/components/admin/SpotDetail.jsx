@@ -19,7 +19,7 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged, embed
 
   const fetchSpotDetail = async () => {
     try {
-      const response = await fetch(`http://localhost:5200/api/admin/reported-spots/${spotId}`);
+      const response = await fetch(`/api/admin/reported-spots/${spotId}`);
       if (response.ok) {
         const data = await response.json();
         setSpot(data);
@@ -35,7 +35,7 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged, embed
     setActionLoading('flag');
     try {
       const response = await fetch(
-        `http://localhost:5200/api/admin/reported-spots/${spotId}/flag`,
+        `/api/admin/reported-spots/${spotId}/flag`,
         { method: 'PATCH' }
       );
       if (response.ok) {
@@ -71,7 +71,7 @@ export default function SpotDetail({ spotId, onBack, onDeleted, onFlagged, embed
     setActionLoading('delete');
     try {
       const response = await fetch(
-        `http://localhost:5200/api/admin/reported-spots/${spotId}`,
+        `/api/admin/reported-spots/${spotId}`,
         { method: 'DELETE' }
       );
       if (response.ok) {

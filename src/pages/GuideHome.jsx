@@ -118,7 +118,7 @@ export default function GuideHome() {
   const handleSubmitRating = async () => {
     if (ratingScore < 1 || ratingScore > 5) return;
     try {
-      const res = await axios.post(`http://localhost:5200/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/rate`, {
+      const res = await axios.post(`/api/spots/${selectedLocalSpot.spotID || selectedLocalSpot.spotId}/rate`, {
         userId: loggedInUserId,
         ratingScore: ratingScore,
         reviewText: reviewText
@@ -153,7 +153,7 @@ export default function GuideHome() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('http://localhost:5200/api/posts');
+        const response = await fetch('/api/posts');
         if (response.ok) {
           const data = await response.json();
           setPosts(data);
@@ -175,17 +175,17 @@ export default function GuideHome() {
         setUserRole(user.role || user.Role);
         
         // Fetch Pending Spots for the top carousel
-        axios.get(`http://localhost:5200/api/spots/pending/${userId}`)
+        axios.get(`/api/spots/pending/${userId}`)
           .then(res => setPendingSpots(res.data))
           .catch(err => console.error(err));
 
         // Fetch assigned tourists for Itinerary Management
-        axios.get(`http://localhost:5200/api/local-guide/${userId}/assigned-tourists`)
+        axios.get(`/api/local-guide/${userId}/assigned-tourists`)
           .then(res => setAssignedTourists(res.data))
           .catch(err => console.error('Error fetching assigned tourists:', err));
 
         // Fetch the user's profile to get their location
-        axios.get(`http://localhost:5200/api/profile/${userId}`)
+        axios.get(`/api/profile/${userId}`)
           .then(res => {
             if (res.data && res.data.location) {
               setUserLocation(res.data.location);
@@ -195,7 +195,7 @@ export default function GuideHome() {
       }
       
       // Fetch verified spots for Local Favourites
-      axios.get(`http://localhost:5200/api/spots/verified?userId=${userId}`)
+      axios.get(`/api/spots/verified?userId=${userId}`)
         .then(res => setSpots(res.data))
         .catch(err => console.error(err));
     } catch (e) {
@@ -237,7 +237,7 @@ export default function GuideHome() {
   const handleDeleteClick = async (post) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       try {
-        const response = await fetch(`http://localhost:5200/api/posts/${post.postID}?userId=${loggedInUserId}`, {
+        const response = await fetch(`/api/posts/${post.postID}?userId=${loggedInUserId}`, {
           method: 'DELETE',
         });
         if (response.ok) {
@@ -268,7 +268,7 @@ export default function GuideHome() {
     }));
 
     try {
-      const res = await fetch(`http://localhost:5200/api/posts/${post.postID}/also-attended`, {
+      const res = await fetch(`/api/posts/${post.postID}/also-attended`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userID: loggedInUserId }),
@@ -301,7 +301,7 @@ export default function GuideHome() {
 
   const handleReviewVote = async (voteType) => {
     try {
-      await axios.post(`http://localhost:5200/api/spots/${selectedSpot.spotID || selectedSpot.spotId}/vote`, {
+      await axios.post(`/api/spots/${selectedSpot.spotID || selectedSpot.spotId}/vote`, {
         guideId: loggedInUserId,
         voteType: voteType
       });
@@ -326,7 +326,7 @@ export default function GuideHome() {
     }));
 
     try {
-      await axios.post(`http://localhost:5200/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
+      await axios.post(`/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
     } catch (e) {
       console.error('Error upvoting spot:', e);
       alert(e.response?.data || 'Failed to upvote spot.');

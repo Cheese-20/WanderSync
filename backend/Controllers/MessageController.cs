@@ -51,7 +51,7 @@ namespace backend.Controllers
                             u.userID, 
                             u.firstName, 
                             u.lastName, 
-                            CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
+                            CONCAT('/api/profile/', u.userID, '/picture') as profilePictureLink,
                             p.job,
                             m.matchID,
                             u.role
@@ -66,7 +66,7 @@ namespace backend.Controllers
                             u.userID, 
                             u.firstName, 
                             u.lastName, 
-                            CONCAT('http://localhost:5200/api/profile/', u.userID, '/picture') as profilePictureLink,
+                            CONCAT('/api/profile/', u.userID, '/picture') as profilePictureLink,
                             p.job,
                             m.matchID,
                             u.role

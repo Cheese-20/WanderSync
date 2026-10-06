@@ -45,13 +45,13 @@ export default function ManageItinerary() {
 
   useEffect(() => {
     if (!loggedInUserId || !touristId) return;
-    axios.get(`http://localhost:5200/api/local-guide/${loggedInUserId}/assigned-tourists`)
+    axios.get(`/api/local-guide/${loggedInUserId}/assigned-tourists`)
       .then(res => {
         const t = res.data.find(u => String(u.userId) === String(touristId));
         if (t) setTourist(t);
       })
       .catch(() => {});
-    axios.get(`http://localhost:5200/api/local-guide/${loggedInUserId}/itinerary/${touristId}`)
+    axios.get(`/api/local-guide/${loggedInUserId}/itinerary/${touristId}`)
       .then(res => {
         setCurrentTourId(res.data.tourId);
         let parsed = [];
@@ -119,7 +119,7 @@ export default function ManageItinerary() {
     
     try {
       await withFeedback(async () => {
-        await axios.put(`http://localhost:5200/api/local-guide/itinerary/${currentTourId}`, {
+        await axios.put(`/api/local-guide/itinerary/${currentTourId}`, {
           timelineJson: JSON.stringify(timeline)
         });
       }, {

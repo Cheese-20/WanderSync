@@ -16,7 +16,7 @@ export default function EditActivity() {
   const [originalTour, setOriginalTour] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5200/api/tours/${id}`)
+    fetch(`/api/tours/${id}`)
       .then(res => {
         if (!res.ok) throw new Error("Not found");
         return res.json();
@@ -51,7 +51,7 @@ export default function EditActivity() {
     };
 
     await withFeedback(async () => {
-      const res = await fetch(`http://localhost:5200/api/tours/${id}`, {
+      const res = await fetch(`/api/tours/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

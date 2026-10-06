@@ -24,15 +24,15 @@ if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("PLACEHO
      connectionString = builder.Configuration.GetConnectionString("WanderSyncDb");
 }
 
-builder.WebHost.UseUrls("http://localhost:5200");
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5200";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-// Port information for axios requests from the frontend (Vite) to the backend (ASP.NET Core)
+// Port information for requests to backend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowViteApp", policy =>
     {
-        //Accepts any port as long as it is localhost
-        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost") 
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -435,6 +435,10 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();

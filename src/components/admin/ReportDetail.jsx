@@ -12,7 +12,7 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:5200/api/admin/reported-accounts/${report.reportID}/suspend`,
+        `/api/admin/reported-accounts/${report.reportID}/suspend`,
         { method: 'PATCH' }
       );
       if (response.ok) {
@@ -34,7 +34,7 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:5200/api/admin/reported-accounts/${report.reportID}`,
+        `/api/admin/reported-accounts/${report.reportID}`,
         { method: 'DELETE' }
       );
       if (response.ok) {
@@ -59,7 +59,7 @@ export default function ReportDetail({ report, onBack, onProcessed }) {
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:5200/api/admin/reported-accounts/${report.reportID}/ban`,
+        `/api/admin/reported-accounts/${report.reportID}/ban`,
         { method: 'PATCH' }
       );
       if (response.ok) {
