@@ -53,7 +53,7 @@ namespace backend.Controllers
         public async Task<IActionResult> GetVerifiedSpots([FromQuery] int? userId = null)
         {
             var spots = await _context.CuratedSpots
-                .Where(s => s.IsVerified == "approved")
+                .Where(s => s.IsVerified != null && (s.IsVerified.ToLower() == "approved" || s.IsVerified.ToLower() == "true" || s.IsVerified == "1"))
                 .ToListAsync();
 
             var userIds = spots.Select(s => s.SubmittedByUserID).Where(id => id.HasValue).Select(id => id.Value).Distinct().ToList();

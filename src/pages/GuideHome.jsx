@@ -416,7 +416,16 @@ export default function GuideHome() {
         </div>
         <div className="tours-grid" ref={localSpotsScrollRef} style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
           {(() => {
-            const localSpots = userLocation ? spots.filter(s => s.location && s.location.toLowerCase().includes(userLocation.toLowerCase())) : spots;
+            const localSpots = userLocation ? [...spots].sort((a, b) => {
+              const userLoc = userLocation.toLowerCase().trim();
+              const aLoc = (a.location || '').toLowerCase();
+              const bLoc = (b.location || '').toLowerCase();
+              const aMatch = aLoc && (aLoc.includes(userLoc) || userLoc.includes(aLoc));
+              const bMatch = bLoc && (bLoc.includes(userLoc) || userLoc.includes(bLoc));
+              if (aMatch && !bMatch) return -1;
+              if (!aMatch && bMatch) return 1;
+              return 0;
+            }) : spots;
             return (
               <>
                 {localSpots.slice(0, visibleLocalSpotsCount).map(spot => (

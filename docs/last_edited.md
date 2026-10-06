@@ -1,3 +1,38 @@
+# Last Edited — 2026-10-06 (React Rules of Hooks Fix on Home Page)
+
+## What Changed
+- **Top-Level Hook Placement (`src/pages/ExplorerHome.jsx`)**:
+  - Moved `displayTours` and `displaySpots` `useMemo` hooks to the top level of the `ExplorerHome` component before any conditional early returns (`if (isLoading)`).
+  - Removed the conditional `useMemo` call that previously sat after `if (isLoading) return (...)`.
+
+## Why
+1. Calling React Hooks (`useMemo`) conditionally after an early return (`if (isLoading) return (...)`) violates React's Rules of Hooks ("Hooks must be called unconditionally in the exact same order on every render").
+2. This conditional hook placement caused React to crash with a render hook order mismatch error when `isLoading` transitioned from `true` to `false`, rendering a blank screen on the home page.
+
+## How it works
+1. **Unconditional Top-Level Hooks**: Placing `displayTours` and `displaySpots` `useMemo` hooks unconditionally at the top of `ExplorerHome` ensures React calls the exact same sequence of hooks on every render, resolving the blank home page error.
+
+---
+
+# Last Edited — 2026-10-06 (Home Page Tours & Local Favourites Visibility Fix)
+
+## What Changed
+- **Location-Based Sorting over Strict Filtering (`src/pages/ExplorerHome.jsx`, `src/pages/GuideHome.jsx`)**:
+  - Replaced strict `.filter()` calls on `displayTours` and `localSpots` with location-match `.sort()` order.
+  - Tours and local spots in the user's location now appear first at the top of the scroll row, while all other available experiences remain visible rather than being discarded into empty sections.
+  - Added fallback in `ExplorerHome.jsx` to return all tours if no upcoming tours match strict date constraints.
+- **Backend Verified Spots Query (`backend/Controllers/SpotController.cs`)**:
+  - Updated `GetVerifiedSpots` query to handle case-insensitive verification status checks (`s.IsVerified.ToLower() == "approved" || s.IsVerified.ToLower() == "true" || s.IsVerified == "1"`).
+
+## Why
+1. Previously, if a user set their profile location (e.g., "Johannesburg" or "Cape Town"), strict `.filter()` calls discarded any tour or spot located in another city, leaving the "Tours happening lately" and "Local Favourites" sections completely blank.
+2. `s.IsVerified == "approved"` in C# missed spots saved as `"Approved"` (capitalized) or `"true"` in MySQL.
+
+## How it works
+1. **Prioritised Location Sorting**: `ExplorerHome.jsx` and `GuideHome.jsx` compare each item's location string against `userLocation`. Items located in the user's city are sorted to the front of the queue, ensuring local items appear first while guaranteeing that the home page lists remain populated.
+
+---
+
 # Last Edited — 2026-10-06 (Match Page Bugfix & Database Query Optimization)
 
 ## What Changed

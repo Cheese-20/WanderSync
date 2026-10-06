@@ -50,6 +50,36 @@ export default function ExplorerHome() {
   const scrollRef = useRef(null);
   const spotsScrollRef = useRef(null);
   const navigate = useNavigate();
+
+  const displayTours = React.useMemo(() => {
+    if (!tours || tours.length === 0) return [];
+    if (!userLocation) return tours;
+    const userLoc = userLocation.toLowerCase().trim();
+    return [...tours].sort((a, b) => {
+      const aLoc = (a.location || '').toLowerCase();
+      const bLoc = (b.location || '').toLowerCase();
+      const aMatch = aLoc && (aLoc.includes(userLoc) || userLoc.includes(aLoc));
+      const bMatch = bLoc && (bLoc.includes(userLoc) || userLoc.includes(bLoc));
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    });
+  }, [tours, userLocation]);
+
+  const displaySpots = React.useMemo(() => {
+    if (!spots || spots.length === 0) return [];
+    if (!userLocation) return spots;
+    const userLoc = userLocation.toLowerCase().trim();
+    return [...spots].sort((a, b) => {
+      const aLoc = (a.location || '').toLowerCase();
+      const bLoc = (b.location || '').toLowerCase();
+      const aMatch = aLoc && (aLoc.includes(userLoc) || userLoc.includes(aLoc));
+      const bMatch = bLoc && (bLoc.includes(userLoc) || userLoc.includes(bLoc));
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    });
+  }, [spots, userLocation]);
   
   const handleLoadMoreTours = () => {
     setVisibleToursCount(prev => Math.min(prev + 4, 12, tours.length));
@@ -181,8 +211,8 @@ export default function ExplorerHome() {
           .then(response => {
             const now = new Date();
             now.setHours(0, 0, 0, 0);
-            const upcomingTours = response.data.filter(tour => new Date(tour.date) >= now);
-            setTours(upcomingTours);
+            const upcomingTours = response.data.filter(tour => !tour.date || new Date(tour.date) >= now);
+            setTours(upcomingTours.length > 0 ? upcomingTours : response.data);
           })
           .catch(err => console.error("Error fetching tours:", err))
       );
@@ -369,14 +399,6 @@ export default function ExplorerHome() {
     );
   }
 
-  const displayTours = userLocation
-    ? tours.filter(t => 
-        t.location && 
-        (t.location.toLowerCase().includes(userLocation.toLowerCase()) || 
-         userLocation.toLowerCase().includes(t.location.toLowerCase()))
-      )
-    : tours;
-
   return (
     <>
       <NavBar />
@@ -475,11 +497,7 @@ export default function ExplorerHome() {
           <h2>Local Favourites</h2>
         </div>
         <div className="tours-grid" ref={spotsScrollRef} style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px' }}>
-          {(() => {
-            const localSpots = userLocation ? spots.filter(s => s.location && s.location.toLowerCase().includes(userLocation.toLowerCase())) : spots;
-            return (
-              <>
-                {localSpots.slice(0, visibleSpotsCount).map(spot => (
+          {displaySpots.slice(0, visibleSpotsCount).map(spot => (
                   <article key={spot.spotID || spot.spotId} className="tour-card" style={{ minWidth: '300px', flexShrink: 0 }}>
                     <div className="tour-image-placeholder">
                       <img src={spot.pictureURL || logo} alt="Spot" />
@@ -530,7 +548,7 @@ export default function ExplorerHome() {
                   </article>
                 ))}
                 
-                {localSpots.length > 0 && (
+                {displaySpots.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px', flexShrink: 0 }}>
                     <button 
                       onClick={() => {
@@ -543,13 +561,13 @@ export default function ExplorerHome() {
                       }} 
                       style={{
                         width: '50px', height: '50px', borderRadius: '50%', 
-                        backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= localSpots.length) ? '#ccc' : '#a6d8b6', 
+                        backgroundColor: (visibleSpotsCount >= 12 || visibleSpotsCount >= displaySpots.length) ? '#ccc' : '#a6d8b6', 
                         color: '#fff', border: 'none', fontSize: '1.5rem', 
-                        cursor: (visibleSpotsCount >= 12 || visibleSpotsCount >= localSpots.length) ? 'default' : 'pointer', 
+                        cursor: (visibleSpotsCount >= 12 || visibleSpotsCount >= displaySpots.length) ? 'default' : 'pointer', 
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                       }}
-                      disabled={visibleSpotsCount >= 12 || visibleSpotsCount >= localSpots.length}
+                      disabled={visibleSpotsCount >= 12 || visibleSpotsCount >= displaySpots.length}
                       title="Load more spots"
                     >
                       &#8594;
@@ -557,10 +575,7 @@ export default function ExplorerHome() {
                   </div>
                 )}
 
-                {localSpots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites found for your location ({userLocation || 'Unknown'}).</p>}
-              </>
-            );
-          })()}
+                {displaySpots.length === 0 && <p style={{ padding: '20px' }}>No verified local favourites found.</p>}
         </div>
       </section>
 
