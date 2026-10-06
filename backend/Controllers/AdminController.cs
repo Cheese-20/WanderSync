@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -470,6 +470,39 @@ LIMIT {take};";
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "User account suspended for 2 weeks.", suspendedUntil = report.ReportedUser.SuspendedUntil });
+        }
+
+        [HttpPatch("reported-accounts/{id}/ban")]
+        public async Task<IActionResult> BanUser(int id)
+        {
+            var report = await _context.Reports
+                .Include(r => r.ReportedUser)
+                .FirstOrDefaultAsync(r => r.ReportID == id);
+
+            if (report == null)
+                return NotFound("Report not found.");
+
+            // Ban the user's account permanently
+            report.ReportedUser.AccountStatus = "Banned";
+            report.ReportedUser.SuspendedUntil = null;
+
+            // Update the report status to Resolved
+            report.Status = "Resolved";
+
+            // Notify the banned user
+            var notification = new Notification
+            {
+                UserID = report.ReportedUserID,
+                Type = "AccountBanned",
+                Message = "Your account has been permanently banned due to a violation of our community guidelines. You will no longer be able to access the platform.",
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _context.Notifications.Add(notification);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User account banned permanently." });
         }
 
         [HttpDelete("reported-accounts/{id}")]

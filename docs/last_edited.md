@@ -1,3 +1,17 @@
+# Last Edited — 2026-10-06 (Admin Ban User Backend Endpoint)
+
+## What Changed
+- **Ban User Endpoint (`backend/Controllers/AdminController.cs`)**:
+  - Added the `[HttpPatch("reported-accounts/{id}/ban")]` endpoint to handle the banning of a reported user.
+
+## Why
+1. The frontend admin dashboard's "Ban Permanently" button in the `ReportDetail` component was attempting to make a PATCH request to `/api/admin/reported-accounts/{id}/ban` which was missing on the backend. This resulted in the ban button not working and returning an error.
+
+## How it works
+1. **Ban Logic**: The `BanUser` endpoint queries the report based on the provided report ID, sets the associated user's `AccountStatus` to `"Banned"`, clears any temporary suspension date, and marks the report itself as `"Resolved"`. It also creates an `"AccountBanned"` notification for the user to notify them of the permanent ban.
+
+---
+
 # Last Edited — 2026-10-06 (Mobile Sign Up Form Visibility & Transform Reset Fix)
 
 ## What Changed
