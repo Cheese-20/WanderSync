@@ -228,7 +228,7 @@ namespace backend.Controllers
         [HttpPost("{id}/report")]
         public async Task<IActionResult> ReportSpot(int id, [FromBody] SpotReportRequest request)
         {
-            int reporterId = request.ReporterId > 0 ? request.ReporterId : request.ReporterID;
+            int reporterId = request.ReporterId;
             if (reporterId <= 0)
             {
                 return BadRequest("Valid reporterId is required.");
@@ -318,7 +318,6 @@ namespace backend.Controllers
     public class SpotReportRequest
     {
         public int ReporterId { get; set; }
-        public int ReporterID { get; set; }
         public string Reason { get; set; } = string.Empty;
     }
 

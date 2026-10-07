@@ -1,3 +1,66 @@
+# Last Edited — 2026-10-07 (Make Setup Profile Modal Scrollable)
+
+## What Changed
+- **Setup Profile Modal CSS (`src/components/SetupProfileModal.css`)**:
+  - Added `max-height: 90vh` and `overflow-y: auto` to the `.setup-modal-container` class.
+
+## Why
+1. The profile setup form displayed in a modal was too tall for smaller screens, causing the content at the bottom to be cut off.
+2. Because the modal overlay was vertically centering the modal without scroll behavior, users were unable to scroll down to complete their profile setup.
+
+## How it works
+1. **Scrolling**: Adding `max-height: 90vh` restricts the modal's height to 90% of the viewport. The `overflow-y: auto` property ensures that if the form content exceeds this height, a vertical scrollbar appears *inside* the modal, allowing the user to scroll through all the fields without the page itself moving.
+
+---
+
+# Last Edited — 2026-10-07 (Fix Vite Proxy Localhost IPv6 Resolution Issue)
+
+## What Changed
+- **Vite Proxy Target (`vite.config.js`)**:
+  - Changed the Vite proxy target from `http://localhost:5200` to `http://127.0.0.1:5200`.
+
+## Why
+1. A 500 Internal Server Error (Network Error) was occurring when making API requests from the frontend because Node 17+ defaults to resolving `localhost` to the IPv6 loopback address (`::1`).
+2. The ASP.NET Core backend was bound explicitly to IPv4 (`0.0.0.0:5200`), causing Vite's proxy connection to fail and drop the requests instead of reaching the backend.
+
+## How it works
+1. **IPv4 Proxy**: Changing the proxy target to `127.0.0.1` explicitly forces Vite to use IPv4 when communicating with the backend, successfully bypassing the Node DNS resolution mismatch and restoring all frontend-backend communication.
+
+---
+
+# Last Edited — 2026-10-07 (Fix JSON property collision in Account and Content Reports)
+
+## What Changed
+- **ReportDto collision fix (`backend/Controllers/ReportsController.cs`)**:
+  - Removed duplicate `ReporterID` and `ReportedUserID` properties from `ReportDto`, keeping only `ReporterId` and `ReportedUserId`.
+  - Simplified the `SubmitReport` logic to use only the remaining properties.
+- **Frontend Payload Update (`src/pages/ReportForm.jsx`)**:
+  - Updated the JSON payload in `handleSubmit` to send `reporterId` and `reportedUserId` instead of `reporterID` and `reportedUserID`.
+
+## Why
+1. A similar JSON deserialization error occurred when submitting account and content reports because `ReportDto` contained duplicate mappings for the same case-insensitive JSON properties (`ReporterId`/`ReporterID` and `ReportedUserId`/`ReportedUserID`), causing a collision.
+
+## How it works
+1. **Backend**: `ReportDto` now only contains unambiguous property names (`ReporterId`, `ReportedUserId`).
+2. **Frontend**: The `fetch` payload matches these exact properties in camelCase, allowing ASP.NET Core to cleanly deserialize the JSON without ambiguity or collisions.
+
+---
+
+# Last Edited — 2026-10-07 (Fix JSON property collision in SpotReportRequest)
+
+## What Changed
+- **SpotReportRequest collision fix (`backend/Controllers/SpotController.cs`)**:
+  - Removed `ReporterID` property from `SpotReportRequest` to prevent JSON property collision with `ReporterId`.
+  - Updated the `ReportSpot` endpoint to use only `ReporterId`.
+
+## Why
+1. A JSON deserialization error was occurring because both `ReporterId` and `ReporterID` map to the same JSON property `reporterId` according to default camelCase naming policies in ASP.NET Core, causing a collision during the `[FromBody]` binding.
+
+## How it works
+1. By keeping only `ReporterId` in the data transfer object, the framework can safely deserialize the JSON payload without ambiguity. The controller logic was simplified to only check `request.ReporterId`.
+
+---
+
 # Last Edited — 2026-10-06 (Admin Ban User Backend Endpoint)
 
 ## What Changed

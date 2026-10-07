@@ -14,7 +14,7 @@ export default defineConfig({
     // and Vite forwards the request to the backend.
     proxy: {
       '/api': {
-        target: 'http://localhost:5200',
+        target: 'http://127.0.0.1:5200',
         changeOrigin: true,
         secure: false
       }

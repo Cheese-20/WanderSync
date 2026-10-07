@@ -20,8 +20,8 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<IActionResult> SubmitReport([FromBody] ReportDto dto)
         {
-            int reporterId = dto.ReporterID > 0 ? dto.ReporterID : dto.ReporterId;
-            int reportedUserId = dto.ReportedUserID > 0 ? dto.ReportedUserID : dto.ReportedUserId;
+            int reporterId = dto.ReporterId;
+            int reportedUserId = dto.ReportedUserId;
 
             if (reporterId <= 0 || reportedUserId <= 0)
                 return BadRequest("Both reporterID and reportedUserID are required.");
@@ -47,9 +47,7 @@ namespace backend.Controllers
 
     public class ReportDto
     {
-        public int ReporterID { get; set; }
         public int ReporterId { get; set; }
-        public int ReportedUserID { get; set; }
         public int ReportedUserId { get; set; }
         public string Reason { get; set; } = string.Empty;
     }

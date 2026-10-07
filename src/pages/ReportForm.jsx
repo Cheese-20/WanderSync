@@ -45,8 +45,8 @@ export default function ReportForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reporterID: Number(reporterId),
-          reportedUserID: Number(reportedUserID),
+          reporterId: Number(reporterId),
+          reportedUserId: Number(reportedUserID),
           reason: reportReason
         })
       });
