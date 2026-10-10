@@ -24,27 +24,26 @@ The modern travel experience is often fragmented and disconnected from authentic
 ---
 
 ### Tech Stack
-This project leverages a modern, robust full-stack architecture:
 
 **Frontend:**
-- **React.js** (via Vite)
-- **JavaScript (ES6+)**
-- **Vanilla CSS & TailwindCSS** for responsive, dynamic styling
+- **React.js** 
+- **JavaScript **
+- ** CSS ** for responsive, dynamic styling
 - **React Router** for seamless SPA navigation
 - **Leaflet & React-Leaflet** for interactive map components
 
 **Backend:**
-- **C# / .NET 8 Web API**
-- **Entity Framework Core (EF Core)** for ORM database interactions
-- **MySQL** (Cloud Database via Aiven)
-
+- **C# **
+- **Entity Framework Core (EF Core)
+- **MySQL**
+  
 ---
 
 ### Project Context
 This application was developed as a **3rd-Year Group Project (2026)**.
 
 **Contributors:**
-- Mendy
-- Sibusiso
-- Anathi
-- Malibongwe
+- Mendy Mhlongo
+- Sibusiso Gamane
+- Anathi Nombona
+- Malibongwe Nhlapo
