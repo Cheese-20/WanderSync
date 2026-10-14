@@ -14,7 +14,7 @@ The modern travel experience is often fragmented and disconnected from authentic
 ### The Solution
 **WanderSync** bridges this gap by acting as a unified, experience-based ecosystem that combines social networking with a tour-booking marketplace. It directly addresses the problems above by providing:
 
-- **Personality-First Matching:** We eliminate the awkwardness of finding a guide. Using an intuitive, Tinder-style swipe interface, Explorers and Local Guides are matched based on shared interests and detailed profiles, establishing a personal connection *before* a tour is even booked.
+- **Personality-First Matching:** We eliminate the awkwardness of finding a guide. Using an intuitive, Tinder-style swipe interface, Explorers and Local Guides are matched based on shared interests and detailed profiles, establishing a personal connection.
 - **Interactive Map Integration:** Discover verified "Curated Spots" through an aesthetic, built-in interactive map powered by Leaflet and OpenStreetMap. View spot ratings, locations, and details seamlessly.
 - **1-on-1 Local Guide Bookings:** WanderSync provides a streamlined dashboard for locals to easily create, price, and schedule authentic tours. Explorers can book customized 1-on-1 experiences safely and efficiently.
 - **Strictly Peer-Reviewed Curation:** To combat generic tourist traps, our platform features a "Curated Spots" system. A spot is only marked as "Verified" and shown to tourists if it receives explicit approval from at least 5 different authenticated Local Guides, ensuring uncompromising quality and authenticity.
