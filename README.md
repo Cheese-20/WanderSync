@@ -1,6 +1,6 @@
 # WanderSync
 
-**WanderSync** is an experience-based social networking platform designed to seamlessly connect travelers ("Explorers") with knowledgeable "Local Guides." 
+WanderSync is an experience-based social networking platform designed to seamlessly connect Explorers with knowledgeable Local Guides. 
 
 ### The Problem
 When visiting new areas, tourists often struggle to find authentic, verified local experiences and reliable guides outside of generic tourist traps. Furthermore, solo travelers often find it difficult to explore safely or meet like-minded adventure buddies.  
@@ -24,27 +24,26 @@ The modern travel experience is often fragmented and disconnected from authentic
 ---
 
 ### Tech Stack
-This project leverages a modern, robust full-stack architecture:
 
 **Frontend:**
-- **React.js** (via Vite)
-- **JavaScript (ES6+)**
-- **Vanilla CSS & TailwindCSS** for responsive, dynamic styling
-- **React Router** for seamless SPA navigation
-- **Leaflet & React-Leaflet** for interactive map components
+- React.js
+- JavaScript 
+- CSS 
+- React Router 
+- Leaflet & React-Leaflet
 
 **Backend:**
-- **C# / .NET 8 Web API**
-- **Entity Framework Core (EF Core)** for ORM database interactions
-- **MySQL** (Cloud Database via Aiven)
-
+- C# 
+- Entity Framework Core (EF Core)
+- MySQL
+  
 ---
 
 ### Project Context
-This application was developed as a **3rd-Year Group Project (2026)**.
+This application was developed as a 3rd-Year Group Project (2026).
 
 **Contributors:**
-- Mendy
-- Sibusiso
-- Anathi
-- Malibongwe
+- Mendy Mhlongo
+- Sibusiso Gamane
+- Anathi Nombona
+- Malibongwe Nhlapo
