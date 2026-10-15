@@ -218,6 +218,7 @@
   justify-content: center;
   height: 40px;
   width: 40px;
+  color: var(--icon-accent);
 }
 
 .report-card-icon svg {
@@ -273,6 +274,11 @@
   margin: 0;
 }
 
+/* Adds top spacing when the list follows a stat/period line */
+.report-list--spaced {
+  margin-top: 16px;
+}
+
 .report-list-item {
   padding: 12px 0;
   border-bottom: 1px solid var(--border);
@@ -305,6 +311,82 @@
   font-size: 0.78rem;
   font-weight: 600;
   margin-left: 8px;
+}
+
+/* ===== Custom Itinerary stops (inside Top Rated Experiences) ===== */
+
+.itinerary-stops {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.itinerary-stop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--admin-green-tint);
+  border: 1px solid var(--admin-green-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.stop-index {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--admin-green-text);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.stop-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.stop-name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+
+.stop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.stop-meta .report-tag {
+  margin-left: 0;
+}
+
+.stop-notes {
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.stop-empty {
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-style: italic;
 }
 
 /* ===== Data table =====

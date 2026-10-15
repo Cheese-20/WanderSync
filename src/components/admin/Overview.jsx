@@ -54,7 +54,7 @@ export default function Overview() {
       <p className="report-stat">{r.count}</p>
       <span className="report-period">{r.period}</span>
       {r.data?.length > 0 && (
-        <ul className="report-list" style={{ marginTop: '16px' }}>
+        <ul className="report-list report-list--spaced">
           {r.data.map((p) => (
             <li key={p.userID} className="report-list-item">
               <strong>{p.firstName} {p.lastName}</strong>
@@ -71,7 +71,7 @@ export default function Overview() {
     <>
       <p className="report-stat">{r.count}</p>
       {r.data?.length > 0 && (
-        <ul className="report-list" style={{ marginTop: '16px' }}>
+        <ul className="report-list report-list--spaced">
           {r.data.map((u) => (
             <li key={u.userID} className="report-list-item">
               <strong>{u.firstName} {u.lastName}</strong>
@@ -84,13 +84,57 @@ export default function Overview() {
     </>
   );
 
+  /**
+   * Render a single top-experience entry.
+   * CustomItinerary tours store their description as a JSON array of stops,
+   * so we parse and display them in a structured way instead of showing raw JSON.
+   */
+  const renderExperienceDescription = (e) => {
+    if (e.type !== 'CustomItinerary') {
+      return <p>{e.description}</p>;
+    }
+
+    let stops = [];
+    try {
+      const parsed = JSON.parse(e.description);
+      stops = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // If parsing fails, fall back to plain text
+      return <p>{e.description}</p>;
+    }
+
+    if (stops.length === 0) {
+      return <p className="stop-empty">No stops added yet.</p>;
+    }
+
+    return (
+      <ul className="itinerary-stops">
+        {stops.map((stop, idx) => (
+          <li key={stop.id ?? idx} className="itinerary-stop">
+            <span className="stop-index">{idx + 1}</span>
+            <div className="stop-details">
+              <strong className="stop-name">{stop.name}</strong>
+              <span className="stop-meta">
+                {stop.type && <span className="report-tag">{stop.type}</span>}
+                {stop.location && <span>📍 {stop.location}</span>}
+                {stop.time && <span> · 🕐 {stop.time}</span>}
+                {stop.duration && <span> · ⏱ {stop.duration}</span>}
+              </span>
+              {stop.notes && <p className="stop-notes">{stop.notes}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   const renderTopExperiences = (r) => (
     <ul className="report-list">
       {r.data?.map((e) => (
         <li key={e.tourId} className="report-list-item">
           <strong>{e.title}</strong>
           <span className="report-tag">{e.type}</span>
-          <p>{e.description}</p>
+          {renderExperienceDescription(e)}
         </li>
       ))}
       {r.data?.length === 0 && <li>No experiences found.</li>}
@@ -190,7 +234,7 @@ export default function Overview() {
             className={`report-card ${activeReport === card.key ? 'active' : ''}`}
             onClick={() => generateReport(card.key)}
           >
-            <span className="report-card-icon" style={{ color: card.accent }}>
+            <span className="report-card-icon" style={{ '--icon-accent': card.accent }}>
               <card.Icon size={28} />
             </span>
             <span className="report-card-title">{card.title}</span>
