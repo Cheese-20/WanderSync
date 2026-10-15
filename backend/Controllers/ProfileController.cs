@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using backend.Data;
 using backend.Models;
+using backend.Services;
 
 namespace backend.Controllers
 {
@@ -125,6 +126,9 @@ namespace backend.Controllers
 
             try
             {
+                // Single User lookup: used as the identity fallback for new profiles and for the User table update below.
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
+
                 if (existingProfile != null)
                 {
                     existingProfile.ProfilePictureLink = request.ProfilePictureLink;
@@ -149,15 +153,14 @@ namespace backend.Controllers
                         Location = request.Location ?? string.Empty,
                         Job = request.Job ?? string.Empty,
                         CreatedAt = createdAt,
-                        UserName = fName,
-                        UserSurname = lName,
-                        UserEmail = email
+                        UserName = ProfileIdentity.Resolve(fName, user?.FirstName, user != null),
+                        UserSurname = ProfileIdentity.Resolve(lName, user?.LastName, user != null),
+                        UserEmail = ProfileIdentity.Resolve(email, user?.Email, user != null)
                     };
                     _context.Profiles.Add(profile);
                 }
 
                 // Update User table
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.UserID);
                 if (user != null)
                 {
                     if (!string.IsNullOrWhiteSpace(fName)) user.FirstName = fName;

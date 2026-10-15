@@ -172,18 +172,26 @@ namespace backend.Controllers
                     return BadRequest("You can only message accepted matches.");
                 }
 
+                // Load both participants so the message stores their names (null when a user is missing)
+                var sender = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.SenderID);
+                var receiver = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.ReceiverID);
+
                 var msg = new Message
                 {
                     MatchID = request.MatchID,
                     SenderID = request.SenderID,
                     ReceiverID = request.ReceiverID,
                     TextMessage = request.TextMessage,
-                    SentAt = DateTime.UtcNow
+                    SentAt = DateTime.UtcNow,
+                    SenderName = sender?.FirstName,
+                    SenderSurname = sender?.LastName,
+                    ReceiverName = receiver?.FirstName,
+                    ReceiverSurname = receiver?.LastName,
+                    StatusMatch = match.Status
                 };
 
                 _context.Messages.Add(msg);
 
-                var sender = await _context.Users.FirstOrDefaultAsync(u => u.UserID == request.SenderID);
                 var senderName = sender != null ? sender.FirstName : "Someone";
 
                 var notification = new Notification {
