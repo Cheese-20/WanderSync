@@ -1,11 +1,76 @@
 # Last Edited — WanderSync
 
 **Date:** 2026-10-15  
-**Changed by:** Kiro
+**Changed by:** Antigravity
 
 ---
 
-## Latest: Cancel-Application Popup Replaces Browser Alert
+## Latest: Merged `fixesBranch` (justbobby-web) into `main`
+
+**What was merged:** commit `06f2c75` by justbobby-web, "feat: add admin dashboard overview component, styles, and documentation". It only touches the admin dashboard frontend: `src/components/admin/Overview.jsx`, `src/styles/admin.css`, and this doc. The two sections below describe it.
+
+**How it was checked before merging:**
+1. It was merged first into a throwaway branch, `review-bobby`, not into `main`.
+2. The merge had no conflicts. `docs/last_edited.md` was the only file both sides had edited, and Git combined it automatically.
+3. Both builds passed on the merged code: the frontend (`vite build`) and the backend (`dotnet build`).
+4. Every CSS variable the new styles use (`--admin-green-*`, `--ink`, `--muted`, `--border`) is already defined in `admin.css`. `--icon-accent` is set per card in the JSX.
+5. No backend, database, or migration files were changed, so today's database work (dropping `Spots`, the SpotVotes changes) is unaffected.
+
+**Small doc tidy-up:** older sections lost their "Latest:" prefix so only this one is marked as latest.
+
+---
+
+## Removed All Inline Styles from Overview.jsx
+
+**Files changed:**
+- `src/components/admin/Overview.jsx` — inline styles replaced with class names / CSS custom property
+- `src/styles/admin.css` — corresponding CSS rules added
+
+**What changed:**  
+All `style={{...}}` attributes have been removed from `Overview.jsx`. Each value is now declared in `admin.css`:
+
+| Removed inline style | Replacement |
+|---|---|
+| `style={{ marginTop: '16px' }}` on `report-list` (×2) | `.report-list--spaced` modifier class |
+| `style={{ color: '#888', fontStyle: 'italic' }}` on "No stops" message | `.stop-empty` class (done in previous change) |
+| `style={{ marginRight: '6px' }}` on stop type tag | removed — `.stop-meta { gap: 4px }` handles spacing (done in previous change) |
+| `style={{ color: card.accent }}` on `.report-card-icon` | CSS custom property `--icon-accent` set per card in JSX; `.report-card-icon { color: var(--icon-accent) }` reads it |
+
+**Why:** Inline styles scatter visual decisions across JSX and make them harder to find, override, or theme. Moving them to CSS keeps all styling in one place.
+
+**How it works:**
+- `.report-list--spaced` is a BEM-style modifier: add it alongside `.report-list` whenever the list needs top spacing after a stat line.
+- The icon accent colour is inherently data-driven (each card has its own colour), so it cannot be a plain CSS class. Using a CSS custom property (`--icon-accent`) keeps the data in JSX while the styling rule stays in CSS — a clean separation.
+
+---
+
+## Fixed CustomItinerary Display in Top Rated Experiences Report
+
+**Files changed:**
+- `src/components/admin/Overview.jsx` — rendering logic
+- `src/styles/admin.css` — itinerary stop styles
+
+**What changed:**
+- `CustomItinerary` type tours were showing raw JSON (e.g. `[{"id":...,"name":"Best day Tour",...}]`) in the Top Rated Experiences report, while every other type showed a plain-English description.
+- Added a new `renderExperienceDescription(e)` helper that is called instead of rendering `e.description` directly.
+- For any experience whose `type` is not `CustomItinerary`, the helper just renders `<p>{e.description}</p>` — identical to the old behaviour.
+- For `CustomItinerary` entries it parses the JSON string into an array of stop objects and renders each one as a numbered card showing: stop name, stop type badge, 📍 location, 🕐 time, ⏱ duration, and an optional notes line.
+- An empty itinerary array (`[]`) is shown as *"No stops added yet."* instead of `[]`.
+- If the JSON string is somehow invalid it falls back to plain text so no crash occurs.
+
+**Why it changed:**
+- The `Description` column in the `Tours` table is reused for both free-text descriptions (all other types) and a serialised list of itinerary stops (`CustomItinerary`). The admin report was rendering the raw JSON, which is unreadable to an admin.
+
+**How it works:**
+1. `renderTopExperiences` calls `renderExperienceDescription(e)` for every item in the list.
+2. If `e.type !== 'CustomItinerary'`, a simple `<p>` is returned — no change.
+3. Otherwise `JSON.parse(e.description)` extracts the stops array.
+4. Each stop is rendered inside an `.itinerary-stop` flex card: a circular numbered badge (`.stop-index`) on the left, and on the right the stop name, a meta row with the type pill + location/time/duration, and an italic notes line if present.
+5. New CSS classes `.itinerary-stops`, `.itinerary-stop`, `.stop-index`, `.stop-details`, `.stop-name`, `.stop-meta`, and `.stop-notes` in `admin.css` handle the visual layout, re-using the existing `--admin-green-tint` and `--admin-green-border` CSS variables so the cards match the project colour palette.
+
+---
+
+## Cancel-Application Popup Replaces Browser Alert
 
 **Problem:** cancelling a pending Local Guide application used the browser's built-in `window.confirm(...)` box. It didn't match the rest of the app's popups.
 
