@@ -297,7 +297,7 @@ export default function GuideDetail() {
         )}
 
         <div className="guide-detail-section">
-          <h2>Book a 1-on-1 Experience</h2>
+          <h2>Book a Private Tour</h2>
           <p className="one-on-one-intro">
             Want {guide.firstName} to yourself? Request a private experience on a date and time
             that suits you. {guide.firstName} confirms the details and the price with you in chat.
@@ -360,7 +360,7 @@ export default function GuideDetail() {
             {oneOnOneMessage && <p className="booking-success">{oneOnOneMessage}</p>}
 
             <button type="submit" className="mint-btn btn-request-one-on-one" disabled={isRequesting} style={{ width: '100%', padding: '12px', fontSize: '1rem' }}>
-              {isRequesting ? 'Sending request...' : 'Request 1-on-1 Experience'}
+              {isRequesting ? 'Sending request...' : 'Book Private Tour'}
             </button>
           </form>
         </div>

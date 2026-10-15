@@ -5,7 +5,36 @@
 
 ---
 
-## Latest: Spot Card Layout (Wider Button, Consistent Pin)
+## Latest: Cancel-Application Popup Replaces Browser Alert
+
+**Problem:** cancelling a pending Local Guide application used the browser's built-in `window.confirm(...)` box. It didn't match the rest of the app's popups.
+
+**What changed:**
+
+| File | Change |
+|---|---|
+| `src/components/ConfirmDialog.jsx` + `ConfirmDialog.css` | **New reusable confirmation popup.** It shows the WanderSync logo as its icon, then a title, a message, and two buttons: a grey Cancel and a red Confirm. It is styled like the system's other popups (white rounded card on a dimmed backdrop). |
+| `src/pages/LocalGuideApplication.jsx` | The "Cancel application" button on the pending-application panel now opens `ConfirmDialog` instead of `window.confirm`. |
+| `src/pages/Profile.jsx` | Same change for the "Cancel Application" button on the profile page. |
+
+**How it works:**
+1. Clicking **Cancel application** sets `showWithdrawConfirm = true`, which opens the popup ("Cancel Application?").
+2. **Keep Application**, the Escape key, or clicking the dimmed backdrop closes it, and nothing happens.
+3. **Yes, Cancel Application** calls the existing withdraw handler (`withdrawGuideApplication`). While the request runs, both buttons are disabled and the confirm button reads "Cancelling...". The popup closes when the request finishes, and the existing success/error messages show as before.
+
+**Accessibility:** the popup uses `role="alertdialog"` and `aria-modal`, and its title and message are linked with `aria-labelledby`/`aria-describedby`. Focus moves to the safe **Keep Application** button when it opens.
+
+**Reuse:** `ConfirmDialog` takes `open`, `title`, `message`, `confirmLabel`, `cancelLabel`, `onConfirm`, `onCancel`, `isBusy` and `busyLabel`, so it can replace other `window.confirm` calls. These still use the browser box: discarding the application form, cancelling a booking, deleting a post, deleting an activity, and banning a user.
+
+---
+
+## "Book Private Tour" Button Text
+
+**File:** `src/pages/GuideDetail.jsx`. The submit button of the one-on-one request form on a guide's profile now reads **Book Private Tour** (it was "Request 1-on-1 Experience"). While the request is being sent it still shows "Sending request...". The section heading above the form was also renamed, from "Book a 1-on-1 Experience" to **Book a Private Tour**. These are text-only changes; the form still posts to `/api/bookings/one-on-one`.
+
+---
+
+## Spot Card Layout (Wider Button, Consistent Pin)
 
 **Files:** `src/pages/ExplorerHome.jsx`, `src/pages/GuideHome.jsx`, `src/styles/explorer.css`
 

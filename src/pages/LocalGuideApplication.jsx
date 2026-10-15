@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
+import ConfirmDialog from '../components/ConfirmDialog';
 import '../styles/localGuide.css';
 import { getStoredUser, isPendingGuide, setStoredRole } from '../utils/session';
 import { MIN_GUIDE_AGE, withdrawGuideApplication, messageFromError } from '../utils/guideApplication';
@@ -11,6 +12,7 @@ export default function LocalGuideApplication() {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isWithdrawing, setIsWithdrawing] = useState(false);
+    const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
     const [apiError, setApiError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
@@ -91,11 +93,8 @@ export default function LocalGuideApplication() {
         navigate('/profile');
     };
 
+    // Runs after the user confirms in the ConfirmDialog popup.
     const handleWithdraw = async () => {
-        if (!window.confirm('Cancel your Local Guide application? You can apply again later.')) {
-            return;
-        }
-
         setApiError('');
         setSuccessMessage('');
         setIsWithdrawing(true);
@@ -113,6 +112,7 @@ export default function LocalGuideApplication() {
             setApiError(messageFromError(error, 'Failed to cancel your application. Please try again.'));
         } finally {
             setIsWithdrawing(false);
+            setShowWithdrawConfirm(false);
         }
     };
 
@@ -210,7 +210,7 @@ export default function LocalGuideApplication() {
                                     <button
                                         type="button"
                                         className="danger-button"
-                                        onClick={handleWithdraw}
+                                        onClick={() => setShowWithdrawConfirm(true)}
                                         disabled={isWithdrawing}
                                     >
                                         {isWithdrawing ? 'Cancelling...' : 'Cancel application'}
@@ -307,6 +307,18 @@ export default function LocalGuideApplication() {
                     </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={showWithdrawConfirm}
+                title="Cancel Application?"
+                message="Are you sure you want to cancel your Local Guide application? You can apply again later."
+                confirmLabel="Yes, Cancel Application"
+                cancelLabel="Keep Application"
+                busyLabel="Cancelling..."
+                isBusy={isWithdrawing}
+                onConfirm={handleWithdraw}
+                onCancel={() => setShowWithdrawConfirm(false)}
+            />
         </>
     );
 }

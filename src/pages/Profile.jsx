@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import ConfirmDialog from '../components/ConfirmDialog';
 import '../styles/profile.css';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
@@ -56,6 +57,7 @@ export default function Profile() {
   const [activeMode, setActiveModeState] = useState(getActiveMode);
   const [guideActionError, setGuideActionError] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const isGuideAccount = accountRole === MODE_GUIDE;
@@ -271,11 +273,8 @@ export default function Profile() {
     navigate('/home');
   };
 
+  // Runs after the user confirms in the ConfirmDialog popup.
   const handleWithdrawApplication = async () => {
-    if (!window.confirm('Cancel your Local Guide application? You can apply again later.')) {
-      return;
-    }
-
     setGuideActionError('');
     setIsWithdrawing(true);
 
@@ -288,6 +287,7 @@ export default function Profile() {
       setGuideActionError(messageFromError(error, 'Failed to cancel your application. Please try again.'));
     } finally {
       setIsWithdrawing(false);
+      setShowWithdrawConfirm(false);
     }
   };
 
@@ -564,7 +564,7 @@ export default function Profile() {
                     <button
                       type="button"
                       className="cancel-application-button"
-                      onClick={handleWithdrawApplication}
+                      onClick={() => setShowWithdrawConfirm(true)}
                       disabled={isWithdrawing || isSaving}
                       style={{ opacity: (isWithdrawing || isSaving) ? 0.5 : 1 }}
                     >
@@ -711,6 +711,18 @@ export default function Profile() {
             )}
           </div>
         )}
+
+        <ConfirmDialog
+          open={showWithdrawConfirm}
+          title="Cancel Application?"
+          message="Are you sure you want to cancel your Local Guide application? You can apply again later."
+          confirmLabel="Yes, Cancel Application"
+          cancelLabel="Keep Application"
+          busyLabel="Cancelling..."
+          isBusy={isWithdrawing}
+          onConfirm={handleWithdrawApplication}
+          onCancel={() => setShowWithdrawConfirm(false)}
+        />
 
         {statusModal.open && (
           <div className="modal-overlay" onClick={() => setStatusModal({ ...statusModal, open: false })}>

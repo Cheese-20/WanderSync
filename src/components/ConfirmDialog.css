@@ -1,0 +1,80 @@
+/* Shared confirmation popup. Matches the existing delete-confirmation popups. */
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.confirm-dialog {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.confirm-dialog-logo {
+  width: 80px;
+  height: auto;
+  margin-bottom: 1.25rem;
+}
+
+.confirm-dialog-title {
+  margin: 0 0 0.75rem;
+  color: #1f2937;
+  font-size: 1.15rem;
+}
+
+.confirm-dialog-message {
+  margin: 0 0 1.75rem;
+  color: #4b5563;
+  line-height: 1.55;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.confirm-dialog-btn {
+  padding: 0.5rem 1.4rem;
+  border-radius: 20px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.confirm-dialog-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.confirm-dialog-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirm-dialog-btn:focus-visible {
+  outline: 2px solid #1a8f66;
+  outline-offset: 2px;
+}
+
+.confirm-dialog-btn-cancel {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.confirm-dialog-btn-danger {
+  background-color: #ef4444;
+  color: #fff;
+}
