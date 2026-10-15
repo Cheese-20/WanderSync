@@ -62,16 +62,11 @@ namespace backend.Controllers
 
             var spotIds = spots.Select(s => s.SpotID).ToList();
 
-            var upvotes = await _context.SpotVotes
-                .Where(v => spotIds.Contains(v.SpotID) && v.VoteType == "upvote")
-                .ToListAsync();
-
             var ratings = await _context.SpotRatings
                 .Where(r => spotIds.Contains(r.SpotID))
                 .ToListAsync();
 
             var result = spots.Select(s => {
-                var sUpvotes = upvotes.Where(v => v.SpotID == s.SpotID).ToList();
                 var sRatings = ratings.Where(r => r.SpotID == s.SpotID).ToList();
                 
                 return new {
@@ -89,8 +84,6 @@ namespace backend.Controllers
                     submitterAvatar = s.SubmittedByUserID.HasValue && profiles.ContainsKey(s.SubmittedByUserID.Value) ? 
                         profiles[s.SubmittedByUserID.Value].ProfilePictureLink : null,
                     submittedAt = s.SubmittedAt,
-                    upvotesCount = sUpvotes.Count,
-                    hasUpvoted = userId.HasValue ? sUpvotes.Any(v => v.GuideID == userId.Value) : false,
                     averageRating = (double?)s.Rating ?? (sRatings.Any() ? sRatings.Average(r => (double)r.RatingScore) : 0.0),
                     totalRatings = s.Rating.HasValue ? 1 : sRatings.Count,
                     hasRated = userId.HasValue ? sRatings.Any(r => r.UserID == userId.Value) : false
@@ -156,60 +149,6 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Vote recorded successfully.", status = spot.IsVerified });
-        }
-
-        public class UpvoteRequest
-        {
-            public int GuideId { get; set; }
-        }
-
-        // POST: api/spots/{id}/upvote
-        [HttpPost("{id}/upvote")]
-        public async Task<IActionResult> UpvoteSpot(int id, [FromBody] UpvoteRequest request)
-        {
-            var spot = await _context.CuratedSpots.FindAsync(id);
-            if (spot == null)
-                return NotFound("Spot not found.");
-
-            if (spot.IsVerified != "approved")
-                return BadRequest("Spot is not verified yet.");
-
-            var existingVote = await _context.SpotVotes
-                .FirstOrDefaultAsync(v => v.SpotID == id && v.GuideID == request.GuideId && v.VoteType == "upvote");
-
-            if (existingVote != null)
-                return BadRequest("You have already upvoted this spot.");
-
-            // Record upvote
-            var vote = new SpotVote
-            {
-                SpotID = id,
-                GuideID = request.GuideId,
-                VoteType = "upvote",
-                VotedAt = DateTime.UtcNow
-            };
-            _context.SpotVotes.Add(vote);
-
-            // Create notification if submitted by another user
-            if (spot.SubmittedByUserID.HasValue && spot.SubmittedByUserID.Value != request.GuideId)
-            {
-                var upvoter = await _context.Users.FindAsync(request.GuideId);
-                var upvoterName = upvoter != null ? $"{upvoter.FirstName} {upvoter.LastName}" : "A fellow guide";
-                var notification = new Notification
-                {
-                    UserID = spot.SubmittedByUserID.Value,
-                    Message = $"{upvoterName} found your spot '{spot.ActivityName}' helpful and upvoted it!",
-                    IsRead = false,
-                    Type = "Upvote",
-                    RelatedEntityID = spot.SpotID,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.Notifications.Add(notification);
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Spot upvoted successfully." });
         }
 
         // POST: api/spots

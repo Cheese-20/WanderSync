@@ -23,8 +23,10 @@ namespace backend.Controllers
         [HttpGet("{userId}")]
         public async Task<ActionResult<IEnumerable<Notification>>> GetUserNotifications(int userId)
         {
+            // Hide notifications scheduled for the future until their time arrives.
+            var now = DateTime.UtcNow;
             var notifications = await _context.Notifications
-                .Where(n => n.UserID == userId)
+                .Where(n => n.UserID == userId && (n.ScheduledFor == null || n.ScheduledFor <= now))
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 

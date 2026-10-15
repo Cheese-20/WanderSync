@@ -5,7 +5,85 @@
 
 ---
 
-## Latest: Guide Review Comment Is Optional
+## Latest: Spot Card Layout (Wider Button, Consistent Pin)
+
+**Files:** `src/pages/ExplorerHome.jsx`, `src/pages/GuideHome.jsx`, `src/styles/explorer.css`
+
+**What changed:**
+1. **View Details button spans the card.** The spacer `<div style={{ flex: 1 }}>` was removed, and the button gets an extra class, `spot-details-btn` (`flex: 1; width: 100%`, slightly larger padding and font). The class is added next to `mint-btn` so other `mint-btn` buttons, like the tour "Join" button, are unaffected.
+2. **Location pin is the same size on every card.** The pin `<svg>` sat in a flex row. When a longer address wrapped onto two lines, the browser shrank the icon to make room, so pins looked different sizes. The row now uses `.spot-card-location`, and the icon uses `.spot-card-location-pin` with `flex: 0 0 14px`, which means it never shrinks. The row aligns to the top (`align-items: flex-start`), so on wrapped addresses the pin lines up with the first line of text. The icon is marked `aria-hidden`, since the address text already conveys the meaning.
+
+---
+
+## Spot Cards Show a Street Address
+
+**Problem:** spot cards show `curatedSpots.location`. For the seeded Gqeberha spots, that field only held the city ("Gqeberha"). The Explore page's "Add a spot" form also hinted at a city ("e.g. Cape Town, WC"). Spots added by dropping a pin on the map already got a street-level address from reverse geocoding in `MapModal.jsx`.
+
+**What changed:**
+
+| Where | Change |
+|---|---|
+| Live DB, `curatedSpots.location` | Updated spots 9201–9205 from "Gqeberha" to street addresses (see table below). |
+| `backend/Program.cs` | The seed `INSERT IGNORE` for 9201–9205 now uses the same addresses, so a fresh database matches. It never overwrites existing rows. |
+| `src/pages/ExplorePage.jsx` | Step 2 of the "Add a spot" wizard now asks for a street address (placeholder `Street address, e.g. 12 Marine Drive, Summerstrand, Gqeberha`, plus an `aria-label`). |
+
+No card code changed. The cards already render `spot.location`, so they now show the address.
+
+| spotID | Spot | New `location` |
+|---|---|---|
+| 9201 | Boardwalk Casino and Entertainment | Marine Drive, Summerstrand, Gqeberha, 6001 |
+| 9202 | Donkin Reserve | Belmont Terrace, Central, Gqeberha, 6001 |
+| 9203 | Kragga Kamma Game Park | Horseshoe Crescent, Kragga Kamma, Gqeberha, 6030 |
+| 9204 | Sardinia Bay Beach | Sardinia Bay Road, Sardinia Bay, Gqeberha |
+| 9205 | Bayworld | Beach Road, Humewood, Gqeberha, 6013 |
+
+Addresses for 9201–9203 and 9205 were checked against OpenStreetMap (Nominatim) search results and well-known street addresses. Sardinia Bay Beach wasn't found by name on OSM, so its address uses the access road. To revert, set `location = 'Gqeberha'` for these IDs (that was the previous value for all five).
+
+**Still city-only (user-submitted, no coordinates):** 9207/9208 "Sacramento Trail" and 9210 "Jack's Pizza Plaza". Their real addresses are needed before they can be updated.
+
+---
+
+## Spot Upvote (Thumbs Up) Removed
+
+**What changed:** the upvote feature on verified spot cards is gone. The card footer now shows only the **View Details** button.
+
+| File | Change |
+|---|---|
+| `src/pages/ExplorerHome.jsx` | Removed the thumbs-up button and the `handleUpvote` function from the local favourites spot cards. |
+| `src/pages/GuideHome.jsx` | Same removal on the guide home spot cards. |
+| `src/styles/explore.css` | Removed the unused `.upvote-btn` styles. |
+| `backend/Controllers/SpotController.cs` | Removed the `POST /api/spots/{id}/upvote` endpoint and its `UpvoteRequest` class, along with the "X upvoted your spot" notification. `GET /api/spots/verified` no longer queries upvotes or returns `upvotesCount` / `hasUpvoted`. |
+| `backend/Controllers/AuthController.cs` | Comment updated so it no longer mentions upvotes. |
+
+**Not affected:** guide **verification** voting (`POST /api/spots/{id}/vote`, approve/reject, 5 approvals to verify) is a separate feature and still works. Spot star ratings are also unchanged.
+
+**Database:** no schema change. One old row with `voteType = 'upvote'` is still in `SpotVotes`. Nothing reads it any more. There are no `Upvote` notifications.
+
+---
+
+## Notifications No Longer Wiped on Startup
+
+**Problem:** `backend/Program.cs` ran `DROP TABLE IF EXISTS Notifications` on **every startup**, right before `CREATE TABLE IF NOT EXISTS Notifications`. Every `dotnet run` or redeploy therefore deleted all users' notifications. This also broke `BookingReminderService`, which checks existing notifications to avoid sending duplicate reminders, so reminders were re-sent after each restart. The line was added in commit `90f608e` (2026-08-05).
+
+**What changed:**
+
+| File | Change |
+|---|---|
+| `backend/Program.cs` | Removed the `DROP TABLE` line and left a comment explaining why it must not come back. `CREATE TABLE IF NOT EXISTS` still creates the table on a fresh database. |
+| `backend/Controllers/NotificationsController.cs` | `GET /api/notifications/{userId}` now hides notifications whose `scheduledFor` is in the future (`ScheduledFor == null \|\| ScheduledFor <= now`). |
+| `backend/Controllers/NotificationController.cs` | **Deleted.** It duplicated `NotificationsController` (`/api/notification/...` vs `/api/notifications/...`), and nothing in the frontend or backend called it. Its only extra feature, the `scheduledFor` filter, was moved into `NotificationsController`. |
+
+**How notifications work now:**
+1. **Creation:** an action (booking, tour cancellation, spot submission, guide application decision, match, message, etc.) adds a row with `_context.Notifications.Add(...)` in its own controller. This was unchanged.
+2. **Display:** `NavBar.jsx` fetches `GET /api/notifications/{userId}` and shows notifications that are due, newest first.
+3. **Mark as read:** `NavBar.jsx` calls `PUT /api/notifications/{id}/read`.
+4. Rows now persist across restarts.
+
+**Note:** no code currently sets `scheduledFor`, so in practice every notification still shows immediately. The filter only matters if scheduled notifications are added later. Notifications wiped before this fix can't be recovered from the app; the live table was last recreated at 2026-10-15 16:30:46.
+
+---
+
+## Guide Review Comment Is Optional
 
 **File:** `src/pages/GuideDetail.jsx` (the "Leave a review" form on a guide's profile page)
 
@@ -137,7 +215,7 @@ Both migrations were applied with `dotnet ef database update`. Checked afterward
 
 ## Decision: No FK on SpotVotes.guideID
 
-`SpotVotes.guideID` intentionally has **no** foreign key to `User`. When a guide deletes their account, their votes are kept. Their approve/reject votes still count toward a spot's 5-vote threshold, and their upvotes still count in `upvotesCount`. This was a deliberate choice: once a spot is decided, it shouldn't change because the voter left.
+`SpotVotes.guideID` intentionally has **no** foreign key to `User`. When a guide deletes their account, their votes are kept. Their approve/reject votes still count toward a spot's 5-vote threshold. This was a deliberate choice: once a spot is decided, it shouldn't change because the voter left.
 
 `AuthController` (account deletion) had a comment saying user deletion cascades to `SpotVotes`. That was wrong, so the comment was corrected.
 

@@ -325,26 +325,6 @@ export default function GuideHome() {
     }
   };
 
-  const handleUpvote = async (spotId) => {
-    const originalSpots = [...spots];
-    
-    // Optimistic UI update
-    setSpots(spots.map(s => {
-      if ((s.spotID || s.spotId) === spotId) {
-        return { ...s, upvotesCount: (s.upvotesCount || 0) + 1, hasUpvoted: true };
-      }
-      return s;
-    }));
-
-    try {
-      await axios.post(`/api/spots/${spotId}/upvote`, { guideId: loggedInUserId });
-    } catch (e) {
-      console.error('Error upvoting spot:', e);
-      alert(e.response?.data || 'Failed to upvote spot.');
-      setSpots(originalSpots); // Revert on failure
-    }
-  };
-
   return (
     <>
       <NavBar />
@@ -458,23 +438,14 @@ export default function GuideHome() {
                         )}
                       </div>
                       <div className="tour-meta">
-                        <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <span className="spot-card-location">
+                          <svg className="spot-card-location-pin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                           {spot.location || 'Unknown Location'}
                         </span>
                       </div>
                       <div className="tour-footer">
                         <button 
-                          className={`upvote-btn ${spot.hasUpvoted ? 'upvoted' : ''}`}
-                          onClick={() => !spot.hasUpvoted && handleUpvote(spot.spotID || spot.spotId)}
-                          title={spot.hasUpvoted ? "You upvoted this!" : "Upvote this spot"}
-                        >
-                          <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                          {spot.upvotesCount || 0}
-                        </button>
-                        <div style={{ flex: 1 }}></div>
-                        <button 
-                          className="mint-btn" 
+                          className="mint-btn spot-details-btn" 
                           onClick={() => { 
                             setSelectedLocalSpot(spot); 
                             setIsLocalSpotModalOpen(true); 

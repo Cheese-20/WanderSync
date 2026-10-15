@@ -489,8 +489,10 @@ export default function ExplorePage() {
                       <div className="cool-form-group">
                         <div className="cool-input-wrapper">
                           <span className="cool-input-icon">📍</span>
+                          {/* Ask for the street address, not just the city: it is shown on the spot cards. */}
                           <input 
-                            type="text" className="cool-input" placeholder="e.g. Cape Town, WC"
+                            type="text" className="cool-input" placeholder="Street address, e.g. 12 Marine Drive, Summerstrand, Gqeberha"
+                            aria-label="Street address of the spot"
                             value={newSpot.location} onChange={(e) => setNewSpot({...newSpot, location: e.target.value})} 
                             required autoFocus
                           />

@@ -273,7 +273,7 @@ namespace backend.Controllers
                 // Profile, Posts, Bookings, Matches, Notifications, Messages,
                 // GuideApplication, AccountReports, etc.
                 // SpotVotes is intentionally NOT cascaded: it has no FK on guideID, so a deleted
-                // guide's votes are kept and still count toward spot approvals/upvotes.
+                // guide's votes are kept and still count toward spot approvals.
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
 
