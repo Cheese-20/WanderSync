@@ -528,59 +528,6 @@ namespace backend.Migrations
                     b.ToTable("Reports");
                 });
 
-            modelBuilder.Entity("backend.Models.Spot", b =>
-                {
-                    b.Property<int>("SpotID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("spotID");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SpotID"));
-
-                    b.Property<string>("ActivityName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("activityName");
-
-                    b.Property<string>("ActivityType")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("activityType");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext")
-                        .HasColumnName("description");
-
-                    b.Property<string>("IsVerified")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("isVerified");
-
-                    b.Property<string>("Location")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("location");
-
-                    b.Property<string>("PictureURL")
-                        .HasColumnType("longtext")
-                        .HasColumnName("pictureURL");
-
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("submittedAt");
-
-                    b.Property<int>("SubmittedByUserID")
-                        .HasColumnType("int")
-                        .HasColumnName("submittedByUserID");
-
-                    b.HasKey("SpotID");
-
-                    b.HasIndex("SubmittedByUserID");
-
-                    b.ToTable("Spots");
-                });
-
             modelBuilder.Entity("backend.Models.SpotRating", b =>
                 {
                     b.Property<int>("RatingID")
@@ -667,29 +614,9 @@ namespace backend.Migrations
                         .HasColumnType("int")
                         .HasColumnName("guideID");
 
-                    b.Property<string>("GuideName")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("guideName");
-
-                    b.Property<string>("GuideSurname")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("guideSurname");
-
                     b.Property<int>("SpotID")
                         .HasColumnType("int")
                         .HasColumnName("spotID");
-
-                    b.Property<string>("SpotLocation")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("spotLoaction");
-
-                    b.Property<string>("SpotName")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("spotName");
 
                     b.Property<string>("VoteType")
                         .IsRequired()
@@ -701,6 +628,8 @@ namespace backend.Migrations
                         .HasColumnName("votedAt");
 
                     b.HasKey("VoteID");
+
+                    b.HasIndex("SpotID");
 
                     b.ToTable("SpotVotes");
                 });
@@ -897,87 +826,6 @@ namespace backend.Migrations
                     b.ToTable("Matches");
                 });
 
-            modelBuilder.Entity("backend.Models.UserSubmittedLocation", b =>
-                {
-                    b.Property<int>("LocationID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("locationID");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("LocationID"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("address");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("category");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("city");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("country");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("description");
-
-                    b.Property<string>("ImageURL")
-                        .HasColumnType("longtext")
-                        .HasColumnName("imageURL");
-
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("double")
-                        .HasColumnName("latitude");
-
-                    b.Property<string>("LocationName")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("locationName");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("double")
-                        .HasColumnName("longitude");
-
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("longtext")
-                        .HasColumnName("rejectionReason");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("status");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("submittedAt");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int")
-                        .HasColumnName("userID");
-
-                    b.Property<DateTime?>("VerifiedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("verifiedAt");
-
-                    b.Property<int?>("VerifiedByAdminID")
-                        .HasColumnType("int")
-                        .HasColumnName("verifiedByAdminID");
-
-                    b.HasKey("LocationID");
-
-                    b.ToTable("UserSubmittedLocations");
-                });
-
             modelBuilder.Entity("backend.Models.LocalGuideApplication", b =>
                 {
                     b.HasOne("backend.Models.User", "User")
@@ -1030,17 +878,6 @@ namespace backend.Migrations
                     b.Navigation("Reporter");
                 });
 
-            modelBuilder.Entity("backend.Models.Spot", b =>
-                {
-                    b.HasOne("backend.Models.User", "SubmittedByUser")
-                        .WithMany()
-                        .HasForeignKey("SubmittedByUserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SubmittedByUser");
-                });
-
             modelBuilder.Entity("backend.Models.SpotRating", b =>
                 {
                     b.HasOne("backend.Models.CuratedSpot", "CuratedSpot")
@@ -1068,7 +905,7 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend.Models.Spot", "Spot")
+                    b.HasOne("backend.Models.CuratedSpot", "Spot")
                         .WithMany()
                         .HasForeignKey("SpotID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1077,6 +914,17 @@ namespace backend.Migrations
                     b.Navigation("Reporter");
 
                     b.Navigation("Spot");
+                });
+
+            modelBuilder.Entity("backend.Models.SpotVote", b =>
+                {
+                    b.HasOne("backend.Models.CuratedSpot", "CuratedSpot")
+                        .WithMany()
+                        .HasForeignKey("SpotID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CuratedSpot");
                 });
 
             modelBuilder.Entity("backend.Models.UserMatch", b =>

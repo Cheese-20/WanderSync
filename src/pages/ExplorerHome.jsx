@@ -423,7 +423,7 @@ export default function ExplorerHome() {
                   </span>
                   <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    {new Date(tour.date).toLocaleDateString()} at {new Date(tour.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(tour.date).toLocaleDateString()}
                   </span>
                   <span style={{ fontStyle: 'italic', color: '#666', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>Hosted by: {tour.guideName}</span>
                 </div>

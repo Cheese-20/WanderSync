@@ -112,23 +112,8 @@ namespace backend.Controllers
                     }
                 }
 
-                // 8. SpotVotes
-                var spotVotes = await _context.SpotVotes.ToListAsync();
-                foreach (var vote in spotVotes)
-                {
-                    var spot = await _context.Spots.FindAsync(vote.SpotID);
-                    var guide = await _context.Users.FindAsync(vote.GuideID);
-                    if (spot != null)
-                    {
-                        vote.SpotName = spot.ActivityName;
-                        vote.SpotLocation = spot.Location;
-                    }
-                    if (guide != null)
-                    {
-                        vote.GuideName = guide.FirstName;
-                        vote.GuideSurname = guide.LastName;
-                    }
-                }
+                // 8. SpotVotes: nothing to backfill. The denormalized name columns were removed
+                // (DropSpotVoteNameColumns migration); join curatedSpots / User when names are needed.
 
                 // 9. Tours
                 var tours = await _context.Tours.ToListAsync();

@@ -129,7 +129,8 @@ export default function GuideDetail() {
       await axios.post(`/api/local-guide/${guideId}/rate`, {
         userID: userId,
         score: reviewScore,
-        comment: reviewComment
+        // Comment is optional; send null when blank (same as the My Activities rating form).
+        comment: reviewComment.trim() || null
       });
       setReviewSuccess('Review submitted successfully!');
       setReviewScore(5);
@@ -442,13 +443,13 @@ export default function GuideDetail() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Comment</label>
+                  <label htmlFor="review-comment">Comment (optional)</label>
                   <textarea
+                    id="review-comment"
                     value={reviewComment}
                     onChange={(e) => setReviewComment(e.target.value)}
-                    placeholder="Write your review here..."
+                    placeholder="Write your review here (optional)..."
                     rows="4"
-                    required
                   ></textarea>
                 </div>
                 {reviewError && <p className="review-error">{reviewError}</p>}

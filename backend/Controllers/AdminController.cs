@@ -524,10 +524,10 @@ LIMIT {take};";
 
         // ========== REPORTED SPOTS ==========
 
-        // Spot moderation reads the real curatedSpots table via the CuratedSpots DbSet.
-        // The Spot entity maps to a `Spots` table that does not exist in this database, so
-        // it cannot be used here. The submitter name is joined from Users manually because
-        // CuratedSpot has no navigation property.
+        // Spot moderation reads the curatedSpots table via the CuratedSpots DbSet, which is the
+        // single source of truth for spots (the legacy `Spots` table was removed in the
+        // DropLegacySpotsTable migration). The submitter name is joined from Users manually
+        // because CuratedSpot has no navigation property.
         [HttpGet("reported-spots")]
         public async Task<IActionResult> GetReportedSpots()
         {

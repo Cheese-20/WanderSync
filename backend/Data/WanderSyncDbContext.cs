@@ -27,7 +27,6 @@ namespace backend.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        public DbSet<Spot> Spots { get; set; }
         public DbSet<SpotReport> SpotReports { get; set; }
         public DbSet<CuratedSpot> CuratedSpots { get; set; }
         public DbSet<SpotVote> SpotVotes { get; set; }

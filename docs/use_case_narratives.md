@@ -328,7 +328,7 @@
 - The Admin is authenticated with an administrator role.
 - The "Reports" tab displays two sub-sections: "Reported Accounts" and "Reported Spots".
 - There are one or more reported spots in the system.
-- The `Spots` table exists in the database with columns: `spotID` (PK, auto-increment), `activityName` (varchar 100, NOT NULL), `activityType` (varchar 50), `description` (text), `location` (varchar 255), `isVerified` (varchar 50), `pictureURL` (longtext), `submittedByUserID` (int), `submittedAt` (datetime).
+- The `curatedSpots` table exists in the database with columns: `spotID` (PK, auto-increment), `activityName` (varchar 200), `activityType` (varchar 50), `description` (text), `location` (text), `isVerified` (text, default "pending"), `pictureURL` (longtext), `submittedByUserID` (int, nullable), `submittedAt` (datetime), `latitude`/`longitude` (double), `submittedByName` (text), `rating` (decimal 4,2). Reports are stored in `SpotReports`, whose `spotID` references `curatedSpots.spotID` with ON DELETE CASCADE.
 
 **Main Flow (How it is accomplished):**
 1. The Admin clicks the "Reports" tab on the Admin Home Page.
@@ -357,14 +357,14 @@
 ### Flag Flow (3 or more reports):
 10a. The spot has at least 3 reports. The Admin clicks the "Flag" button.
 11a. The frontend sends a PATCH request to the backend API (`/api/admin/reported-spots/{spotID}/flag`).
-12a. The backend updates the spot's `isVerified` field to "Flagged" in the `Spots` table.
+12a. The backend updates the spot's `isVerified` field to "Flagged" in the `curatedSpots` table.
 13a. The flagged spot remains visible to users but displays a warning indicator so users become wary of it.
 14a. The Admin is returned to the reported spots list, where the spot now shows a "Flagged" status.
 
 ### Delete Flow (more than 5 reports):
 10b. The spot has more than 5 reports. The Admin clicks the "Delete" button.
 11b. The frontend sends a DELETE request to the backend API (`/api/admin/reported-spots/{spotID}`).
-12b. The backend permanently removes the spot record from the `Spots` table.
+12b. The backend permanently removes the spot record from the `curatedSpots` table (its `SpotReports` rows are removed automatically by the cascading foreign key).
 13b. The spot is no longer visible to any users on the platform.
 14b. The Admin is returned to the reported spots list, where the deleted spot is no longer displayed.
 

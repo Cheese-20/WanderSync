@@ -271,7 +271,9 @@ namespace backend.Controllers
 
                 // Removing the User row cascades to all child tables:
                 // Profile, Posts, Bookings, Matches, Notifications, Messages,
-                // GuideApplication, SpotVotes, AccountReports, etc.
+                // GuideApplication, AccountReports, etc.
+                // SpotVotes is intentionally NOT cascaded: it has no FK on guideID, so a deleted
+                // guide's votes are kept and still count toward spot approvals/upvotes.
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
 
